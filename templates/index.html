@@ -1,0 +1,1968 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Makokha Medical Centre{% endblock %}
+{% block description %}Welcome to Makokha Medical Centre - Providing quality healthcare services with modern facilities and experienced doctors.{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* HOME PAGE SPECIFIC STYLES */
+    
+    .hero {
+        color: white;
+        min-height: clamp(600px, 84vh, 860px);
+        padding: 9.5rem 0 6.75rem;
+        position: relative;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+        margin-top: -70px;
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+    }
+
+    .hero-bg-slider {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        overflow: hidden;
+    }
+
+    .hero-bg-track {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        transform: translate3d(0, 0, 0);
+        transition: transform 1s ease-in-out;
+        will-change: transform;
+    }
+
+    .hero-bg-slide {
+        flex: 0 0 100%;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0f2f4e;
+    }
+
+    .hero-bg-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+        image-rendering: auto;
+    }
+    
+    .hero::before {
+        content: none;
+    }
+
+    .hero::after {
+        content: none;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 760px;
+    }
+
+    .header.over-hero {
+        background: transparent;
+        box-shadow: none;
+        border-bottom: none;
+        backdrop-filter: none;
+    }
+
+    .header.over-hero .logo,
+    .header.over-hero .nav-link {
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+    }
+
+    .header.over-hero .nav-link::after {
+        background: #ffffff;
+    }
+
+    .header.over-hero .nav-link.admin-link {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.95);
+        color: #ffffff;
+    }
+
+    .header.over-hero .nav-link.admin-link:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: #ffffff;
+    }
+
+    .header.over-hero .mobile-menu-toggle span {
+        background: #ffffff;
+    }
+
+    .header.over-hero.scrolled {
+        background: transparent;
+        box-shadow: none;
+        border-bottom: none;
+        backdrop-filter: none;
+    }
+    
+    .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+    }
+    
+    .hero p {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        color: rgba(255, 255, 255, 0.9);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    }
+    
+    .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-hero {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        border-radius: 50px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-hero-primary {
+        background: white;
+        color: #0066cc;
+        font-weight: 600;
+    }
+    
+    .btn-hero-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-hero-secondary {
+        background: transparent;
+        color: white;
+        border: 2px solid white;
+        font-weight: 600;
+    }
+    
+    .btn-hero-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    /* FEATURES SECTION */
+    
+    .features {
+        background: white;
+        padding: 4rem 0;
+    }
+    
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .feature-card {
+        text-align: center;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        background: white;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        transform: translateY(-8px);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        color: #0066cc;
+        margin-bottom: 1rem;
+    }
+    
+    .feature-card h3 {
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+    
+    .feature-card p {
+        font-size: 0.95rem;
+        color: #666;
+    }
+
+    .home-gallery-section {
+        background: #ffffff;
+        padding: 4rem 0;
+    }
+
+    .home-gallery-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .home-gallery-header h2 {
+        margin-bottom: 0.35rem;
+    }
+
+    .home-gallery-header p {
+        margin: 0;
+        color: #5d6775;
+    }
+
+    .home-gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 1rem;
+    }
+
+    .home-gallery-card {
+        background: #ffffff;
+        border: 1px solid #d8e5f6;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 10px 24px rgba(15, 34, 60, 0.08);
+        transition: transform 0.24s ease, box-shadow 0.24s ease;
+    }
+
+    .home-gallery-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 30px rgba(15, 34, 60, 0.13);
+    }
+
+    .home-gallery-image-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #edf4ff;
+        overflow: hidden;
+    }
+
+    .home-gallery-image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .home-gallery-badge {
+        position: absolute;
+        right: 0.6rem;
+        bottom: 0.6rem;
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        background: rgba(15, 93, 182, 0.92);
+        color: #ffffff;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.24rem 0.55rem;
+        text-transform: capitalize;
+    }
+
+    .home-gallery-body {
+        padding: 0.8rem 0.9rem;
+    }
+
+    .home-gallery-body h3 {
+        margin: 0;
+        color: #1f2a37;
+        font-size: 0.96rem;
+    }
+
+    .home-gallery-body p {
+        margin: 0.35rem 0 0;
+        color: #5d6775;
+        font-size: 0.86rem;
+        line-height: 1.45;
+    }
+    
+    /* DOCTORS SECTION */
+
+    .services-section {
+        background: #f4f8ff;
+        padding: 4rem 0;
+    }
+
+    .services-heading {
+        margin: 0;
+        color: #1f2a37;
+        text-align: left;
+    }
+
+    .services-subheading {
+        margin: 0.5rem 0 0;
+        color: #5d6775;
+        text-align: left;
+    }
+
+    .services-layout {
+        display: grid;
+        gap: 1.75rem;
+        align-items: start;
+        margin-top: 2rem;
+        grid-template-columns: 1fr;
+    }
+
+    .services-layout.has-banner {
+        grid-template-columns: minmax(0, 0.82fr) minmax(calc(440px + 8cm), 2.2fr);
+        gap: 2.3rem;
+    }
+
+    .services-details {
+        min-width: 0;
+    }
+
+    .services-banner-wrap {
+        min-width: 0;
+    }
+
+    .services-banner {
+        width: 100%;
+        border-radius: 14px;
+        border: none;
+        background: transparent;
+        box-shadow: none;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0;
+    }
+
+    .services-banner img {
+        display: block;
+        max-width: 100%;
+        width: 100%;
+        height: auto;
+        max-height: min(95vh, calc(860px + 8cm));
+        object-fit: contain;
+        border-radius: 14px;
+    }
+
+    .services-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.68rem;
+    }
+
+    .service-card {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 0.15rem 0 0.55rem;
+        margin: 0;
+        border-bottom: 1px solid #dbe5f5;
+        box-shadow: none;
+    }
+
+    .service-card-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: #eaf2ff;
+        color: #0f5db6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .service-card h3 {
+        margin: 0 0 0.35rem;
+        color: #1f2a37;
+        font-size: 1.02rem;
+        font-weight: 700;
+    }
+
+    .service-card p {
+        margin: 0;
+        color: #5d6775;
+        font-size: 0.92rem;
+        line-height: 1.5;
+    }
+
+    .telemedicine-card {
+        background: linear-gradient(160deg, #0f5db6 0%, #0b4b92 100%);
+        color: #fff;
+        border-radius: 14px;
+        padding: 1.35rem;
+        box-shadow: 0 16px 34px rgba(15, 61, 124, 0.26);
+        min-height: 100%;
+    }
+
+    .telemedicine-eyebrow {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        color: #dfeeff;
+        border-radius: 999px;
+        padding: 0.25rem 0.65rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-bottom: 0.7rem;
+    }
+
+    .telemedicine-card h3 {
+        color: #fff;
+        margin-bottom: 0.35rem;
+    }
+
+    .telemedicine-subtitle {
+        color: rgba(255, 255, 255, 0.82);
+        margin-bottom: 0.9rem;
+        font-size: 0.92rem;
+    }
+
+    .telemedicine-description {
+        color: rgba(255, 255, 255, 0.95);
+        line-height: 1.55;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .telemedicine-launch {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        background: rgba(255, 255, 255, 0.17);
+        border-radius: 9px;
+        padding: 0.45rem 0.65rem;
+        font-size: 0.86rem;
+        color: #f2f8ff;
+    }
+
+    .services-hours {
+        margin-top: 1rem;
+        border: 1px solid #d8e5fa;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 1rem 1.1rem;
+    }
+
+    .services-hours h3 {
+        margin: 0 0 0.5rem;
+        color: #1f2a37;
+        font-size: 1.02rem;
+    }
+
+    .services-hours ul {
+        margin: 0;
+        padding-left: 1rem;
+        color: #42556b;
+        line-height: 1.55;
+        font-size: 0.92rem;
+    }
+    
+    .doctors-section {
+        background: #f8f9fa;
+        padding: 4rem 0;
+    }
+    
+    .doctors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .doctor-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .doctor-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(-8px);
+    }
+    
+    .doctor-image {
+        width: 100%;
+        height: 250px;
+        background: linear-gradient(135deg, #e6f0ff 0%, #cce5ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: #0066cc;
+    }
+    
+    .doctor-info {
+        padding: 1.5rem;
+    }
+    
+    .doctor-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+    
+    .doctor-specialty {
+        color: #0066cc;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+    
+    .doctor-hours {
+        font-size: 0.9rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .founders-section,
+    .partners-section {
+        background: #ffffff;
+        padding: 4rem 0;
+    }
+
+    .partners-section {
+        background: #f7fbff;
+    }
+
+    .people-slider {
+        --people-per-view: 3;
+        --people-gap: 1rem;
+        position: relative;
+        margin-top: 2rem;
+    }
+
+    .people-slider-track-wrap {
+        overflow: hidden;
+        border-radius: 14px;
+    }
+
+    .people-slider-track {
+        display: flex;
+        gap: var(--people-gap);
+        justify-content: flex-start;
+        transition: transform 0.5s ease;
+        will-change: transform;
+    }
+
+    .people-slide {
+        flex: 0 0 calc((100% - (var(--people-gap) * (var(--people-per-view) - 1))) / var(--people-per-view));
+        min-width: 0;
+        padding: 0;
+    }
+
+    .people-slider.static-mode .people-slider-track-wrap {
+        overflow: visible;
+    }
+
+    .people-slider.static-mode .people-slider-track {
+        transition: none;
+    }
+
+    .people-slider.static-mode .people-slider-arrow,
+    .people-slider.static-mode .people-slider-dots {
+        display: none;
+    }
+
+    .people-slider.static-mode .founder-image,
+    .people-slider.static-mode .partner-image {
+        height: clamp(150px, 22vw, 240px);
+    }
+
+    .founder-card {
+        background: #ffffff;
+        border: 1px solid #d8e5f6;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 26px rgba(15, 34, 60, 0.1);
+        transition: all 0.28s ease;
+        max-width: 390px;
+        margin: 0;
+    }
+
+    .partner-card {
+        background: #ffffff;
+        border: 1px solid #d8e5f6;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 26px rgba(15, 34, 60, 0.1);
+        transition: all 0.28s ease;
+        max-width: 390px;
+        margin: 0;
+    }
+
+    .founder-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 32px rgba(15, 34, 60, 0.14);
+    }
+
+    .partner-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 32px rgba(15, 34, 60, 0.14);
+    }
+
+    .founder-image {
+        width: 100%;
+        height: clamp(210px, 30vw, 260px);
+        background: linear-gradient(135deg, #eef4ff 0%, #dceaff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #2c5fa8;
+    }
+
+    .partner-image {
+        width: 100%;
+        height: clamp(210px, 30vw, 260px);
+        background: linear-gradient(135deg, #eef4ff 0%, #dceaff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #2c5fa8;
+    }
+
+    .founder-details {
+        padding: 1.25rem 1.3rem 1.35rem;
+    }
+
+    .partner-details {
+        padding: 1.25rem 1.3rem 1.35rem;
+    }
+
+    .founder-name {
+        margin: 0 0 0.24rem;
+        font-size: 1.2rem;
+        color: #1f2a37;
+        font-weight: 700;
+    }
+
+    .partner-name {
+        margin: 0 0 0.24rem;
+        font-size: 1.2rem;
+        color: #1f2a37;
+        font-weight: 700;
+    }
+
+    .founder-title {
+        margin: 0 0 0.62rem;
+        font-size: 0.95rem;
+        color: #0f5db6;
+        font-weight: 600;
+    }
+
+    .partner-title {
+        margin: 0 0 0.62rem;
+        font-size: 0.95rem;
+        color: #0f5db6;
+        font-weight: 600;
+    }
+
+    .founder-bio {
+        margin: 0;
+        font-size: 0.94rem;
+        line-height: 1.58;
+        color: #4a5a6f;
+    }
+
+    .partner-bio {
+        margin: 0;
+        font-size: 0.94rem;
+        line-height: 1.58;
+        color: #4a5a6f;
+    }
+
+    .people-slider-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 40px;
+        border: none;
+        border-radius: 999px;
+        background: rgba(15, 52, 100, 0.78);
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 3;
+    }
+
+    .people-slider-arrow:hover {
+        background: rgba(15, 52, 100, 0.92);
+    }
+
+    .people-slider-arrow.prev {
+        left: 0.45rem;
+    }
+
+    .people-slider-arrow.next {
+        right: 0.45rem;
+    }
+
+    .people-slider-dots {
+        margin-top: 0.85rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.42rem;
+    }
+
+    .people-slider-dot {
+        width: 10px;
+        height: 10px;
+        border: none;
+        border-radius: 999px;
+        background: #c7d8ef;
+        cursor: pointer;
+    }
+
+    .people-slider-dot.active {
+        background: #0f5db6;
+    }
+    
+    /* EVENTS SECTION */
+    
+    .events-section {
+        background: #ffffff;
+        padding: 4rem 0;
+    }
+
+    .events-home-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1rem;
+        margin-bottom: 1.3rem;
+    }
+
+    .events-home-toolbar h2 {
+        margin: 0;
+        color: #1f2a37;
+    }
+
+    .events-home-toolbar p {
+        margin: 0.38rem 0 0;
+        color: #5f6b7a;
+    }
+
+    .events-home-filter {
+        min-width: 260px;
+    }
+
+    .events-home-filter label {
+        display: block;
+        margin-bottom: 0.34rem;
+        font-size: 0.84rem;
+        font-weight: 600;
+        color: #465468;
+    }
+
+    .events-home-filter select {
+        width: 100%;
+        height: 42px;
+        border: 1px solid #c8d7eb;
+        border-radius: 9px;
+        padding: 0 0.78rem;
+        color: #1f2a37;
+        background: #fff;
+    }
+
+    .events-home-group {
+        margin-top: 1.45rem;
+    }
+
+    .events-home-group h3 {
+        margin: 0 0 0.7rem;
+        color: #1f2a37;
+        font-size: 1.32rem;
+    }
+
+    .events-home-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .event-card {
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(250px, 36%);
+        transition: all 0.25s ease;
+    }
+
+    .event-card:hover {
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+        transform: translateY(-3px);
+    }
+
+    .event-card.event-card-past {
+        grid-template-columns: minmax(250px, 36%) minmax(0, 1fr);
+    }
+
+    .event-media {
+        min-height: 235px;
+        background: linear-gradient(135deg, #e6f0ff 0%, #cce5ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #0f5db6;
+    }
+
+    .event-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .event-media-telemedicine {
+        background: linear-gradient(135deg, #e9f3ff 0%, #d8eaff 100%);
+    }
+
+    .event-media-telemedicine i {
+        font-size: 3.2rem;
+        color: #0f5db6;
+    }
+
+    .event-content {
+        padding: 1.2rem 1.25rem;
+    }
+
+    .event-topline {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.62rem;
+    }
+
+    .event-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.24rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .event-badge-type {
+        background: #e6f0ff;
+        color: #0f5db6;
+    }
+
+    .event-badge-status {
+        background: #eef8f1;
+        color: #1c7d4f;
+    }
+
+    .event-title {
+        margin: 0 0 0.66rem;
+        font-size: 1.12rem;
+        color: #1f2a37;
+        font-weight: 700;
+    }
+
+    .event-meta {
+        display: grid;
+        gap: 0.42rem;
+        margin-bottom: 0.7rem;
+        color: #3e4b5c;
+        font-size: 0.92rem;
+    }
+
+    .event-meta-row {
+        display: flex;
+        gap: 0.45rem;
+        align-items: flex-start;
+    }
+
+    .event-meta-row i {
+        color: #0f5db6;
+        width: 14px;
+        margin-top: 0.12rem;
+    }
+
+    .event-description {
+        margin: 0;
+        color: #4f5d70;
+        line-height: 1.55;
+        white-space: pre-line;
+    }
+    
+    /* CTA SECTION */
+    
+    .cta-section {
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        color: white;
+        padding: 4rem 0;
+        text-align: center;
+        margin: 3rem 0;
+        border-radius: 12px;
+    }
+    
+    .cta-section h2 {
+        color: white;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .cta-section p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto 2rem;
+    }
+    
+    /* STATS SECTION */
+    
+    .stats-section {
+        background: white;
+        padding: 3rem 0;
+        margin: 3rem 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+    }
+    
+    .stat-item {
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #0066cc;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 1rem;
+    }
+    
+    @media (min-width: 1025px) and (max-width: 1280px) {
+        .services-layout.has-banner {
+            grid-template-columns: minmax(0, 0.95fr) minmax(calc(320px + 3.5cm), 1.65fr);
+            gap: 2rem;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .events-home-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .events-home-filter {
+            min-width: 0;
+        }
+
+        .event-card,
+        .event-card.event-card-past {
+            grid-template-columns: 1fr;
+        }
+
+        .event-media {
+            min-height: 220px;
+        }
+
+        .hero {
+            min-height: 580px;
+            padding: 8rem 0 5rem;
+        }
+
+        .hero h1 {
+            font-size: 2.25rem;
+        }
+        
+        .hero p {
+            font-size: 1.05rem;
+        }
+
+        .cta-section h2 {
+            font-size: 1.95rem;
+        }
+
+        .services-layout,
+        .services-layout.has-banner {
+            grid-template-columns: 1fr;
+        }
+
+        .people-slider-arrow {
+            width: 36px;
+            height: 36px;
+        }
+
+        .founder-card,
+        .partner-card {
+            max-width: 100%;
+        }
+
+        .founder-image,
+        .partner-image {
+            height: 230px;
+        }
+
+        .services-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .header.over-hero .nav-menu {
+            background: rgba(6, 22, 43, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header.over-hero .nav-link {
+            color: #ffffff;
+            border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .header.over-hero.scrolled .nav-menu {
+            background: rgba(6, 22, 43, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header.over-hero.scrolled .nav-link {
+            color: #ffffff;
+            border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+        .hero {
+            min-height: 610px;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+        .hero {
+            min-height: 540px;
+            padding: 7.3rem 0 4.3rem;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 767px) {
+        .events-home-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .events-home-filter {
+            min-width: 0;
+        }
+
+        .event-card,
+        .event-card.event-card-past {
+            grid-template-columns: 1fr;
+        }
+
+        .event-media {
+            min-height: 205px;
+        }
+
+        .hero {
+            min-height: 540px;
+            padding: 7.2rem 0 4.4rem;
+        }
+
+        .hero h1 {
+            font-size: 2rem;
+        }
+        
+        .hero p {
+            font-size: 1rem;
+        }
+        
+        .hero-buttons {
+            flex-direction: column;
+        }
+        
+        .cta-section h2 {
+            font-size: 1.78rem;
+        }
+
+        .services-layout,
+        .services-layout.has-banner {
+            grid-template-columns: 1fr;
+        }
+
+        .people-slider-arrow {
+            width: 34px;
+            height: 34px;
+        }
+
+        .founder-card,
+        .partner-card {
+            max-width: 100%;
+        }
+
+        .founder-image,
+        .partner-image {
+            height: 220px;
+        }
+
+        .services-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .header.over-hero .nav-menu {
+            background: rgba(6, 22, 43, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header.over-hero .nav-link {
+            color: #ffffff;
+            border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .header.over-hero.scrolled .nav-menu {
+            background: rgba(6, 22, 43, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header.over-hero.scrolled .nav-link {
+            color: #ffffff;
+            border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+    }
+
+    @media (min-width: 320px) and (max-width: 480px) {
+        .events-home-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .events-home-filter {
+            min-width: 0;
+        }
+
+        .event-card,
+        .event-card.event-card-past {
+            grid-template-columns: 1fr;
+        }
+
+        .event-media {
+            min-height: 198px;
+        }
+
+        .hero {
+            min-height: 500px;
+            padding: 6.7rem 0 4rem;
+        }
+
+        .hero h1 {
+            font-size: 1.72rem;
+        }
+        
+        .hero p {
+            font-size: 0.96rem;
+        }
+        
+        .hero-buttons {
+            flex-direction: column;
+        }
+
+        .btn-hero {
+            width: 100%;
+            padding: 0.85rem 1rem;
+        }
+        
+        .cta-section h2 {
+            font-size: 1.55rem;
+        }
+
+        .services-layout,
+        .services-layout.has-banner {
+            grid-template-columns: 1fr;
+        }
+
+        .services-banner img {
+            max-height: 72vh;
+        }
+
+        .people-slider-arrow {
+            width: 32px;
+            height: 32px;
+        }
+
+        .people-slider-arrow.prev {
+            left: 0.2rem;
+        }
+
+        .people-slider-arrow.next {
+            right: 0.2rem;
+        }
+
+        .founder-card,
+        .partner-card {
+            max-width: 100%;
+        }
+
+        .founder-image,
+        .partner-image {
+            height: 206px;
+        }
+
+        .services-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .header.over-hero .nav-menu {
+            background: rgba(6, 22, 43, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header.over-hero .nav-link {
+            color: #ffffff;
+            border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .header.over-hero.scrolled .nav-menu {
+            background: rgba(6, 22, 43, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header.over-hero.scrolled .nav-link {
+            color: #ffffff;
+            border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set initial_live_stats = live_stats if live_stats is defined else {} %}
+{% set hero_slider_images = site_content.hero_background_slides if site_content.hero_background_slides is defined else [] %}
+<!-- HERO SECTION -->
+<section class="hero">
+    {% if hero_slider_images %}
+    <div class="hero-bg-slider" aria-hidden="true">
+        <div class="hero-bg-track" id="heroBgTrack">
+            {% for hero_slide in hero_slider_images %}
+            <div class="hero-bg-slide">
+                <img
+                    src="{{ hero_slide.url }}"
+                    alt=""
+                    loading="{{ 'eager' if loop.first else 'lazy' }}"
+                    style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
+                >
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    <div class="container">
+        <div class="hero-content">
+            <h1>Your Health is Our Priority</h1>
+            <p>Professional medical care with state-of-the-art facilities and experienced healthcare professionals dedicated to your wellness.</p>
+            <div class="hero-buttons">
+                <button class="btn btn-hero btn-hero-primary" onclick="scrollToElement('.doctors-section')">Meet Our Doctors</button>
+                <a href="{{ url_for('contact') }}" class="btn btn-hero btn-hero-secondary">Book Appointment</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES SECTION -->
+<section class="features">
+    <div class="container">
+        <h2 class="text-center">Why Choose Makokha Medical Centre?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <h3>Expert Doctors</h3>
+                <p>Highly qualified physicians with years of experience in their specialties.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <h3>Modern Facilities</h3>
+                <p>State-of-the-art medical equipment and comfortable patient care environments.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>24/7 Service</h3>
+                <p>Available round the clock for emergencies and urgent medical care.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Patient Safety</h3>
+                <p>Strict adherence to hygiene and safety protocols for your protection.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h3>Support Services</h3>
+                <p>Friendly staff ready to assist with any medical or administrative needs.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h3>Patient Care</h3>
+                <p>Compassionate care focused on your complete health and well-being.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SERVICES SECTION -->
+<section class="services-section" id="services-offered">
+    <div class="container">
+        <h2 class="services-heading">Services Offered at Makokha Medical Centre</h2>
+        <p class="services-subheading">Comprehensive facility services for outpatient care, diagnostics, treatment, and long-term follow-up.</p>
+
+        <div class="services-layout{% if site_content.services_banner_image_url %} has-banner{% endif %}">
+            <div class="services-details">
+                <div class="services-grid">
+                    {% for service in services %}
+                    <article class="service-card fade-in">
+                        <h3>{{ service.name }}</h3>
+                        <p>{{ service.description }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                <div class="services-hours fade-in">
+                    <h3><i class="fas fa-clock"></i> Service Opening Hours</h3>
+                    <ul>
+                        {% for opening_line in site_content.opening_hours_lines %}
+                            <li>{{ opening_line }}</li>
+                        {% else %}
+                            <li>Monday - Friday: 9:00 AM - 5:00 PM</li>
+                            <li>Saturday: 9:00 AM - 1:00 PM</li>
+                            <li>Sunday: Emergency Only</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            {% if site_content.services_banner_image_url %}
+            <div class="services-banner-wrap">
+                <div class="services-banner fade-in">
+                    <img src="{{ site_content.services_banner_image_url }}" alt="Makokha Medical Offered Services Banner" style="object-position: {{ '%.2f'|format(site_content.services_banner_position.x) }}% {{ '%.2f'|format(site_content.services_banner_position.y) }}%;">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- DOCTORS SECTION -->
+{% if doctors %}
+<section class="doctors-section">
+    <div class="container">
+        <h2 class="text-center">Our Experienced Doctors</h2>
+        <p class="text-center" style="color: #666; margin-bottom: 2rem;">Meet our team of highly qualified medical professionals</p>
+        
+        <div class="doctors-grid">
+            {% for doctor in doctors %}
+            <div class="doctor-card fade-in">
+                <div class="doctor-image">
+                    {% if doctor.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }}%;">
+                    {% else %}
+                        <i class="fas fa-user-md"></i>
+                    {% endif %}
+                </div>
+                <div class="doctor-info">
+                    <div class="doctor-name">{{ doctor.full_name() }}</div>
+                    <div class="doctor-specialty">{{ doctor.specialty }}</div>
+                    {% if doctor.consulting_hours %}
+                    <div class="doctor-hours">
+                        <i class="fas fa-clock"></i>
+                        {{ doctor.consulting_hours }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center" style="margin-top: 2rem;">
+            <a href="{{ url_for('doctors_page') }}" class="btn btn-primary">View All Doctors</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- STATS SECTION -->
+<section class="container">
+    <div class="stats-section">
+        <div class="stat-item">
+            <div class="stat-number" data-live-stat="total_doctors">{{ initial_live_stats.get('total_doctors', total_doctors or 0) }}</div>
+            <div class="stat-label">Doctors</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" data-live-stat="total_interactions">{{ initial_live_stats.get('total_interactions', 0) }}</div>
+            <div class="stat-label">Patient Interactions</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">
+                <i class="fas fa-star" style="color: #ffc107;"></i>
+                <span data-live-stat="avg_rating" data-live-format="decimal1">{{ initial_live_stats.get('avg_rating', avg_rating or 0) }}</span>
+            </div>
+            <div class="stat-label">Hospital Rating</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number" data-live-stat="emergency_today_calls">{{ initial_live_stats.get('emergency_today_calls', 0) }}</div>
+            <div class="stat-label">Emergency Calls Today</div>
+        </div>
+    </div>
+</section>
+
+<!-- EVENTS SECTION -->
+{% set home_upcoming_events = upcoming_events if upcoming_events is defined else events %}
+{% set home_past_events = past_events if past_events is defined else [] %}
+{% if home_upcoming_events or home_past_events or telemedicine %}
+<section class="events-section">
+    <div class="container">
+        <div class="events-home-toolbar">
+            <div>
+                <h2>Events & Outreach</h2>
+                <p>Upcoming events are shown with details on the left and photos on the right. Past events are shown with photos on the left and details on the right.</p>
+            </div>
+            <div class="events-home-filter">
+                <label for="homeEventTypeRedirect">Browse by category</label>
+                <select id="homeEventTypeRedirect">
+                    {% for option in event_type_options %}
+                    <option value="{{ option.value }}">{{ option.label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="events-home-group">
+            <h3>Upcoming Events</h3>
+            {% if home_upcoming_events or telemedicine %}
+            <div class="events-home-list">
+                {% if telemedicine %}
+                <article class="event-card event-card-upcoming fade-in">
+                    <div class="event-content">
+                        <div class="event-topline">
+                            <span class="event-badge event-badge-type">Telemedicine</span>
+                            <span class="event-badge event-badge-status">Upcoming</span>
+                        </div>
+                        <h3 class="event-title">{{ telemedicine.title }}</h3>
+                        <div class="event-meta">
+                            <div class="event-meta-row">
+                                <i class="fas fa-laptop-medical"></i>
+                                <span><strong>Mode:</strong> Virtual Consultation</span>
+                            </div>
+                            <div class="event-meta-row">
+                                <i class="fas fa-circle-info"></i>
+                                <span><strong>Subtitle:</strong> {{ telemedicine.subtitle }}</span>
+                            </div>
+                            <div class="event-meta-row">
+                                <i class="fas fa-clock"></i>
+                                <span><strong>Launch Window:</strong> {{ telemedicine.launch_window }}</span>
+                            </div>
+                        </div>
+                        <p class="event-description">{{ telemedicine.description }}</p>
+                    </div>
+                    <div class="event-media event-media-telemedicine">
+                        {% if telemedicine.image_url %}
+                            <img src="{{ telemedicine.image_url }}" alt="{{ telemedicine.title }}">
+                        {% else %}
+                            <i class="fas fa-laptop-medical"></i>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endif %}
+
+                {% for event in home_upcoming_events %}
+                {% set status_value = event.normalized_status() %}
+                {% if status_value == 'ongoing' %}
+                    {% set status_label = 'Ongoing' %}
+                {% elif status_value == 'completed' %}
+                    {% set status_label = 'Past' %}
+                {% else %}
+                    {% set status_label = 'Upcoming' %}
+                {% endif %}
+                <article class="event-card event-card-upcoming fade-in">
+                    <div class="event-content">
+                        <div class="event-topline">
+                            <span class="event-badge event-badge-type">{{ (event.event_type or 'general')|replace('_', ' ')|title }}</span>
+                            <span class="event-badge event-badge-status">{{ status_label }}</span>
+                        </div>
+                        <h3 class="event-title">{{ event.title }}</h3>
+                        <div class="event-meta">
+                            <div class="event-meta-row">
+                                <i class="fas fa-calendar-day"></i>
+                                <span><strong>Date:</strong> {{ event.event_date.strftime('%b %d, %Y') }}</span>
+                            </div>
+                            <div class="event-meta-row">
+                                <i class="fas fa-clock"></i>
+                                <span><strong>Time:</strong> {{ event.event_date.strftime('%I:%M %p') }}</span>
+                            </div>
+                            <div class="event-meta-row">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span><strong>Location:</strong> {{ event.location or 'Not specified' }}</span>
+                            </div>
+                        </div>
+                        <p class="event-description">{{ event.description }}</p>
+                    </div>
+                    <div class="event-media">
+                        {% set media_slides = event_slides_map.get(event.id, []) %}
+                        {% if media_slides %}
+                            <img
+                                src="{{ media_slides[0].url }}"
+                                alt="{{ event.title }}"
+                                class="event-auto-image"
+                                data-event-slides='{{ media_slides|tojson }}'
+                                style="object-position: {{ '%.2f'|format((media_slides[0].x if media_slides[0].x is not none else 50.0)) }}% {{ '%.2f'|format((media_slides[0].y if media_slides[0].y is not none else 50.0)) }}%;"
+                            >
+                        {% else %}
+                            <i class="fas fa-calendar-alt"></i>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #666;">No upcoming events at the moment.</p>
+            {% endif %}
+        </div>
+
+        <div class="events-home-group">
+            <h3>Past Events</h3>
+            {% if home_past_events %}
+            <div class="events-home-list">
+                {% for event in home_past_events %}
+                {% set status_value = event.normalized_status() %}
+                {% if status_value == 'ongoing' %}
+                    {% set status_label = 'Ongoing' %}
+                {% elif status_value == 'completed' %}
+                    {% set status_label = 'Past' %}
+                {% else %}
+                    {% set status_label = 'Upcoming' %}
+                {% endif %}
+                <article class="event-card event-card-past fade-in">
+                    <div class="event-media" style="opacity: 0.88;">
+                        {% set media_slides = event_slides_map.get(event.id, []) %}
+                        {% if media_slides %}
+                            <img
+                                src="{{ media_slides[0].url }}"
+                                alt="{{ event.title }}"
+                                class="event-auto-image"
+                                data-event-slides='{{ media_slides|tojson }}'
+                                style="object-position: {{ '%.2f'|format((media_slides[0].x if media_slides[0].x is not none else 50.0)) }}% {{ '%.2f'|format((media_slides[0].y if media_slides[0].y is not none else 50.0)) }}%;"
+                            >
+                        {% else %}
+                            <i class="fas fa-calendar-alt"></i>
+                        {% endif %}
+                    </div>
+                    <div class="event-content">
+                        <div class="event-topline">
+                            <span class="event-badge event-badge-type">{{ (event.event_type or 'general')|replace('_', ' ')|title }}</span>
+                            <span class="event-badge event-badge-status">{{ status_label }}</span>
+                        </div>
+                        <h3 class="event-title">{{ event.title }}</h3>
+                        <div class="event-meta">
+                            <div class="event-meta-row">
+                                <i class="fas fa-calendar-day"></i>
+                                <span><strong>Date:</strong> {{ event.event_date.strftime('%b %d, %Y') }}</span>
+                            </div>
+                            <div class="event-meta-row">
+                                <i class="fas fa-clock"></i>
+                                <span><strong>Time:</strong> {{ event.event_date.strftime('%I:%M %p') }}</span>
+                            </div>
+                            <div class="event-meta-row">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span><strong>Location:</strong> {{ event.location or 'Not specified' }}</span>
+                            </div>
+                        </div>
+                        <p class="event-description">{{ event.description }}</p>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="color: #666;">No past events at the moment.</p>
+            {% endif %}
+        </div>
+        
+        <div class="text-center" style="margin-top: 2rem;">
+            <a href="{{ url_for('events_page') }}" class="btn btn-primary">View All Events</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if gallery_photos %}
+<section class="home-gallery-section" id="home-gallery">
+    <div class="container">
+        <div class="home-gallery-header">
+            <h2>Hospital Gallery</h2>
+        </div>
+        <div class="home-gallery-grid">
+            {% for photo in gallery_photos %}
+            <article class="home-gallery-card fade-in">
+                <div class="home-gallery-image-wrap">
+                    <img src="{{ photo.url }}" alt="Hospital Gallery Photo" loading="lazy">
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA SECTION -->
+<div class="container">
+    <section class="cta-section">
+        <h2>Ready to Book an Appointment?</h2>
+        <p>Contact us today to schedule your consultation with our experienced medical team.</p>
+        <a href="{{ url_for('contact') }}" class="btn btn-hero btn-hero-primary">Get In Touch</a>
+    </section>
+</div>
+
+<!-- FOUNDERS SECTION -->
+{% if founders %}
+<section class="founders-section" id="founders">
+    <div class="container">
+        <h2 class="text-center">Founders</h2>
+        <p class="text-center" style="color: #66758a; margin-bottom: 1.1rem;">The visionaries behind Makokha Medical Centre.</p>
+
+        <div class="people-slider fade-in" data-people-slider="founders">
+            <button class="people-slider-arrow prev" type="button" aria-label="Previous founder">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="people-slider-track-wrap">
+                <div class="people-slider-track">
+            {% for founder in founders %}
+                    <div class="people-slide">
+                        <article class="founder-card">
+                            <div class="founder-image">
+                                {% if founder.image_filename %}
+                                    <img src="{{ url_for('static', filename='uploads/' + founder.image_filename) }}" alt="{{ founder.full_name }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((founder.image_focus_x if founder.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((founder.image_focus_y if founder.image_focus_y is not none else 50.0)) }}%;">
+                                {% else %}
+                                    <i class="fas fa-user-tie"></i>
+                                {% endif %}
+                            </div>
+                            <div class="founder-details">
+                                <h3 class="founder-name">{{ founder.full_name }}</h3>
+                                <p class="founder-title">{{ founder.title }}</p>
+                                {% if founder.bio %}
+                                <p class="founder-bio">{{ founder.bio }}</p>
+                                {% endif %}
+                            </div>
+                        </article>
+                    </div>
+            {% endfor %}
+                </div>
+            </div>
+            <button class="people-slider-arrow next" type="button" aria-label="Next founder">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="people-slider-dots" aria-label="Founders slide indicators"></div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- PARTNERS SECTION -->
+{% if partners %}
+<section class="partners-section" id="partners">
+    <div class="container">
+        <h2 class="text-center">Partners</h2>
+        <p class="text-center" style="color: #66758a; margin-bottom: 1.1rem;">Organizations and collaborators working with Makokha Medical Centre.</p>
+
+        <div class="people-slider fade-in" data-people-slider="partners">
+            <button class="people-slider-arrow prev" type="button" aria-label="Previous partner">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="people-slider-track-wrap">
+                <div class="people-slider-track">
+            {% for partner in partners %}
+                    <div class="people-slide">
+                        <article class="partner-card">
+                            <div class="partner-image">
+                                {% if partner.image_filename %}
+                                    <img src="{{ url_for('static', filename='uploads/' + partner.image_filename) }}" alt="{{ partner.full_name }}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                                {% else %}
+                                    <i class="fas fa-handshake"></i>
+                                {% endif %}
+                            </div>
+                            <div class="partner-details">
+                                <h3 class="partner-name">{{ partner.full_name }}</h3>
+                                <p class="partner-title">{{ partner.title }}</p>
+                                {% if partner.bio %}
+                                <p class="partner-bio">{{ partner.bio }}</p>
+                                {% endif %}
+                            </div>
+                        </article>
+                    </div>
+            {% endfor %}
+                </div>
+            </div>
+            <button class="people-slider-arrow next" type="button" aria-label="Next partner">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="people-slider-dots" aria-label="Partners slide indicators"></div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- REVIEWS SECTION -->
+<section class="features">
+    <div class="container">
+        <h2 class="text-center">Patient Reviews</h2>
+        <p class="text-center" style="color: #666; margin-bottom: 2rem;">See what our patients say about their experience</p>
+        
+        <div style="text-align: center;">
+            <div class="stat-number" style="margin-bottom: 0.5rem;">
+                <i class="fas fa-star" style="color: #ffc107;"></i> {{ avg_rating or 0 }}/5
+            </div>
+            <p style="color: #666; margin-bottom: 2rem;">Based on {{ total_reviews or 0 }} patient reviews</p>
+            <a href="{{ url_for('reviews_page') }}" class="btn btn-primary">Read All Reviews</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block inline_js %}
+    // Hero background slider (moves horizontally every 10 seconds)
+    (function initHeroBackgroundSlider() {
+        const track = document.getElementById('heroBgTrack');
+        if (!track) return;
+
+        const slides = track.querySelectorAll('.hero-bg-slide');
+        if (!slides || slides.length <= 1) return;
+
+        let currentIndex = 0;
+        const slideCount = slides.length;
+
+        setInterval(() => {
+            currentIndex = (currentIndex + 1) % slideCount;
+            track.style.transform = `translate3d(-${currentIndex * 100}%, 0, 0)`;
+        }, 10000);
+    })();
+
+    (function initHomeEventTypeRedirect() {
+        const selector = document.getElementById('homeEventTypeRedirect');
+        if (!selector) return;
+
+        selector.addEventListener('change', () => {
+            const selectedType = (selector.value || 'all').trim();
+            const baseEventsUrl = "{{ url_for('events_page') }}";
+            if (!selectedType || selectedType === 'all') {
+                window.location.href = baseEventsUrl;
+                return;
+            }
+            window.location.href = `${baseEventsUrl}?event_type=${encodeURIComponent(selectedType)}`;
+        });
+    })();
+
+    (function initEventCardImageSlides() {
+        const imageNodes = document.querySelectorAll('.event-auto-image[data-event-slides]');
+        imageNodes.forEach((imageNode) => {
+            if (imageNode.dataset.sliderReady === '1') return;
+
+            let slides = [];
+            try {
+                slides = JSON.parse(imageNode.dataset.eventSlides || '[]');
+            } catch (error) {
+                slides = [];
+            }
+            if (!Array.isArray(slides) || slides.length <= 1) {
+                imageNode.dataset.sliderReady = '1';
+                return;
+            }
+
+            let index = 0;
+            imageNode.dataset.sliderReady = '1';
+            setInterval(() => {
+                index = (index + 1) % slides.length;
+                const current = slides[index] || {};
+                if (!current.url) return;
+                const x = Number.isFinite(Number(current.x)) ? Number(current.x) : 50;
+                const y = Number.isFinite(Number(current.y)) ? Number(current.y) : 50;
+                imageNode.src = current.url;
+                imageNode.style.objectPosition = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+            }, 5000);
+        });
+    })();
+
+    (function initPeopleSliders() {
+        const sliders = document.querySelectorAll('.people-slider[data-people-slider]');
+        if (!sliders.length) return;
+
+        const getResponsivePerView = () => {
+            const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 1200;
+            if (viewportWidth <= 767) return 1;
+            if (viewportWidth <= 1024) return 2;
+            return 3;
+        };
+
+        sliders.forEach((slider) => {
+            const track = slider.querySelector('.people-slider-track');
+            const slides = Array.from(slider.querySelectorAll('.people-slide'));
+            const prevBtn = slider.querySelector('.people-slider-arrow.prev');
+            const nextBtn = slider.querySelector('.people-slider-arrow.next');
+            const dotsWrap = slider.querySelector('.people-slider-dots');
+            if (!track || !slides.length) return;
+
+            let currentIndex = 0;
+            const slideCount = slides.length;
+            let maxIndex = 0;
+            let timerId = null;
+            let resizeTimer = null;
+
+            const setPosition = () => {
+                if (maxIndex <= 0) {
+                    track.style.transform = 'translate3d(0, 0, 0)';
+                } else {
+                    const activeSlide = slides[currentIndex];
+                    const offset = activeSlide ? activeSlide.offsetLeft : 0;
+                    track.style.transform = `translate3d(-${offset}px, 0, 0)`;
+                }
+                if (dotsWrap) {
+                    const dots = dotsWrap.querySelectorAll('.people-slider-dot');
+                    dots.forEach((dot, index) => {
+                        dot.classList.toggle('active', index === currentIndex);
+                        dot.setAttribute('aria-current', index === currentIndex ? 'true' : 'false');
+                    });
+                }
+            };
+
+            const createDots = () => {
+                if (!dotsWrap) return;
+                dotsWrap.innerHTML = '';
+                for (let index = 0; index <= maxIndex; index += 1) {
+                    const dot = document.createElement('button');
+                    dot.type = 'button';
+                    dot.className = 'people-slider-dot';
+                    dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
+                    dot.addEventListener('click', () => {
+                        currentIndex = index;
+                        setPosition();
+                    });
+                    dotsWrap.appendChild(dot);
+                }
+            };
+
+            const goPrev = () => {
+                if (maxIndex <= 0) return;
+                currentIndex = currentIndex <= 0 ? maxIndex : currentIndex - 1;
+                setPosition();
+            };
+
+            const goNext = () => {
+                if (maxIndex <= 0) return;
+                currentIndex = currentIndex >= maxIndex ? 0 : currentIndex + 1;
+                setPosition();
+            };
+
+            const stopAuto = () => {
+                if (timerId) {
+                    clearInterval(timerId);
+                    timerId = null;
+                }
+            };
+
+            const startAuto = () => {
+                stopAuto();
+                if (maxIndex <= 0) return;
+                timerId = setInterval(goNext, 7000);
+            };
+
+            const configureLayout = () => {
+                const shouldScroll = slideCount > 3;
+                const perView = shouldScroll ? getResponsivePerView() : Math.max(1, Math.min(3, slideCount));
+                slider.style.setProperty('--people-per-view', String(perView));
+                maxIndex = shouldScroll ? Math.max(0, slideCount - perView) : 0;
+
+                if (currentIndex > maxIndex) {
+                    currentIndex = maxIndex;
+                }
+
+                slider.classList.toggle('static-mode', !shouldScroll);
+                if (prevBtn) prevBtn.style.display = shouldScroll ? '' : 'none';
+                if (nextBtn) nextBtn.style.display = shouldScroll ? '' : 'none';
+                if (dotsWrap) {
+                    dotsWrap.style.display = shouldScroll ? 'flex' : 'none';
+                }
+
+                if (shouldScroll) {
+                    createDots();
+                } else if (dotsWrap) {
+                    dotsWrap.innerHTML = '';
+                }
+
+                setPosition();
+                startAuto();
+            };
+
+            if (prevBtn) {
+                prevBtn.addEventListener('click', () => {
+                    goPrev();
+                    startAuto();
+                });
+            }
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    goNext();
+                    startAuto();
+                });
+            }
+
+            slider.addEventListener('mouseenter', stopAuto);
+            slider.addEventListener('mouseleave', startAuto);
+            slider.addEventListener('focusin', stopAuto);
+            slider.addEventListener('focusout', startAuto);
+
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(configureLayout, 120);
+            });
+
+            configureLayout();
+        });
+    })();
+
+    // Auto-animate elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.feature-card, .service-card, .doctor-card, .founder-card, .partner-card, .event-card').forEach(el => {
+        observer.observe(el);
+    });
+{% endblock %}

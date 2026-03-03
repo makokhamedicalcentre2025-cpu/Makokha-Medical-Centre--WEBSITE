@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Local secrets and runtime config
+.env
+
+# Local databases and runtime state
+instance/
+*.sqlite
+*.sqlite3
+.db
+
+
+# Logs
+*.log
+
+# IDE/editor
+.vscode/
+
+# Build/test caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local uploaded media cache (do not commit runtime uploads)
+static/uploads/

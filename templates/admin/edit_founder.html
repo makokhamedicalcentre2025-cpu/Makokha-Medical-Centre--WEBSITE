@@ -1,0 +1,222 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Founder - Admin Panel{% endblock %}
+{% block page_title %}Edit Founder: {{ founder.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .founder-image-editor {
+        border: 1px solid #ceddf0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 0.55rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .founder-image-stage {
+        position: relative;
+        width: 100%;
+        max-width: 360px;
+        aspect-ratio: 4 / 5;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #d6e3f3;
+        background: #0f2f4e;
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .founder-image-stage.dragging {
+        cursor: grabbing;
+    }
+
+    .founder-adjust-image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .founder-image-toolbar {
+        margin-top: 0.45rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .founder-position-label {
+        font-size: 0.78rem;
+        color: #607186;
+        white-space: nowrap;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-form-layout">
+    <div class="admin-page-intro">
+        <h1><i class="fas fa-user-edit"></i> Edit Founder</h1>
+        <p>Update founder details and website visibility.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="admin-form-shell">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" id="founderImagePositionJson" name="founder_image_position_json" value='{{ founder_focus|tojson }}'>
+        <h3 class="admin-form-title">Founder Profile</h3>
+
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" name="full_name" class="form-control" value="{{ founder.full_name }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Title / Role</label>
+                <input type="text" name="title" class="form-control" value="{{ founder.title }}" required>
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Display Order</label>
+                <input type="number" name="display_order" class="form-control" value="{{ founder.display_order }}" min="0">
+            </div>
+            <div class="form-group" style="display: flex; align-items: end;">
+                <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                    <input type="checkbox" name="is_active" {% if founder.is_active %}checked{% endif %}>
+                    Show on website
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Biography</label>
+            <textarea name="bio" class="form-textarea">{{ founder.bio or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Founder Photo</label>
+            <div class="founder-image-editor" id="founderImageEditor" {% if not founder.image_filename %}hidden{% endif %}>
+                <div class="founder-image-stage" id="founderImageStage">
+                    {% if founder.image_filename %}
+                    <img
+                        src="{{ url_for('static', filename='uploads/' + founder.image_filename) }}"
+                        alt="{{ founder.full_name }}"
+                        id="founderImagePreview"
+                        class="founder-adjust-image"
+                        style="object-position: {{ '%.2f'|format(founder_focus.x) }}% {{ '%.2f'|format(founder_focus.y) }}%;"
+                    >
+                    {% else %}
+                    <img src="" alt="Founder photo preview" id="founderImagePreview" class="founder-adjust-image">
+                    {% endif %}
+                </div>
+                <div class="founder-image-toolbar">
+                    <small class="admin-field-note">Current photo. Drag to control what is displayed before saving.</small>
+                    <span class="founder-position-label" id="founderImagePositionLabel">{{ '%.0f'|format(founder_focus.x) }}% x / {{ '%.0f'|format(founder_focus.y) }}% y</span>
+                </div>
+            </div>
+            <input type="file" id="founderImageInput" name="image" class="form-control" accept="image/*">
+            <small class="admin-field-note">Leave blank to keep current photo. Uploading a new image keeps drag-adjust available before save.</small>
+        </div>
+
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Update Founder
+            </button>
+            <a href="{{ url_for('admin_founders') }}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function initFounderImageEditor() {
+        const hiddenInput = document.getElementById('founderImagePositionJson');
+        const fileInput = document.getElementById('founderImageInput');
+        const editor = document.getElementById('founderImageEditor');
+        const stage = document.getElementById('founderImageStage');
+        const image = document.getElementById('founderImagePreview');
+        const label = document.getElementById('founderImagePositionLabel');
+        if (!hiddenInput || !fileInput || !editor || !stage || !image) return;
+
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+        let position = { x: 50, y: 50 };
+        try {
+            const parsed = JSON.parse(hiddenInput.value || '{}');
+            position = {
+                x: clamp(Number(parsed.x) || 50, 0, 100),
+                y: clamp(Number(parsed.y) || 50, 0, 100)
+            };
+        } catch (error) {
+            position = { x: 50, y: 50 };
+        }
+
+        const sync = () => {
+            hiddenInput.value = JSON.stringify(position);
+            image.style.objectPosition = `${position.x.toFixed(2)}% ${position.y.toFixed(2)}%`;
+            if (label) {
+                label.textContent = `${Math.round(position.x)}% x / ${Math.round(position.y)}% y`;
+            }
+        };
+        sync();
+
+        let dragging = false;
+        let startX = 0;
+        let startY = 0;
+        let originX = position.x;
+        let originY = position.y;
+
+        stage.addEventListener('pointerdown', (event) => {
+            if (editor.hidden) return;
+            dragging = true;
+            startX = event.clientX;
+            startY = event.clientY;
+            originX = position.x;
+            originY = position.y;
+            stage.classList.add('dragging');
+            stage.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        });
+
+        stage.addEventListener('pointermove', (event) => {
+            if (!dragging) return;
+            const width = Math.max(stage.clientWidth, 1);
+            const height = Math.max(stage.clientHeight, 1);
+            const dx = event.clientX - startX;
+            const dy = event.clientY - startY;
+            position.x = clamp(originX + ((dx / width) * 100), 0, 100);
+            position.y = clamp(originY + ((dy / height) * 100), 0, 100);
+            sync();
+        });
+
+        const stopDragging = (event) => {
+            if (!dragging) return;
+            dragging = false;
+            stage.classList.remove('dragging');
+            try {
+                stage.releasePointerCapture(event.pointerId);
+            } catch (error) {
+                // no-op
+            }
+        };
+
+        stage.addEventListener('pointerup', stopDragging);
+        stage.addEventListener('pointercancel', stopDragging);
+        stage.addEventListener('lostpointercapture', stopDragging);
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            image.src = URL.createObjectURL(file);
+            editor.hidden = false;
+            sync();
+        });
+    })();
+</script>
+{% endblock %}

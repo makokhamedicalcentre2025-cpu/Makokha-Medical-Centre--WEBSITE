@@ -1,0 +1,132 @@
+{% extends "reception/base.html" %}
+
+{% block reception_content %}
+<div style="padding: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">
+        <i class="fas fa-envelope"></i> Messages
+    </h1>
+    
+    <!-- Filters -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <input type="text" placeholder="Search by name or email..." style="padding: 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.95rem;" id="searchInput">
+        
+        <select style="padding: 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.95rem;" id="filterSelect" onchange="updateFilter(this.value)">
+            <option value="">All Messages</option>
+            <option value="unread" {% if request.args.get('filter') == 'unread' %}selected{% endif %}>Unread</option>
+            <option value="pending" {% if request.args.get('filter') == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="resolved" {% if request.args.get('filter') == 'resolved' %}selected{% endif %}>Resolved</option>
+        </select>
+        
+        <select style="padding: 0.75rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.95rem;" onchange="updateSort(this.value)">
+            <option value="recent" {% if request.args.get('sort') == 'recent' %}selected{% endif %}>Most Recent</option>
+            <option value="oldest" {% if request.args.get('sort') == 'oldest' %}selected{% endif %}>Oldest</option>
+            <option value="urgent" {% if request.args.get('sort') == 'urgent' %}selected{% endif %}>Urgent First</option>
+        </select>
+    </div>
+    
+    <!-- Messages List -->
+    {% if communications.items %}
+        <div style="display: grid; gap: 1rem;">
+            {% for comm in communications.items %}
+                <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid {% if comm.is_resolved %}#27ae60{% elif comm.reply_content %}#3498db{% else %}#e74c3c{% endif %}; transition: all 0.3s; cursor: pointer;" data-message-id="{{ comm.id }}" class="message-item">                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="flex: 1;">
+                            <h3 style="font-size: 1.1rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.25rem;">
+                                {{ comm.patient_name }}
+                                {% if not comm.is_read %}<span style="display: inline-block; width: 8px; height: 8px; background: #e74c3c; border-radius: 50%; margin-left: 0.5rem;"></span>{% endif %}
+                            </h3>
+                            <p style="color: #666; font-size: 0.9rem;">{{ comm.patient_email }}</p>
+                        </div>
+                        <div style="text-align: right;">                            <!-- stylelint-disable-next-line -->                            <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; background: {% if comm.message_type == 'call' %}#e3f2fd{% elif comm.message_type == 'email' %}#f3e5f5{% elif comm.message_type == 'appointment' %}#fff3cd{% else %}#e8f5e9{% endif %}; color: {% if comm.message_type == 'call' %}#1976d2{% elif comm.message_type == 'email' %}#7b1fa2{% elif comm.message_type == 'appointment' %}#856404{% else %}#388e3c{% endif %};\">
+                                {{ comm.message_type }}
+                            </span>
+                            {% if comm.priority == 'urgent' %}
+                                <span style="display: inline-block; margin-left: 0.5rem; padding: 0.25rem 0.75rem; background: #ffebee; color: #c62828; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">⚠ Urgent</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <p style="color: #555; margin-bottom: 1rem; line-height: 1.5;">
+                        {{ comm.message_content[:150] }}{% if comm.message_content|length > 150 %}...{% endif %}
+                    </p>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <small style="color: #999;">
+                            <i class="fas fa-calendar"></i> {{ comm.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                        </small>
+                        <div>
+                            {% if comm.is_resolved %}
+                                <span style="color: #27ae60; font-weight: 500; font-size: 0.9rem;">✓ Resolved</span>
+                            {% elif comm.reply_content %}
+                                <span style="color: #3498db; font-weight: 500; font-size: 0.9rem;">✓ Replied</span>
+                            {% else %}
+                                <span style="color: #e74c3c; font-weight: 500; font-size: 0.9rem;">● Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if communications.has_prev or communications.has_next %}
+            <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem;">
+                {% if communications.has_prev %}
+                    <a href="{{ url_for('reception_messages', page=communications.prev_num) }}" style="padding: 0.5rem 1rem; background: #0066cc; color: white; border-radius: 6px; text-decoration: none;">← Previous</a>
+                {% endif %}
+                
+                <span style="color: #666;">Page {{ communications.page }} of {{ communications.pages }}</span>
+                
+                {% if communications.has_next %}
+                    <a href="{{ url_for('reception_messages', page=communications.next_num) }}" style="padding: 0.5rem 1rem; background: #0066cc; color: white; border-radius: 6px; text-decoration: none;">Next →</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div style="background: white; padding: 3rem; border-radius: 8px; text-align: center;">
+            <i class="fas fa-inbox" style="font-size: 3rem; color: #ddd; margin-bottom: 1rem;"></i>
+            <p style="color: #666; font-size: 1.1rem;">No messages found</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function updateFilter(filter) {
+    const url = new URL(window.location);
+    if (filter) {
+        url.searchParams.set('filter', filter);
+    } else {
+        url.searchParams.delete('filter');
+    }
+    window.location.href = url.toString();
+}
+
+function updateSort(sort) {
+    const url = new URL(window.location);
+    if (sort) {
+        url.searchParams.set('sort', sort);
+    } else {
+        url.searchParams.delete('sort');
+    }
+    window.location.href = url.toString();
+}
+
+// Handle message item clicks
+document.querySelectorAll('.message-item').forEach(item => {
+    item.addEventListener('click', function() {
+        const messageId = this.getAttribute('data-message-id');
+        const viewUrl = `/reception/message/${messageId}`;
+        location.href = viewUrl;
+    });
+});
+
+document.getElementById('searchInput').addEventListener('keyup', function(e) {
+    const searchTerm = this.value.toLowerCase();
+    const messages = document.querySelectorAll('.message-item');
+    
+    messages.forEach(msg => {
+        const text = msg.textContent.toLowerCase();
+        msg.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}

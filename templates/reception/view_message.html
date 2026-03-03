@@ -1,0 +1,233 @@
+{% extends "reception/base.html" %}
+
+{% block reception_content %}
+<div style="padding: 2rem; max-width: 980px; margin: 0 auto;">
+    <a href="{{ url_for('reception_messages') }}" style="color: #0f5db6; text-decoration: none; font-weight: 600; margin-bottom: 1.25rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+        <i class="fas fa-arrow-left"></i> Back to Messages
+    </a>
+
+    <div style="background: #fff; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #0f5db6 0%, #0b4b91 100%); padding: 1.6rem; color: #fff;">
+            <h1 style="font-size: 1.55rem; margin: 0 0 0.45rem; color: #fff;">{{ communication.patient_name }}</h1>
+            <p style="margin: 0; opacity: 0.93;">
+                <i class="fas fa-envelope"></i> {{ communication.patient_email }}
+                {% if communication.patient_phone %}<span style="margin-left: 0.75rem;"><i class="fas fa-phone"></i> {{ communication.patient_phone }}</span>{% endif %}
+            </p>
+            <small style="display: inline-block; margin-top: 0.45rem; opacity: 0.86;">
+                <i class="fas fa-calendar"></i> {{ communication.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+            </small>
+        </div>
+
+        <div style="padding: 1.35rem;">
+            <div id="messageStatusBadges" style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: #edf4ff; color: #0f5db6;">
+                    <i class="fas fa-tag"></i> {{ communication.message_type|replace('_', ' ')|title }}
+                </span>
+                {% if communication.priority == 'urgent' %}
+                <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: #ffefef; color: #c62828;">
+                    <i class="fas fa-triangle-exclamation"></i> Urgent
+                </span>
+                {% endif %}
+                <span id="resolvedBadge" style="display: {% if communication.is_resolved %}inline-block{% else %}none{% endif %}; padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: #e9f9ef; color: #1f8f53;">
+                    <i class="fas fa-check"></i> Resolved
+                </span>
+            </div>
+
+            <div style="background: #f8fbff; border: 1px solid #d7e7fb; border-radius: 8px; overflow: hidden;">
+                <div style="padding: 0.75rem 0.9rem; border-bottom: 1px solid #dce9fb; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.86rem; font-weight: 700; color: #0f5db6;">
+                        <i class="fas fa-comments"></i> Private Conversation
+                    </div>
+                    <button type="button" id="refreshThreadBtn" style="border: 1px solid #c7daf6; border-radius: 6px; background: #fff; color: #0f5db6; font-size: 0.78rem; font-weight: 600; padding: 0.32rem 0.6rem; cursor: pointer;">
+                        Refresh
+                    </button>
+                </div>
+
+                <div id="conversationThread" style="max-height: 380px; overflow-y: auto; padding: 0.9rem;">
+                    <p style="margin: 0; font-size: 0.9rem; color: #6b7280;">Loading conversation...</p>
+                </div>
+
+                <form id="threadReplyForm" style="padding: 0.85rem; border-top: 1px solid #dce9fb; background: #fff;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <input type="hidden" id="communicationId" value="{{ communication.id }}">
+                    <textarea id="replyContent" placeholder="Write your reply to the patient..." style="width: 100%; min-height: 110px; resize: vertical; border: 1px solid #d7dfeb; border-radius: 6px; padding: 0.7rem; font-family: inherit;" required></textarea>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-top: 0.7rem; flex-wrap: wrap;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
+                            <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.84rem; color: #46566a;">
+                                <input type="checkbox" id="sendEmailReply" checked>
+                                Email patient this reply
+                            </label>
+                            <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.84rem; color: #46566a;">
+                                <input type="checkbox" id="markResolved" {% if communication.is_resolved %}checked{% endif %}>
+                                Mark as resolved
+                            </label>
+                        </div>
+
+                        <button type="submit" id="sendReplyBtn" style="border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 700; padding: 0.62rem 1rem; cursor: pointer;">
+                            <i class="fas fa-paper-plane"></i> Send Reply
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const receptionThreadState = {
+    communicationId: Number(document.getElementById('communicationId').value),
+    pollTimer: null,
+    loading: false
+};
+
+function escapeThreadHtml(value) {
+    return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function formatThreadTime(timestampValue) {
+    if (!timestampValue) return '';
+    const parsedDate = new Date(timestampValue);
+    if (Number.isNaN(parsedDate.getTime())) return '';
+    return parsedDate.toLocaleString([], {
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function updateResolvedBadge(isResolved) {
+    const badge = document.getElementById('resolvedBadge');
+    if (!badge) return;
+    badge.style.display = isResolved ? 'inline-block' : 'none';
+}
+
+function renderConversationThread(messages) {
+    const thread = document.getElementById('conversationThread');
+    if (!thread) return;
+
+    const rows = Array.isArray(messages) ? messages : [];
+    if (rows.length === 0) {
+        thread.innerHTML = '<p style="margin: 0; font-size: 0.9rem; color: #6b7280;">No conversation entries yet.</p>';
+        return;
+    }
+
+    thread.innerHTML = rows.map((row) => {
+        const senderType = row && row.sender_type ? String(row.sender_type).toLowerCase() : 'patient';
+        const isPatient = senderType === 'patient';
+        const sender = escapeThreadHtml(row.sender_name || (isPatient ? 'Patient' : 'Reception'));
+        const message = escapeThreadHtml(row.message_content || '');
+        const created = escapeThreadHtml(formatThreadTime(row.created_at));
+
+        return `
+            <div style="display: flex; ${isPatient ? 'justify-content: flex-start;' : 'justify-content: flex-end;'} margin-bottom: 0.55rem;">
+                <div style="max-width: 88%; border-radius: 10px; padding: 0.55rem 0.7rem; ${isPatient ? 'background: #ecf4ff; color: #1f2a37;' : 'background: #0f5db6; color: #ffffff;'}">
+                    <div style="font-size: 0.72rem; font-weight: 700; opacity: 0.9; margin-bottom: 0.22rem;">${sender}</div>
+                    <div style="font-size: 0.86rem; white-space: pre-wrap; word-break: break-word; line-height: 1.35;">${message}</div>
+                    <div style="font-size: 0.68rem; margin-top: 0.3rem; opacity: 0.84;">${created}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    thread.scrollTop = thread.scrollHeight;
+}
+
+async function loadConversationThread(showError = false) {
+    if (!receptionThreadState.communicationId || receptionThreadState.loading) return;
+    receptionThreadState.loading = true;
+
+    try {
+        const response = await fetch(`/api/reception/communication-thread/${encodeURIComponent(receptionThreadState.communicationId)}`);
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Unable to load conversation thread.');
+        }
+
+        renderConversationThread(data.messages || []);
+        updateResolvedBadge(!!data.is_resolved);
+    } catch (error) {
+        if (showError) {
+            showNotification(error.message || 'Unable to load conversation thread.', 'error');
+        }
+    } finally {
+        receptionThreadState.loading = false;
+    }
+}
+
+document.getElementById('refreshThreadBtn').addEventListener('click', () => {
+    loadConversationThread(true);
+});
+
+document.getElementById('threadReplyForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const replyContentElement = document.getElementById('replyContent');
+    const sendReplyButton = document.getElementById('sendReplyBtn');
+    const replyText = replyContentElement && replyContentElement.value ? replyContentElement.value.trim() : '';
+    if (!replyText) {
+        showNotification('Reply cannot be empty.', 'error');
+        return;
+    }
+
+    if (sendReplyButton) sendReplyButton.disabled = true;
+    try {
+        const response = await fetch('{{ url_for("reply_message") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                communication_id: receptionThreadState.communicationId,
+                reply: replyText,
+                is_resolved: document.getElementById('markResolved').checked,
+                send_email: document.getElementById('sendEmailReply').checked
+            })
+        });
+
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Unable to send reply.');
+        }
+
+        if (replyContentElement) replyContentElement.value = '';
+        updateResolvedBadge(!!document.getElementById('markResolved').checked);
+        await loadConversationThread(false);
+
+        if (data.email_sent) {
+            showNotification('Reply sent and email delivered to patient.', 'success');
+        } else if (document.getElementById('sendEmailReply').checked && data.email_error) {
+            showNotification(`Reply sent. Email not delivered: ${data.email_error}`, 'error');
+        } else {
+            showNotification('Reply sent successfully.', 'success');
+        }
+    } catch (error) {
+        showNotification(error.message || 'Unable to send reply.', 'error');
+    } finally {
+        if (sendReplyButton) sendReplyButton.disabled = false;
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadConversationThread(false);
+    receptionThreadState.pollTimer = setInterval(() => {
+        loadConversationThread(false);
+    }, 6000);
+});
+
+window.addEventListener('beforeunload', () => {
+    if (receptionThreadState.pollTimer) {
+        clearInterval(receptionThreadState.pollTimer);
+        receptionThreadState.pollTimer = null;
+    }
+});
+</script>
+{% endblock %}

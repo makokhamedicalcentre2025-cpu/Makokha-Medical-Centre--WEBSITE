@@ -1,0 +1,687 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Website Content - Admin Panel{% endblock %}
+{% block page_title %}Website Content{% endblock %}
+
+{% block extra_css %}
+<style>
+    .site-content-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.1rem;
+    }
+
+    .site-content-card {
+        border: 1px solid #dce6f3;
+        border-radius: 12px;
+        background: #f8fbff;
+        padding: 1rem;
+    }
+
+    .site-content-card h3 {
+        margin: 0 0 0.35rem;
+        font-size: 1.05rem;
+        color: #1f2a37;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .site-content-card p {
+        margin: 0 0 0.9rem;
+        color: #5f6b7a;
+        font-size: 0.9rem;
+    }
+
+    .site-content-card .form-textarea {
+        min-height: 130px;
+    }
+
+    .site-content-card .form-textarea.tall {
+        min-height: 200px;
+    }
+
+    .hero-preview-grid {
+        margin: 0.55rem 0 0.9rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .hero-preview-editor {
+        border: 1px solid #ceddf0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 0.55rem;
+    }
+
+    .hero-preview-editor.is-marked-remove {
+        opacity: 0.55;
+    }
+
+    .hero-preview-editor.is-dragging {
+        opacity: 0.35;
+        border-color: #86a7cf;
+    }
+
+    .hero-reorder-handle {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin-bottom: 0.45rem;
+        padding: 0.35rem 0.5rem;
+        border-radius: 7px;
+        border: 1px dashed #b8cde6;
+        background: #eef5ff;
+        color: #38567a;
+        font-size: 0.78rem;
+        font-weight: 600;
+        cursor: grab;
+        user-select: none;
+    }
+
+    .hero-reorder-handle:active {
+        cursor: grabbing;
+    }
+
+    .hero-preview-stage {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #d6e3f3;
+        background: #0f2f4e;
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .hero-preview-stage.dragging {
+        cursor: grabbing;
+    }
+
+    .hero-adjust-image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .hero-preview-toolbar {
+        margin-top: 0.45rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .hero-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.84rem;
+        color: #445164;
+    }
+
+    .hero-position-label {
+        font-size: 0.78rem;
+        color: #607186;
+        white-space: nowrap;
+    }
+
+    .services-banner-editor {
+        border: 1px solid #ceddf0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 0.55rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .services-banner-editor.is-marked-remove {
+        opacity: 0.55;
+    }
+
+    .services-banner-stage {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 5;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #d6e3f3;
+        background: #0f2f4e;
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .services-banner-stage.dragging {
+        cursor: grabbing;
+    }
+
+    .services-banner-adjust-image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .telemedicine-preview {
+        border: 1px solid #ceddf0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 0.55rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .telemedicine-preview img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #d6e3f3;
+    }
+
+    .form-help {
+        font-size: 0.82rem;
+        color: #5f6b7a;
+        margin-top: 0.35rem;
+    }
+
+    @media (max-width: 980px) {
+        .site-content-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-form-layout">
+    <div class="admin-page-intro">
+        <h1><i class="fas fa-pen-ruler"></i> Edit Public Website Content</h1>
+        <p>Update services, opening hours, about details, contact information, and emergency call content from one place.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="admin-form-shell">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="site-content-grid">
+            <section class="site-content-card">
+                <h3><i class="fas fa-stethoscope"></i> Services Offered</h3>
+                <p>One service per line: <code>Name | Description | fa-icon</code>. Icon must start with <code>fa-</code>.</p>
+                <div class="form-group">
+                    <label class="form-label" for="services_editor">Services List</label>
+                    <textarea id="services_editor" name="services_editor" class="form-textarea tall" required>{{ services_editor_text }}</textarea>
+                </div>
+            </section>
+
+            <section class="site-content-card">
+                <h3><i class="fas fa-image"></i> Services Banner Image</h3>
+                <p>Upload a large banner image shown under the Services Offered section on the public home page.</p>
+                <input type="hidden" id="servicesBannerPositionJson" name="services_banner_position_json" value='{{ site_content.services_banner_position|tojson }}'>
+                {% if site_content.services_banner_image_url %}
+                <div class="services-banner-editor" id="servicesBannerEditor">
+                    <div class="services-banner-stage" id="servicesBannerStage">
+                        <img
+                            src="{{ site_content.services_banner_image_url }}"
+                            alt="Services banner preview"
+                            id="servicesBannerImage"
+                            class="services-banner-adjust-image"
+                            style="object-position: {{ '%.2f'|format(site_content.services_banner_position.x) }}% {{ '%.2f'|format(site_content.services_banner_position.y) }}%;"
+                        >
+                    </div>
+                    <div class="hero-preview-toolbar">
+                        <label class="hero-remove">
+                            <input type="checkbox" name="remove_services_banner" id="removeServicesBanner" value="1">
+                            Remove current services banner
+                        </label>
+                        <span class="hero-position-label" id="servicesBannerPositionLabel">{{ '%.0f'|format(site_content.services_banner_position.x) }}% x / {{ '%.0f'|format(site_content.services_banner_position.y) }}% y</span>
+                    </div>
+                </div>
+                <p class="form-help">Drag image inside frame to adjust displayed area.</p>
+                {% else %}
+                <p class="form-help">No services banner uploaded yet.</p>
+                {% endif %}
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="services_banner_image">Upload Banner Image</label>
+                    <input id="services_banner_image" type="file" name="services_banner_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif">
+                    <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF.</p>
+                </div>
+            </section>
+
+            <section class="site-content-card">
+                <h3><i class="fas fa-clock"></i> Opening Hours</h3>
+                <p>Shown on public pages and used by clients when checking availability.</p>
+                <div class="form-group">
+                    <label class="form-label" for="opening_hours">Opening Hours</label>
+                    <textarea id="opening_hours" name="opening_hours" class="form-textarea" required>{{ site_content.opening_hours }}</textarea>
+                </div>
+            </section>
+
+            <section class="site-content-card">
+                <h3><i class="fas fa-hospital"></i> About Section</h3>
+                <p>Controls the primary about page heading and introduction blocks.</p>
+                <div class="form-group">
+                    <label class="form-label" for="about_heading">About Heading</label>
+                    <input id="about_heading" type="text" name="about_heading" class="form-control" value="{{ site_content.about_heading }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="about_intro_primary">About Intro (Primary)</label>
+                    <textarea id="about_intro_primary" name="about_intro_primary" class="form-textarea" required>{{ site_content.about_intro_primary }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="about_intro_secondary">About Intro (Secondary)</label>
+                    <textarea id="about_intro_secondary" name="about_intro_secondary" class="form-textarea" required>{{ site_content.about_intro_secondary }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="mission_text">Mission Text</label>
+                    <textarea id="mission_text" name="mission_text" class="form-textarea" required>{{ site_content.mission_text }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="vision_text">Vision Text</label>
+                    <textarea id="vision_text" name="vision_text" class="form-textarea" required>{{ site_content.vision_text }}</textarea>
+                </div>
+            </section>
+
+            <section class="site-content-card">
+                <h3><i class="fas fa-address-book"></i> Contact Information</h3>
+                <p>Use one line per address/phone/email item so they render cleanly on public pages.</p>
+                <div class="form-group">
+                    <label class="form-label" for="contact_address">Address (one line per item)</label>
+                    <textarea id="contact_address" name="contact_address" class="form-textarea" required>{{ site_content.contact_address }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="contact_phones">Phone Numbers (one per line)</label>
+                    <textarea id="contact_phones" name="contact_phones" class="form-textarea">{{ site_content.contact_phones }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="contact_emails">Emails (one per line)</label>
+                    <textarea id="contact_emails" name="contact_emails" class="form-textarea">{{ site_content.contact_emails }}</textarea>
+                </div>
+            </section>
+
+            <section class="site-content-card">
+                <h3><i class="fas fa-triangle-exclamation"></i> Emergency Call (No Phone)</h3>
+                <p>This text appears for the phone-less emergency system call button on the client side.</p>
+                <div class="form-group">
+                    <label class="form-label" for="emergency_call_title">Emergency Call Title</label>
+                    <input id="emergency_call_title" type="text" name="emergency_call_title" class="form-control" value="{{ site_content.emergency_call_title }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="emergency_call_description">Emergency Call Description</label>
+                    <textarea id="emergency_call_description" name="emergency_call_description" class="form-textarea" required>{{ site_content.emergency_call_description }}</textarea>
+                </div>
+            </section>
+
+            <section class="site-content-card">
+                <h3><i class="fas fa-laptop-medical"></i> Upcoming Telemedicine</h3>
+                <p>This block is displayed inside Upcoming Events on public pages.</p>
+                <div class="form-group">
+                    <label class="form-label" for="telemedicine_title">Title</label>
+                    <input id="telemedicine_title" type="text" name="telemedicine_title" class="form-control" value="{{ site_content.telemedicine_title }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="telemedicine_subtitle">Subtitle</label>
+                    <input id="telemedicine_subtitle" type="text" name="telemedicine_subtitle" class="form-control" value="{{ site_content.telemedicine_subtitle }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="telemedicine_description">Description</label>
+                    <textarea id="telemedicine_description" name="telemedicine_description" class="form-textarea" required>{{ site_content.telemedicine_description }}</textarea>
+                </div>
+                {% if site_content.telemedicine_image_url %}
+                <div class="telemedicine-preview">
+                    <img src="{{ site_content.telemedicine_image_url }}" alt="Upcoming telemedicine image preview">
+                    <div class="hero-preview-toolbar">
+                        <label class="hero-remove">
+                            <input type="checkbox" name="remove_telemedicine_image" value="1">
+                            Remove current telemedicine image
+                        </label>
+                    </div>
+                </div>
+                {% else %}
+                <p class="form-help">No telemedicine image uploaded yet.</p>
+                {% endif %}
+                <div class="form-group">
+                    <label class="form-label" for="telemedicine_image">Upload Telemedicine Image</label>
+                    <input id="telemedicine_image" type="file" name="telemedicine_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif">
+                    <p class="form-help">This image appears on the right side of the Upcoming Telemedicine card.</p>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="telemedicine_launch_window">Launch Window</label>
+                    <input id="telemedicine_launch_window" type="text" name="telemedicine_launch_window" class="form-control" value="{{ site_content.telemedicine_launch_window }}" required>
+                </div>
+            </section>
+
+            <section class="site-content-card">
+                <h3><i class="fas fa-info-circle"></i> Footer About Text</h3>
+                <p>Short summary displayed in the public footer.</p>
+                <div class="form-group">
+                    <label class="form-label" for="footer_about_text">Footer About Text</label>
+                    <textarea id="footer_about_text" name="footer_about_text" class="form-textarea" required>{{ site_content.footer_about_text }}</textarea>
+                </div>
+            </section>
+
+            <section class="site-content-card">
+                <h3><i class="fas fa-image"></i> Homepage Hero Background</h3>
+                <p>Upload up to 10 images at once for the hero slider. Drag inside each preview to set the visible focus area (for faces/details), drag handles to reorder slides, and tick remove for images you want deleted.</p>
+                <input type="hidden" id="heroPositionsJson" name="hero_positions_json" value='{{ site_content.hero_background_positions|tojson }}'>
+                <input type="hidden" id="heroOrderJson" name="hero_order_json" value='{{ site_content.hero_background_images|tojson }}'>
+                {% if site_content.hero_background_slides %}
+                <div class="hero-preview-grid">
+                    {% for hero_slide in site_content.hero_background_slides %}
+                    <div class="hero-preview-editor" data-image-name="{{ hero_slide.filename }}">
+                        <div class="hero-reorder-handle" draggable="true" title="Drag to reorder slides">
+                            <i class="fas fa-grip-vertical"></i>
+                            Drag to reorder
+                        </div>
+                        <div class="hero-preview-stage">
+                            <img
+                                src="{{ hero_slide.url }}"
+                                alt="Current hero background image {{ loop.index }}"
+                                class="hero-adjust-image"
+                                style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
+                            >
+                        </div>
+                        <div class="hero-preview-toolbar">
+                            <label class="hero-remove">
+                                <input type="checkbox" name="remove_hero_images" value="{{ hero_slide.filename }}">
+                                Remove photo
+                            </label>
+                            <span class="hero-position-label" data-position-label>{{ '%.0f'|format(hero_slide.position_x) }}% x / {{ '%.0f'|format(hero_slide.position_y) }}% y</span>
+                        </div>
+                        <p class="form-help">Drag image inside frame to adjust placement.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="form-help">No hero photos uploaded yet.</p>
+                {% endif %}
+                <div class="form-group">
+                    <label class="form-label" for="hero_background_images">Hero Background Images</label>
+                    <input id="hero_background_images" type="file" name="hero_background_images" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" multiple>
+                    <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF. Upload limit: 10 files per save. New uploads are auto-normalized to a fixed 16:9 hero ratio.</p>
+                </div>
+            </section>
+        </div>
+
+        <div class="admin-form-actions" style="margin-top: 1.2rem;">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Website Content
+            </button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function initHeroEditor() {
+        const maxUpload = 10;
+        const fileInput = document.getElementById('hero_background_images');
+        if (fileInput) {
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files && fileInput.files.length > maxUpload) {
+                    alert(`Please select at most ${maxUpload} images per upload.`);
+                    fileInput.value = '';
+                }
+            });
+        }
+
+        const hiddenPositionInput = document.getElementById('heroPositionsJson');
+        const hiddenOrderInput = document.getElementById('heroOrderJson');
+        const grid = document.querySelector('.hero-preview-grid');
+        const editors = Array.from(document.querySelectorAll('.hero-preview-editor[data-image-name]'));
+
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        let positionMap = {};
+        if (hiddenPositionInput) {
+            try {
+                positionMap = JSON.parse(hiddenPositionInput.value || '{}');
+            } catch (error) {
+                positionMap = {};
+            }
+        }
+        const syncPositionInput = () => {
+            if (!hiddenPositionInput) return;
+            hiddenPositionInput.value = JSON.stringify(positionMap);
+        };
+        const syncOrderInput = () => {
+            if (!hiddenOrderInput) return;
+            const orderedNames = Array.from(document.querySelectorAll('.hero-preview-editor[data-image-name]'))
+                .map((item) => item.dataset.imageName)
+                .filter(Boolean);
+            hiddenOrderInput.value = JSON.stringify(orderedNames);
+        };
+
+        if (grid && editors.length) {
+            let draggedEditor = null;
+            const handles = grid.querySelectorAll('.hero-reorder-handle[draggable=\"true\"]');
+
+            handles.forEach((handle) => {
+                const editor = handle.closest('.hero-preview-editor');
+                if (!editor) return;
+
+                handle.addEventListener('dragstart', (event) => {
+                    draggedEditor = editor;
+                    editor.classList.add('is-dragging');
+                    if (event.dataTransfer) {
+                        event.dataTransfer.effectAllowed = 'move';
+                        try {
+                            event.dataTransfer.setData('text/plain', editor.dataset.imageName || '');
+                        } catch (error) {
+                            // no-op
+                        }
+                    }
+                });
+
+                handle.addEventListener('dragend', () => {
+                    if (draggedEditor) {
+                        draggedEditor.classList.remove('is-dragging');
+                    }
+                    draggedEditor = null;
+                    syncOrderInput();
+                });
+            });
+
+            grid.addEventListener('dragover', (event) => {
+                if (!draggedEditor) return;
+                event.preventDefault();
+
+                const targetEditor = event.target.closest('.hero-preview-editor');
+                if (!targetEditor) {
+                    grid.appendChild(draggedEditor);
+                    return;
+                }
+                if (targetEditor === draggedEditor) return;
+
+                const rect = targetEditor.getBoundingClientRect();
+                const shouldInsertAfter = event.clientY > (rect.top + rect.height / 2);
+                if (shouldInsertAfter) {
+                    grid.insertBefore(draggedEditor, targetEditor.nextElementSibling);
+                } else {
+                    grid.insertBefore(draggedEditor, targetEditor);
+                }
+            });
+
+            grid.addEventListener('drop', (event) => {
+                if (!draggedEditor) return;
+                event.preventDefault();
+                syncOrderInput();
+            });
+        }
+
+        editors.forEach((editor) => {
+            if (!hiddenPositionInput || !hiddenOrderInput || !editors.length) return;
+            const imageName = editor.dataset.imageName;
+            const stage = editor.querySelector('.hero-preview-stage');
+            const image = editor.querySelector('.hero-adjust-image');
+            const removeBox = editor.querySelector('input[name=\"remove_hero_images\"]');
+            const label = editor.querySelector('[data-position-label]');
+
+            if (!imageName || !stage || !image) return;
+
+            const existing = positionMap[imageName] || { x: 50, y: 50 };
+            const position = {
+                x: clamp(Number(existing.x) || 50, 0, 100),
+                y: clamp(Number(existing.y) || 50, 0, 100)
+            };
+            positionMap[imageName] = position;
+
+            const renderPosition = () => {
+                image.style.objectPosition = `${position.x.toFixed(2)}% ${position.y.toFixed(2)}%`;
+                if (label) {
+                    label.textContent = `${Math.round(position.x)}% x / ${Math.round(position.y)}% y`;
+                }
+            };
+
+            renderPosition();
+
+            let dragging = false;
+            let startX = 0;
+            let startY = 0;
+            let originX = position.x;
+            let originY = position.y;
+
+            stage.addEventListener('pointerdown', (event) => {
+                if (removeBox && removeBox.checked) return;
+                dragging = true;
+                startX = event.clientX;
+                startY = event.clientY;
+                originX = position.x;
+                originY = position.y;
+                stage.classList.add('dragging');
+                stage.setPointerCapture(event.pointerId);
+                event.preventDefault();
+            });
+
+            stage.addEventListener('pointermove', (event) => {
+                if (!dragging) return;
+                const width = Math.max(stage.clientWidth, 1);
+                const height = Math.max(stage.clientHeight, 1);
+                const dx = event.clientX - startX;
+                const dy = event.clientY - startY;
+
+                position.x = clamp(originX + ((dx / width) * 100), 0, 100);
+                position.y = clamp(originY + ((dy / height) * 100), 0, 100);
+                positionMap[imageName] = position;
+                renderPosition();
+                syncPositionInput();
+            });
+
+            const stopDragging = (event) => {
+                if (!dragging) return;
+                dragging = false;
+                stage.classList.remove('dragging');
+                try {
+                    stage.releasePointerCapture(event.pointerId);
+                } catch (error) {
+                    // no-op
+                }
+            };
+
+            stage.addEventListener('pointerup', stopDragging);
+            stage.addEventListener('pointercancel', stopDragging);
+
+            if (removeBox) {
+                removeBox.addEventListener('change', () => {
+                    editor.classList.toggle('is-marked-remove', removeBox.checked);
+                });
+            }
+        });
+
+        if (hiddenPositionInput && hiddenOrderInput && editors.length) {
+            syncPositionInput();
+            syncOrderInput();
+        }
+
+        const servicesPositionInput = document.getElementById('servicesBannerPositionJson');
+        const servicesStage = document.getElementById('servicesBannerStage');
+        const servicesImage = document.getElementById('servicesBannerImage');
+        const servicesLabel = document.getElementById('servicesBannerPositionLabel');
+        const servicesRemoveBox = document.getElementById('removeServicesBanner');
+        const servicesEditor = document.getElementById('servicesBannerEditor');
+
+        if (servicesPositionInput && servicesStage && servicesImage) {
+            let servicesPosition = { x: 50, y: 50 };
+            try {
+                const parsed = JSON.parse(servicesPositionInput.value || '{}');
+                servicesPosition = {
+                    x: clamp(Number(parsed.x) || 50, 0, 100),
+                    y: clamp(Number(parsed.y) || 50, 0, 100)
+                };
+            } catch (error) {
+                servicesPosition = { x: 50, y: 50 };
+            }
+
+            const syncServicesPosition = () => {
+                servicesPositionInput.value = JSON.stringify(servicesPosition);
+            };
+
+            const renderServicesPosition = () => {
+                servicesImage.style.objectPosition = `${servicesPosition.x.toFixed(2)}% ${servicesPosition.y.toFixed(2)}%`;
+                if (servicesLabel) {
+                    servicesLabel.textContent = `${Math.round(servicesPosition.x)}% x / ${Math.round(servicesPosition.y)}% y`;
+                }
+            };
+
+            renderServicesPosition();
+            syncServicesPosition();
+
+            let dragging = false;
+            let startX = 0;
+            let startY = 0;
+            let originX = servicesPosition.x;
+            let originY = servicesPosition.y;
+
+            servicesStage.addEventListener('pointerdown', (event) => {
+                if (servicesRemoveBox && servicesRemoveBox.checked) return;
+                dragging = true;
+                startX = event.clientX;
+                startY = event.clientY;
+                originX = servicesPosition.x;
+                originY = servicesPosition.y;
+                servicesStage.classList.add('dragging');
+                servicesStage.setPointerCapture(event.pointerId);
+                event.preventDefault();
+            });
+
+            servicesStage.addEventListener('pointermove', (event) => {
+                if (!dragging) return;
+                const width = Math.max(servicesStage.clientWidth, 1);
+                const height = Math.max(servicesStage.clientHeight, 1);
+                const dx = event.clientX - startX;
+                const dy = event.clientY - startY;
+
+                servicesPosition.x = clamp(originX + ((dx / width) * 100), 0, 100);
+                servicesPosition.y = clamp(originY + ((dy / height) * 100), 0, 100);
+                renderServicesPosition();
+                syncServicesPosition();
+            });
+
+            const stopServicesDragging = (event) => {
+                if (!dragging) return;
+                dragging = false;
+                servicesStage.classList.remove('dragging');
+                try {
+                    servicesStage.releasePointerCapture(event.pointerId);
+                } catch (error) {
+                    // no-op
+                }
+            };
+
+            servicesStage.addEventListener('pointerup', stopServicesDragging);
+            servicesStage.addEventListener('pointercancel', stopServicesDragging);
+
+            if (servicesRemoveBox && servicesEditor) {
+                servicesRemoveBox.addEventListener('change', () => {
+                    servicesEditor.classList.toggle('is-marked-remove', servicesRemoveBox.checked);
+                });
+            }
+        }
+    })();
+</script>
+{% endblock %}

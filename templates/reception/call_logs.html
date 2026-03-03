@@ -1,0 +1,100 @@
+{% extends "reception/base.html" %}
+
+{% block reception_content %}
+<div style="padding: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">
+        <i class="fas fa-phone-volume"></i> Call Logs
+    </h1>
+
+    <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.85rem; margin-bottom: 1.25rem; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div>
+            <label style="display: block; font-size: 0.82rem; margin-bottom: 0.35rem; color: #5b6878; font-weight: 600;">Call Type</label>
+            <select name="call_type" style="width: 100%; padding: 0.6rem; border: 1px solid #d7dfeb; border-radius: 6px;">
+                <option value="all" {% if call_type_filter == 'all' %}selected{% endif %}>All</option>
+                <option value="customer_care" {% if call_type_filter == 'customer_care' %}selected{% endif %}>Customer Care</option>
+                <option value="emergency" {% if call_type_filter == 'emergency' %}selected{% endif %}>Emergency</option>
+            </select>
+        </div>
+        <div>
+            <label style="display: block; font-size: 0.82rem; margin-bottom: 0.35rem; color: #5b6878; font-weight: 600;">Status</label>
+            <select name="status" style="width: 100%; padding: 0.6rem; border: 1px solid #d7dfeb; border-radius: 6px;">
+                {% set status_options = ['all', 'initiated', 'dialing', 'ringing', 'busy', 'on_hold', 'connected', 'message_left', 'ended', 'rejected', 'failed'] %}
+                {% for option in status_options %}
+                <option value="{{ option }}" {% if status_filter == option %}selected{% endif %}>{{ option|replace('_', ' ')|title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display: flex; gap: 0.55rem; align-items: end;">
+            <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 600; cursor: pointer;">
+                Apply
+            </button>
+            <a href="{{ url_for('reception_call_logs') }}" style="padding: 0.62rem 0.9rem; border-radius: 6px; background: #eef4ff; color: #0f5db6; text-decoration: none; font-weight: 600;">
+                Reset
+            </a>
+        </div>
+    </form>
+
+    {% if calls.items %}
+    <div style="background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 980px;">
+                <thead>
+                    <tr style="background: #f7f9fc; border-bottom: 1px solid #e6edf7;">
+                        <th style="text-align: left; padding: 0.85rem; color: #526173;">Call ID</th>
+                        <th style="text-align: left; padding: 0.85rem; color: #526173;">Patient</th>
+                        <th style="text-align: left; padding: 0.85rem; color: #526173;">Type</th>
+                        <th style="text-align: left; padding: 0.85rem; color: #526173;">Status</th>
+                        <th style="text-align: left; padding: 0.85rem; color: #526173;">Duration</th>
+                        <th style="text-align: left; padding: 0.85rem; color: #526173;">Created</th>
+                        <th style="text-align: left; padding: 0.85rem; color: #526173;">Answered</th>
+                        <th style="text-align: left; padding: 0.85rem; color: #526173;">Ended</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for call in calls.items %}
+                    <tr style="border-bottom: 1px solid #edf2f8;">
+                        <td style="padding: 0.8rem; color: #243247; font-weight: 600;">{{ call.call_id }}</td>
+                        <td style="padding: 0.8rem; color: #2f3f54;">
+                            <div style="font-weight: 600;">{{ call.patient_name }}</div>
+                            <div style="font-size: 0.82rem; color: #6a7789;">{{ call.patient_phone or 'No phone provided' }}</div>
+                        </td>
+                        <td style="padding: 0.8rem; color: #2f3f54;">{{ call.call_type|replace('_', ' ')|title }}</td>
+                        <td style="padding: 0.8rem;">
+                            <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; background: #eef4ff; color: #0f5db6; font-size: 0.78rem; font-weight: 600;">
+                                {{ call.status|replace('_', ' ')|title }}
+                            </span>
+                        </td>
+                        <td style="padding: 0.8rem; color: #2f3f54;">{{ call.get_duration_formatted() }}</td>
+                        <td style="padding: 0.8rem; color: #44556b;">{{ call.created_at.strftime('%b %d, %Y %I:%M %p') if call.created_at else '-' }}</td>
+                        <td style="padding: 0.8rem; color: #44556b;">{{ call.answered_at.strftime('%b %d, %Y %I:%M %p') if call.answered_at else '-' }}</td>
+                        <td style="padding: 0.8rem; color: #44556b;">{{ call.ended_at.strftime('%b %d, %Y %I:%M %p') if call.ended_at else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if calls.has_prev or calls.has_next %}
+    <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem; align-items: center;">
+        {% if calls.has_prev %}
+            <a href="{{ url_for('reception_call_logs', page=calls.prev_num, status=status_filter, call_type=call_type_filter) }}" style="padding: 0.5rem 0.8rem; background: #0f5db6; color: #fff; border-radius: 6px; text-decoration: none;">
+                Previous
+            </a>
+        {% endif %}
+        <span style="color: #5b6878;">Page {{ calls.page }} of {{ calls.pages }}</span>
+        {% if calls.has_next %}
+            <a href="{{ url_for('reception_call_logs', page=calls.next_num, status=status_filter, call_type=call_type_filter) }}" style="padding: 0.5rem 0.8rem; background: #0f5db6; color: #fff; border-radius: 6px; text-decoration: none;">
+                Next
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div style="background: #fff; border-radius: 8px; padding: 2.2rem; text-align: center; color: #6b7280; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <i class="fas fa-phone-slash" style="font-size: 2rem; color: #b4c1d3; margin-bottom: 0.7rem;"></i>
+        <p style="margin: 0;">No call logs found for the selected filters.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

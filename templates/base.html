@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}Makokha Medical Centre - Professional Healthcare Services{% endblock %}</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block description %}Makokha Medical Centre - Providing quality healthcare services with modern facilities and experienced doctors.{% endblock %}">
+    <meta name="keywords" content="{% block keywords %}medical centre, healthcare, doctors, hospital, emergency{% endblock %}">
+    <meta name="author" content="Makokha Medical Centre">
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="{% block og_title %}Makokha Medical Centre{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Professional medical and healthcare services{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://makokhamedical.com">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏥</text></svg>">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Global Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    
+    {% block extra_css %}{% endblock %}
+    
+    <style>
+        {% block inline_css %}{% endblock %}
+    </style>
+</head>
+<body>
+    {% set initial_live_stats = live_stats if live_stats is defined else {} %}
+    <!-- Navigation Header -->
+    <header class="header{% if request.endpoint == 'index' %} over-hero{% endif %}" id="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="{{ url_for('index') }}" class="logo" aria-label="Makokha Medical Centre Home">
+                    <span class="logo-mark">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Makokha Medical Centre" class="logo-image">
+                    </span>
+                </a>
+                
+                <nav class="nav-menu" id="navMenu">
+                    <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+                    <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                    <a href="{{ url_for('index') }}#founders" class="nav-link">Founders</a>
+                    <a href="{{ url_for('index') }}#partners" class="nav-link">Partners</a>
+                    <a href="{{ url_for('index') }}#services-offered" class="nav-link">Services</a>
+                    <a href="{{ url_for('doctors_page') }}" class="nav-link">Doctors</a>
+                    <div class="nav-dropdown" id="eventsNavDropdown">
+                        <a href="{{ url_for('events_page') }}" class="nav-link nav-dropdown-toggle">
+                            Events <i class="fas fa-chevron-down nav-dropdown-icon"></i>
+                        </a>
+                        <div class="nav-dropdown-menu">
+                            <a href="{{ url_for('events_page') }}" class="nav-dropdown-item">All Event Types</a>
+                            {% for option in event_type_nav_options %}
+                            <a href="{{ url_for('events_page', event_type=option.value) }}" class="nav-dropdown-item">{{ option.label }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <a href="{{ url_for('reviews_page') }}" class="nav-link">Reviews</a>
+                    <a href="{{ url_for('contact') }}" class="nav-link">Contact</a>
+                    <a href="{{ url_for('login') }}" class="nav-link admin-link"><i class="fas fa-lock"></i> Portal</a>
+                </nav>
+                
+                <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" role="alert">
+                    <div class="container">
+                        <button type="button" class="alert-close" data-dismiss="alert">&times;</button>
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Communication Widget Backdrop -->
+    <div id="commWidgetBackdrop" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        z-index: 9999;
+        cursor: pointer;
+    " onclick="toggleCommWidget()"></div>
+    
+    <!-- Communication Widget -->
+    <div id="commWidget" style="position: fixed; bottom: 100px; right: 20px; z-index: 9998;">
+        <!-- Floating Button -->
+        <button id="commWidgetBtn" onclick="toggleCommWidget()" style="
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-size: 1.5rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        " onmouseover="this.style.boxShadow='0 6px 16px rgba(0,0,0,0.3)'; this.style.transform='scale(1.1)'" onmouseout="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.2)'; this.style.transform='scale(1)'">
+            <i class="fas fa-comments"></i>
+            <span id="commNotificationBadge" style="position: absolute; top: -8px; right: -8px; background: #e74c3c; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; display: none;">0</span>
+        </button>
+        
+        <!-- Widget Panel -->
+        <div id="commWidgetPanel" style="
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 450px;
+            max-height: 80vh;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: none;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+            z-index: 10000;
+        ">
+            <!-- Panel Header -->
+            <div style="
+                background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+                color: white;
+                padding: 1rem;
+                border-radius: 12px 12px 0 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            ">
+                <h3 style="margin: 0; font-size: 1rem; font-weight: 600;">
+                    <i class="fas fa-headset"></i> Customer Care Desk
+                </h3>
+                <button onclick="toggleCommWidget()" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">
+                    ×
+                </button>
+            </div>
+            
+            <!-- Tabs -->
+            <div style="display: flex; border-bottom: 1px solid #dee2e6;">
+                <button onclick="switchCommTab('message')" class="commTab" style="
+                    flex: 1;
+                    padding: 0.75rem;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    font-weight: 500;
+                    color: #666;
+                    border-bottom: 2px solid transparent;
+                    transition: all 0.3s;
+                " data-tab="message">
+                    <i class="fas fa-envelope"></i> Message
+                </button>
+                <button onclick="switchCommTab('call')" class="commTab" style="
+                    flex: 1;
+                    padding: 0.75rem;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    font-weight: 500;
+                    color: #666;
+                    border-bottom: 2px solid transparent;
+                    transition: all 0.3s;
+                " data-tab="call">
+                    <i class="fas fa-phone"></i> Call
+                </button>
+                <button onclick="switchCommTab('appointment')" class="commTab" style="
+                    flex: 1;
+                    padding: 0.75rem;
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    font-weight: 500;
+                    color: #666;
+                    border-bottom: 2px solid transparent;
+                    transition: all 0.3s;
+                " data-tab="appointment">
+                    <i class="fas fa-calendar"></i> Book
+                </button>
+            </div>
+            
+            <!-- Content Area -->
+            <div id="commWidgetContent" style="flex: 1; overflow-y: auto; padding: 1rem;">
+                <!-- Message Tab -->
+                <div id="commTabMessage" style="display: none;">
+                    <form id="messageForm" onsubmit="sendMessage(event)">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Your Name</label>
+                            <input type="text" name="name" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="Enter your name">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Email</label>
+                            <input type="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="your@email.com">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Phone (optional)</label>
+                            <input type="tel" name="phone" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="+254 XXX XXX XXX">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Message Type</label>
+                            <select name="type" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                                <option value="message">General Message</option>
+                                <option value="email">Email Inquiry</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Message</label>
+                            <textarea name="message" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem; min-height: 100px; font-family: inherit;" placeholder="Type your message here..."></textarea>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Priority</label>
+                            <select name="priority" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                                <option value="normal">Normal</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #0066cc; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s; margin-bottom: 0.5rem;">
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </button>
+                        
+                        <button type="button" onclick="initiateCall()" style="width: 100%; padding: 0.75rem; background: #27ae60; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#229954'" onmouseout="this.style.background='#27ae60'">
+                            <i class="fas fa-phone"></i> Call Customer Care Now
+                        </button>
+                    </form>
+
+                    <div id="messageConversationPanel" style="display: none; margin-top: 1rem; border: 1px solid #d7e7fb; border-radius: 8px; background: #f8fbff;">
+                        <div style="padding: 0.75rem 0.85rem; border-bottom: 1px solid #e2ecfb;">
+                            <div style="font-weight: 700; color: #0f5db6; font-size: 0.88rem;">
+                                <i class="fas fa-comments"></i> Private Conversation
+                            </div>
+                            <div id="messageConversationMeta" style="font-size: 0.76rem; color: #5b6e88; margin-top: 0.2rem;"></div>
+                        </div>
+                        <div id="messageConversationThread" style="max-height: 220px; overflow-y: auto; padding: 0.75rem;"></div>
+                        <form id="messageReplyForm" onsubmit="sendMessageReply(event)" style="padding: 0.75rem; border-top: 1px solid #e2ecfb; background: #fff;">
+                            <textarea id="messageReplyInput" style="width: 100%; padding: 0.55rem; border: 1px solid #d7dfeb; border-radius: 6px; font-size: 0.88rem; min-height: 74px; font-family: inherit;" placeholder="Type your reply to customer care..." required></textarea>
+                            <div style="display: flex; gap: 0.55rem; margin-top: 0.55rem;">
+                                <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 600; cursor: pointer;">
+                                    <i class="fas fa-paper-plane"></i> Send Reply
+                                </button>
+                                <button type="button" onclick="clearMessageConversation(true)" style="padding: 0.62rem 0.75rem; border: 1px solid #cfddee; border-radius: 6px; background: #f6f9ff; color: #435971; font-weight: 600; cursor: pointer;">
+                                    New Chat
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Legacy Call Tab (kept for fallback) -->
+                <div id="commTabCallLegacy" style="display: none;">
+                    <form id="callForm" onsubmit="initiateCall(event)">
+                        <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; text-align: center;">
+                            <i class="fas fa-phone" style="font-size: 2rem; color: #0066cc; margin-bottom: 0.5rem;"></i>
+                            <p style="color: #0066cc; font-weight: 600; margin: 0.5rem 0;">Request a Call</p>
+                            <p style="color: #666; font-size: 0.9rem; margin: 0;">Our customer care team will call you back shortly</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Your Name</label>
+                            <input type="text" name="name" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="Enter your name">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Phone Number *</label>
+                            <input type="tel" name="phone" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="+254 XXX XXX XXX">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Email</label>
+                            <input type="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="your@email.com">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Best Time to Call</label>
+                            <select name="time" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                                <option value="anytime">Anytime</option>
+                                <option value="morning">Morning (9AM - 12PM)</option>
+                                <option value="afternoon">Afternoon (12PM - 5PM)</option>
+                                <option value="evening">Evening (5PM - 8PM)</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Reason for Call (optional)</label>
+                            <textarea name="reason" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem; min-height: 80px; font-family: inherit;" placeholder="Tell us why you're calling..."></textarea>
+                        </div>
+                        
+                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #0066cc; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-phone"></i> Request Call
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Appointment Tab -->
+                <div id="commTabAppointment" style="display: none;">
+                    <form id="appointmentForm" onsubmit="bookAppointment(event)">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Your Name</label>
+                            <input type="text" name="name" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="Enter your name">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Email</label>
+                            <input type="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="your@email.com">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Phone</label>
+                            <input type="tel" name="phone" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="+254 XXX XXX XXX">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Preferred Date & Time</label>
+                            <input type="datetime-local" name="appointment_date" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Reason for Visit</label>
+                            <textarea name="reason" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem; min-height: 80px; font-family: inherit;" placeholder="Describe your health concern..."></textarea>
+                        </div>
+                        
+                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #0066cc; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                            <i class="fas fa-calendar-check"></i> Book Appointment
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Call Tab -->
+                <div id="commTabCall" style="display: none;">
+                    <div style="text-align: center; padding: 1rem 0;">
+                        <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: #2c3e50;">
+                                <i class="fas fa-phone-alt" style="color: #0066cc; font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                Direct Call to Customer Care
+                            </div>
+                            <p style="color: #7f8c8d; font-size: 0.9rem; margin: 0;">Connect directly with our customer care team</p>
+                        </div>
+
+                        <div style="text-align: left; background: #f8fbff; border: 1px solid #d6e6ff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                            <div style="margin-bottom: 0.75rem;">
+                                <label for="callCustomerName" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Your Name</label>
+                                <input id="callCustomerName" type="text" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="Enter your name">
+                            </div>
+                            <div style="margin-bottom: 0.75rem;">
+                                <label for="callCustomerPhone" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Phone Number (optional for callback)</label>
+                                <input id="callCustomerPhone" type="tel" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="+254 XXX XXX XXX">
+                            </div>
+                            <div>
+                                <label for="callCustomerEmail" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Email (for callback/message)</label>
+                                <input id="callCustomerEmail" type="email" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="your@email.com">
+                            </div>
+
+                            <div style="margin-top: 0.85rem; border-top: 1px solid #dce8fb; padding-top: 0.75rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                                    <label for="preferredReceptionSelect" style="font-weight: 600; color: #2c3e50; font-size: 0.88rem;">Choose Receptionist (Optional)</label>
+                                    <button type="button" onclick="refreshReceptionAvailability(true)" style="border: 1px solid #c4d8f3; background: #edf4ff; color: #0f5db6; border-radius: 6px; padding: 0.3rem 0.45rem; font-size: 0.76rem; cursor: pointer;">
+                                        <i class="fas fa-rotate"></i> Refresh
+                                    </button>
+                                </div>
+                                <select id="preferredReceptionSelect" style="width: 100%; padding: 0.55rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem; margin-bottom: 0.55rem;">
+                                    <option value="">Auto-assign available receptionist</option>
+                                </select>
+                                <div id="receptionAvailabilitySummary" style="font-size: 0.78rem; color: #667a93; margin-bottom: 0.45rem;">
+                                    Receptionist availability will appear here.
+                                </div>
+                                <div id="receptionAvailabilityList" style="max-height: 160px; overflow-y: auto; border: 1px solid #d9e6f9; border-radius: 8px; background: #fff;">
+                                    <p style="margin: 0; padding: 0.65rem; color: #789; font-size: 0.82rem; text-align: center;">Loading receptionists...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Call Status -->
+                        <div style="background: #f0f4ff; border: 2px solid #0066cc; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                            <span id="callStatusBadge" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #95a5a6; margin-right: 0.5rem; vertical-align: middle;"></span>
+                            <span style="font-weight: 600; color: #2c3e50; vertical-align: middle;">Status: </span>
+                            <span id="callStatus" style="color: #7f8c8d; vertical-align: middle;">Ready to call</span>
+                        </div>
+                        <audio id="callRemoteAudio" autoplay playsinline style="display: none;"></audio>
+                        
+                        <!-- Call Duration -->
+                        <div style="margin-bottom: 1.5rem; display: none;" id="callDurationDiv">
+                            <p style="margin: 0 0 0.5rem 0; color: #7f8c8d; font-size: 0.9rem;">Call Duration</p>
+                            <div style="font-size: 1.8rem; font-weight: bold; color: #0066cc;">
+                                <span id="callDuration">0:00</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Call Buttons -->
+                        <div style="display: flex; gap: 1rem;">
+                            <button id="startCallBtn" onclick="initiateCall()" style="
+                                flex: 1;
+                                padding: 0.75rem;
+                                background: #27ae60;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: all 0.3s;
+                                font-size: 0.95rem;
+                            " onmouseover="this.style.background='#229954'" onmouseout="this.style.background='#27ae60'">
+                                <i class="fas fa-phone"></i> Call Customer Care
+                            </button>
+                            <button id="endCallBtn" onclick="endCall()" style="
+                                flex: 1;
+                                padding: 0.75rem;
+                                background: #e74c3c;
+                                color: white;
+                                border: none;
+                                border-radius: 6px;
+                                font-weight: 500;
+                                cursor: pointer;
+                                transition: all 0.3s;
+                                font-size: 0.95rem;
+                                display: none;
+                            " onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
+                                <i class="fas fa-phone-slash"></i> End Call
+                            </button>
+                        </div>
+                        <button id="emergencyCallBtn" onclick="initiateEmergencyCall()" style="
+                            width: 100%;
+                            margin-top: 0.75rem;
+                            padding: 0.75rem;
+                            background: #c62828;
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            font-size: 0.95rem;
+                        " onmouseover="this.style.background='#b71c1c'" onmouseout="this.style.background='#c62828'">
+                            <i class="fas fa-triangle-exclamation"></i> {{ site_content.emergency_call_title }}
+                        </button>
+                        <p style="margin: 0.6rem 0 0; font-size: 0.82rem; color: #7f8c8d;">
+                            {{ site_content.emergency_call_description }}
+                        </p>
+
+                        <div id="callBusyActions" style="display: none; margin-top: 1rem; text-align: left; padding: 1rem; border-radius: 8px; background: #fff8e8; border: 1px solid #f5deb0;">
+                            <p id="callBusyNotice" style="margin: 0 0 0.75rem 0; color: #856404; font-size: 0.9rem;">
+                                <i class="fas fa-exclamation-circle"></i> Customer care is currently on another call.
+                            </p>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                                <button type="button" id="holdCallBtn" onclick="holdCurrentCall()" style="flex: 1; padding: 0.6rem; background: #f39c12; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                    <i class="fas fa-pause-circle"></i> Hold
+                                </button>
+                                <button type="button" onclick="toggleCallMessageBox()" style="flex: 1; padding: 0.6rem; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                    <i class="fas fa-envelope"></i> Send Message
+                                </button>
+                            </div>
+                            <button type="button" onclick="endCall()" style="width: 100%; padding: 0.6rem; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem; margin-bottom: 0.75rem;">
+                                <i class="fas fa-rotate-left"></i> Try Again Later
+                            </button>
+                            <div id="callMessageBox" style="display: none;">
+                                <textarea id="callMessageInput" style="width: 100%; padding: 0.6rem; border: 1px solid #dee2e6; border-radius: 6px; min-height: 80px; font-family: inherit; font-size: 0.9rem;" placeholder="Type your message to customer care..."></textarea>
+                                <button type="button" onclick="sendCallMessage()" style="margin-top: 0.5rem; width: 100%; padding: 0.6rem; background: #0066cc; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                    <i class="fas fa-paper-plane"></i> Send Message
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Customer Care Availability -->
+                        <div style="margin-top: 1.5rem; padding: 0.75rem; background: #e8f5e9; border-radius: 6px; color: #2e7d32;">
+                            <p style="margin: 0; font-size: 0.9rem;">
+                                <i class="fas fa-check-circle"></i>
+                                {% if site_content.opening_hours_lines %}
+                                    Service hours: {{ site_content.opening_hours_lines|join(' | ') }}
+                                {% else %}
+                                    Customer care available Mon-Fri: 8:00 AM - 6:00 PM
+                                {% endif %}
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .commTab[data-active="true"] {
+            color: #0066cc !important;
+            border-bottom-color: #0066cc !important;
+        }
+
+        #commWidgetBackdrop {
+            z-index: 12000 !important;
+        }
+
+        #commWidget {
+            z-index: 12001 !important;
+        }
+
+        #commWidgetPanel {
+            position: fixed !important;
+            inset: 0 !important;
+            margin: auto !important;
+            left: auto !important;
+            top: auto !important;
+            transform: none !important;
+            width: min(450px, calc(100vw - 1.5rem)) !important;
+            max-width: 450px !important;
+            height: min(80dvh, 760px) !important;
+            max-height: calc(100dvh - 1.5rem) !important;
+            overflow: hidden !important;
+        }
+
+        #commWidgetContent {
+            min-height: 0;
+        }
+
+        @media (max-height: 700px) {
+            #commWidgetPanel {
+                height: calc(100dvh - 1rem) !important;
+            }
+        }
+    </style>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" crossorigin="anonymous"></script>
+
+    <script>
+        function toggleCommWidget() {
+            const panel = document.getElementById('commWidgetPanel');
+            const backdrop = document.getElementById('commWidgetBackdrop');
+            const btn = document.getElementById('commWidgetBtn');
+            
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'flex';
+                backdrop.style.display = 'block';
+                switchCommTab('message'); // Show message tab by default
+                btn.style.transform = 'rotate(45deg)';
+            } else {
+                stopReceptionAvailabilityPolling();
+                stopMessageConversationPolling();
+                panel.style.display = 'none';
+                backdrop.style.display = 'none';
+                btn.style.transform = 'rotate(0deg)';
+            }
+        }
+        
+        function switchCommTab(tab) {
+            document.getElementById('commTabMessage').style.display = tab === 'message' ? 'block' : 'none';
+            document.getElementById('commTabCall').style.display = tab === 'call' ? 'block' : 'none';
+            document.getElementById('commTabAppointment').style.display = tab === 'appointment' ? 'block' : 'none';
+            
+            document.querySelectorAll('.commTab').forEach(t => {
+                t.setAttribute('data-active', t.dataset.tab === tab ? 'true' : 'false');
+            });
+
+            if (tab === 'message') {
+                const hasConversation = initializeMessageConversationFromStorage(true);
+                if (hasConversation) {
+                    startMessageConversationPolling();
+                } else {
+                    stopMessageConversationPolling();
+                }
+            } else {
+                stopMessageConversationPolling();
+            }
+
+            if (tab === 'call') {
+                displayCallHistory();
+                startReceptionAvailabilityPolling();
+            } else {
+                stopReceptionAvailabilityPolling();
+            }
+        }
+        
+        async function sendMessage(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: event.target.name.value,
+                email: event.target.email.value,
+                phone: event.target.phone.value || '',
+                type: event.target.type.value,
+                message: event.target.message.value,
+                priority: event.target.priority.value
+            };
+            
+            try {
+                const response = await fetch('{{ url_for("send_message") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showCommNotification(data.message, 'success');
+                    const communicationId = Number(data.message_id);
+                    const conversationToken = String(data.conversation_token || '').trim();
+
+                    if (Number.isFinite(communicationId) && communicationId > 0 && conversationToken) {
+                        messageConversationState.communicationId = communicationId;
+                        messageConversationState.token = conversationToken;
+                        messageConversationState.patientName = formData.name || '';
+                        messageConversationState.patientEmail = formData.email || '';
+                        messageConversationState.patientPhone = formData.phone || '';
+                        messageConversationState.initialized = true;
+
+                        persistMessageConversationState();
+                        event.target.reset();
+                        setMessageConversationVisibility(true);
+                        renderMessageConversationMeta();
+                        await refreshMessageConversationThread(false);
+                        startMessageConversationPolling();
+                    } else {
+                        event.target.reset();
+                    }
+                } else {
+                    showCommNotification(data.message || 'Error sending message', 'error');
+                }
+            } catch (error) {
+                showCommNotification('Error: ' + error.message, 'error');
+            }
+        }
+        
+        async function bookAppointment(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: event.target.name.value,
+                email: event.target.email.value,
+                phone: event.target.phone.value,
+                appointment_date: event.target.appointment_date.value,
+                reason: event.target.reason.value,
+                doctor_id: null
+            };
+            
+            try {
+                const response = await fetch('{{ url_for("book_appointment") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showCommNotification(data.message, 'success');
+                    event.target.reset();
+                    setTimeout(() => toggleCommWidget(), 2000);
+                } else {
+                    showCommNotification(data.message || 'Error booking appointment', 'error');
+                }
+            } catch (error) {
+                showCommNotification('Error: ' + error.message, 'error');
+            }
+        }
+        
+        function showCommNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                background: ${type === 'success' ? '#27ae60' : '#e74c3c'};
+                color: white;
+                border-radius: 6px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Live public stats functionality
+        let publicLiveStatsTimer = null;
+        const PUBLIC_LIVE_STATS_POLL_MS = 30000;
+
+        function formatLiveStatValue(rawValue, formatMode) {
+            if (rawValue === null || rawValue === undefined || rawValue === '') {
+                return '0';
+            }
+
+            const numericValue = Number(rawValue);
+            if (Number.isNaN(numericValue)) {
+                return String(rawValue);
+            }
+
+            if (formatMode === 'decimal1') {
+                return numericValue.toFixed(1);
+            }
+            if (formatMode === 'percent') {
+                return `${Math.round(numericValue)}%`;
+            }
+            return String(Math.round(numericValue));
+        }
+
+        function applyPublicLiveStats(statsPayload) {
+            if (!statsPayload || typeof statsPayload !== 'object') return;
+
+            const statNodes = document.querySelectorAll('[data-live-stat]');
+            statNodes.forEach((node) => {
+                const key = node.getAttribute('data-live-stat');
+                if (!key || !(key in statsPayload)) return;
+                const formatMode = node.getAttribute('data-live-format') || 'integer';
+                node.textContent = formatLiveStatValue(statsPayload[key], formatMode);
+            });
+        }
+
+        async function refreshPublicLiveStats(showErrorNotification = false) {
+            try {
+                const response = await fetch('/api/public-live-stats');
+                const data = await response.json();
+                if (!response.ok || !data.success || !data.stats) {
+                    throw new Error(data.message || 'Unable to fetch live stats');
+                }
+                applyPublicLiveStats(data.stats);
+            } catch (error) {
+                if (showErrorNotification) {
+                    showCommNotification(error.message || 'Unable to refresh live stats', 'error');
+                }
+            }
+        }
+
+        function startPublicLiveStatsPolling() {
+            const hasTargets = !!document.querySelector('[data-live-stat]');
+            if (publicLiveStatsTimer || !hasTargets) return;
+            refreshPublicLiveStats(false);
+            publicLiveStatsTimer = setInterval(() => {
+                if (document.visibilityState !== 'visible') return;
+                refreshPublicLiveStats(false);
+            }, PUBLIC_LIVE_STATS_POLL_MS);
+        }
+
+        function stopPublicLiveStatsPolling() {
+            if (!publicLiveStatsTimer) return;
+            clearInterval(publicLiveStatsTimer);
+            publicLiveStatsTimer = null;
+        }
+
+        window.refreshPublicLiveStats = refreshPublicLiveStats;
+        window.startPublicLiveStatsPolling = startPublicLiveStatsPolling;
+        window.stopPublicLiveStatsPolling = stopPublicLiveStatsPolling;
+        
+        // Call functionality
+        let commSocket = null;
+        let rtcRuntime = {
+            checked: false,
+            enabled: false,
+            iceServers: [],
+            message: ''
+        };
+        let messageConversationState = {
+            communicationId: null,
+            token: '',
+            patientName: '',
+            patientEmail: '',
+            patientPhone: '',
+            pollTimer: null,
+            fetching: false,
+            initialized: false
+        };
+        const MESSAGE_CONVERSATION_STORAGE_KEY = 'mmc_private_conversation_v1';
+
+        function hasActiveMessageConversation() {
+            const communicationId = Number(messageConversationState.communicationId);
+            return Number.isFinite(communicationId) && communicationId > 0 && !!String(messageConversationState.token || '').trim();
+        }
+
+        function isCommWidgetVisible() {
+            const panel = document.getElementById('commWidgetPanel');
+            return !!panel && panel.style.display === 'flex';
+        }
+
+        function isMessageTabActive() {
+            const tab = document.getElementById('commTabMessage');
+            return !!tab && tab.style.display !== 'none';
+        }
+
+        function populateMessageFormFromState() {
+            const messageForm = document.getElementById('messageForm');
+            if (!messageForm) return;
+
+            const nameInput = messageForm.querySelector('input[name="name"]');
+            const emailInput = messageForm.querySelector('input[name="email"]');
+            const phoneInput = messageForm.querySelector('input[name="phone"]');
+
+            if (nameInput) nameInput.value = messageConversationState.patientName || '';
+            if (emailInput) emailInput.value = messageConversationState.patientEmail || '';
+            if (phoneInput) phoneInput.value = messageConversationState.patientPhone || '';
+        }
+
+        function persistMessageConversationState() {
+            if (!hasActiveMessageConversation()) {
+                try {
+                    localStorage.removeItem(MESSAGE_CONVERSATION_STORAGE_KEY);
+                } catch (_error) {
+                    // Ignore browser storage errors.
+                }
+                return;
+            }
+
+            const payload = {
+                communication_id: Number(messageConversationState.communicationId),
+                conversation_token: String(messageConversationState.token || ''),
+                patient_name: String(messageConversationState.patientName || ''),
+                patient_email: String(messageConversationState.patientEmail || ''),
+                patient_phone: String(messageConversationState.patientPhone || '')
+            };
+
+            try {
+                localStorage.setItem(MESSAGE_CONVERSATION_STORAGE_KEY, JSON.stringify(payload));
+            } catch (_error) {
+                // Ignore browser storage errors.
+            }
+        }
+
+        function loadMessageConversationState() {
+            if (messageConversationState.initialized) {
+                return hasActiveMessageConversation();
+            }
+
+            messageConversationState.initialized = true;
+            try {
+                const rawPayload = localStorage.getItem(MESSAGE_CONVERSATION_STORAGE_KEY);
+                if (!rawPayload) return false;
+                const parsed = JSON.parse(rawPayload);
+                const communicationId = Number(parsed.communication_id);
+                const token = String(parsed.conversation_token || '').trim();
+
+                if (!Number.isFinite(communicationId) || communicationId <= 0 || !token) {
+                    localStorage.removeItem(MESSAGE_CONVERSATION_STORAGE_KEY);
+                    return false;
+                }
+
+                messageConversationState.communicationId = communicationId;
+                messageConversationState.token = token;
+                messageConversationState.patientName = String(parsed.patient_name || '');
+                messageConversationState.patientEmail = String(parsed.patient_email || '');
+                messageConversationState.patientPhone = String(parsed.patient_phone || '');
+                return true;
+            } catch (_error) {
+                try {
+                    localStorage.removeItem(MESSAGE_CONVERSATION_STORAGE_KEY);
+                } catch (_storageError) {
+                    // Ignore browser storage errors.
+                }
+                return false;
+            }
+        }
+
+        function setMessageConversationVisibility(showConversation) {
+            const messageForm = document.getElementById('messageForm');
+            const conversationPanel = document.getElementById('messageConversationPanel');
+            if (!messageForm || !conversationPanel) return;
+
+            if (showConversation) {
+                messageForm.style.display = 'none';
+                conversationPanel.style.display = 'block';
+            } else {
+                conversationPanel.style.display = 'none';
+                messageForm.style.display = 'block';
+            }
+        }
+
+        function formatConversationTimestamp(timestampValue) {
+            if (!timestampValue) return '';
+            const parsedDate = new Date(timestampValue);
+            if (Number.isNaN(parsedDate.getTime())) return '';
+            return parsedDate.toLocaleString([], {
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeMessageHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function renderMessageConversationMeta(isResolved = false) {
+            const meta = document.getElementById('messageConversationMeta');
+            if (!meta) return;
+
+            const name = messageConversationState.patientName || 'Patient';
+            const email = messageConversationState.patientEmail || 'No email';
+            const status = isResolved ? 'Resolved' : 'Active';
+            meta.textContent = `${name} • ${email} • ${status}`;
+        }
+
+        function renderMessageConversation(messages = []) {
+            const thread = document.getElementById('messageConversationThread');
+            if (!thread) return;
+
+            const rows = Array.isArray(messages) ? messages : [];
+            if (rows.length === 0) {
+                thread.innerHTML = '<p style="font-size: 0.84rem; color: #6b7280; margin: 0;">No replies yet. Customer care will respond here.</p>';
+                return;
+            }
+
+            thread.innerHTML = rows.map((row) => {
+                const senderType = row && row.sender_type ? String(row.sender_type).toLowerCase() : 'patient';
+                const isPatient = senderType === 'patient';
+                const senderName = escapeMessageHtml(row.sender_name || (isPatient ? 'You' : 'Reception'));
+                const messageText = escapeMessageHtml(row.message_content || '');
+                const messageTime = escapeMessageHtml(formatConversationTimestamp(row.created_at));
+
+                return `
+                    <div style="display: flex; ${isPatient ? 'justify-content: flex-end;' : 'justify-content: flex-start;'} margin-bottom: 0.55rem;">
+                        <div style="max-width: 88%; border-radius: 10px; padding: 0.55rem 0.68rem; ${isPatient ? 'background: #0f5db6; color: #ffffff;' : 'background: #edf4ff; color: #1f2a37;'}">
+                            <div style="font-size: 0.72rem; font-weight: 700; opacity: 0.9; margin-bottom: 0.22rem;">${senderName}</div>
+                            <div style="font-size: 0.84rem; line-height: 1.35; white-space: pre-wrap; word-break: break-word;">${messageText}</div>
+                            <div style="font-size: 0.68rem; margin-top: 0.3rem; opacity: 0.82;">${messageTime}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            thread.scrollTop = thread.scrollHeight;
+        }
+
+        async function refreshMessageConversationThread(showErrorNotification = false) {
+            if (!hasActiveMessageConversation()) return false;
+            if (messageConversationState.fetching) return false;
+
+            messageConversationState.fetching = true;
+            try {
+                const communicationId = Number(messageConversationState.communicationId);
+                const token = String(messageConversationState.token || '').trim();
+                const response = await fetch(`/api/communication-thread/${encodeURIComponent(communicationId)}?token=${encodeURIComponent(token)}`, {
+                    headers: {
+                        'X-CONVERSATION-TOKEN': token
+                    }
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    if (response.status === 401 || response.status === 403) {
+                        clearMessageConversation(false, true);
+                    }
+                    throw new Error(data.message || 'Unable to load private conversation.');
+                }
+
+                if (data.communication) {
+                    messageConversationState.patientName = String(data.communication.patient_name || messageConversationState.patientName || '');
+                    messageConversationState.patientEmail = String(data.communication.patient_email || messageConversationState.patientEmail || '');
+                    renderMessageConversationMeta(!!data.communication.is_resolved);
+                } else {
+                    renderMessageConversationMeta(false);
+                }
+
+                persistMessageConversationState();
+                renderMessageConversation(data.messages);
+                return true;
+            } catch (error) {
+                if (showErrorNotification) {
+                    showCommNotification(error.message || 'Unable to load private conversation.', 'error');
+                }
+                return false;
+            } finally {
+                messageConversationState.fetching = false;
+            }
+        }
+
+        function startMessageConversationPolling() {
+            if (messageConversationState.pollTimer) return;
+            messageConversationState.pollTimer = setInterval(() => {
+                if (!isCommWidgetVisible() || !isMessageTabActive() || !hasActiveMessageConversation()) {
+                    return;
+                }
+                refreshMessageConversationThread(false);
+            }, 6000);
+        }
+
+        function stopMessageConversationPolling() {
+            if (!messageConversationState.pollTimer) return;
+            clearInterval(messageConversationState.pollTimer);
+            messageConversationState.pollTimer = null;
+        }
+
+        async function sendMessageReply(event) {
+            event.preventDefault();
+            if (!hasActiveMessageConversation()) {
+                showCommNotification('Start a new message first.', 'error');
+                return;
+            }
+
+            const replyInput = document.getElementById('messageReplyInput');
+            const submitButton = event.target.querySelector('button[type="submit"]');
+            const replyText = replyInput && replyInput.value ? replyInput.value.trim() : '';
+            if (!replyText) {
+                showCommNotification('Please type a reply before sending.', 'error');
+                return;
+            }
+
+            if (submitButton) submitButton.disabled = true;
+            try {
+                const response = await fetch('/api/message-reply', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        communication_id: Number(messageConversationState.communicationId),
+                        conversation_token: String(messageConversationState.token || ''),
+                        name: messageConversationState.patientName || '',
+                        email: messageConversationState.patientEmail || '',
+                        phone: messageConversationState.patientPhone || '',
+                        message: replyText
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to send reply.');
+                }
+
+                if (replyInput) replyInput.value = '';
+                await refreshMessageConversationThread(false);
+                startMessageConversationPolling();
+                showCommNotification(data.message || 'Reply sent successfully.', 'success');
+            } catch (error) {
+                showCommNotification(error.message || 'Failed to send reply.', 'error');
+            } finally {
+                if (submitButton) submitButton.disabled = false;
+            }
+        }
+
+        function initializeMessageConversationFromStorage(forceRefresh = false) {
+            const hasConversation = loadMessageConversationState();
+            if (hasConversation) {
+                setMessageConversationVisibility(true);
+                renderMessageConversationMeta(false);
+                if (forceRefresh && isCommWidgetVisible() && isMessageTabActive()) {
+                    refreshMessageConversationThread(false);
+                }
+            } else {
+                setMessageConversationVisibility(false);
+                renderMessageConversation([]);
+            }
+            populateMessageFormFromState();
+            return hasConversation;
+        }
+
+        function clearMessageConversation(requireConfirmation = false, silent = false) {
+            if (requireConfirmation && hasActiveMessageConversation()) {
+                const confirmed = window.confirm('Start a new private conversation?');
+                if (!confirmed) return;
+            }
+
+            const rememberedName = messageConversationState.patientName || '';
+            const rememberedEmail = messageConversationState.patientEmail || '';
+            const rememberedPhone = messageConversationState.patientPhone || '';
+
+            stopMessageConversationPolling();
+            messageConversationState.communicationId = null;
+            messageConversationState.token = '';
+            messageConversationState.patientName = '';
+            messageConversationState.patientEmail = '';
+            messageConversationState.patientPhone = '';
+            messageConversationState.fetching = false;
+            messageConversationState.initialized = true;
+
+            persistMessageConversationState();
+            setMessageConversationVisibility(false);
+            renderMessageConversationMeta(false);
+            renderMessageConversation([]);
+
+            const replyInput = document.getElementById('messageReplyInput');
+            if (replyInput) replyInput.value = '';
+
+            const messageForm = document.getElementById('messageForm');
+            if (messageForm) {
+                const nameInput = messageForm.querySelector('input[name="name"]');
+                const emailInput = messageForm.querySelector('input[name="email"]');
+                const phoneInput = messageForm.querySelector('input[name="phone"]');
+                if (nameInput) nameInput.value = rememberedName;
+                if (emailInput) emailInput.value = rememberedEmail;
+                if (phoneInput) phoneInput.value = rememberedPhone;
+            }
+
+            if (!silent) {
+                showCommNotification('You can now start a new private message.', 'success');
+            }
+        }
+
+        let callState = {
+            isActive: false,
+            callId: null,
+            startTime: null,
+            duration: 0,
+            statusPollTimer: null,
+            durationTimer: null,
+            availabilityTimer: null,
+            outgoingToneTimer: null,
+            callType: 'customer_care',
+            roomName: null,
+            iceServers: [],
+            joinedRoom: false,
+            peerConnection: null,
+            localStream: null,
+            lastStatus: null,
+            selectedReceptionId: null,
+            patientName: 'Walk-in Patient',
+            patientPhone: '',
+            patientEmail: ''
+        };
+
+        async function ensureRtcRuntime(showErrorNotification = false) {
+            if (rtcRuntime.checked && rtcRuntime.enabled) {
+                return true;
+            }
+            if (rtcRuntime.checked && !rtcRuntime.enabled) {
+                if (showErrorNotification && rtcRuntime.message) {
+                    showCommNotification(rtcRuntime.message, 'error');
+                }
+                return false;
+            }
+
+            try {
+                const response = await fetch('/api/webrtc-config');
+                const data = await response.json();
+                rtcRuntime.checked = true;
+                rtcRuntime.enabled = !!(response.ok && data.success);
+                rtcRuntime.iceServers = Array.isArray(data.ice_servers) ? data.ice_servers : [];
+                rtcRuntime.message = data.message || '';
+
+                if (!rtcRuntime.enabled && showErrorNotification) {
+                    showCommNotification(rtcRuntime.message || 'Real-time communication is not configured.', 'error');
+                }
+                return rtcRuntime.enabled;
+            } catch (error) {
+                rtcRuntime.checked = true;
+                rtcRuntime.enabled = false;
+                rtcRuntime.message = error.message || 'Unable to verify real-time communication setup.';
+                if (showErrorNotification) {
+                    showCommNotification(rtcRuntime.message, 'error');
+                }
+                return false;
+            }
+        }
+
+        function getCallerDetails() {
+            const nameInput = document.getElementById('callCustomerName');
+            const phoneInput = document.getElementById('callCustomerPhone');
+            const emailInput = document.getElementById('callCustomerEmail');
+
+            let name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'Walk-in Patient';
+            let phone = phoneInput && phoneInput.value.trim() ? phoneInput.value.trim() : '';
+            let email = emailInput && emailInput.value.trim() ? emailInput.value.trim() : '';
+
+            const messageForm = document.getElementById('messageForm');
+            if (messageForm) {
+                const messageName = messageForm.querySelector('input[name="name"]');
+                const messagePhone = messageForm.querySelector('input[name="phone"]');
+                const messageEmail = messageForm.querySelector('input[name="email"]');
+
+                if (name === 'Walk-in Patient' && messageName && messageName.value.trim()) {
+                    name = messageName.value.trim();
+                }
+                if (!phone && messagePhone && messagePhone.value.trim()) {
+                    phone = messagePhone.value.trim();
+                }
+                if (!email && messageEmail && messageEmail.value.trim()) {
+                    email = messageEmail.value.trim();
+                }
+            }
+
+            return { name, phone, email };
+        }
+
+        function speakBusyPrompt(customText) {
+            if (!('speechSynthesis' in window)) return;
+            const promptText = customText || 'The other user is on another call. Please hold, try again later, or send a message.';
+
+            const utterance = new SpeechSynthesisUtterance(promptText);
+            utterance.rate = 1;
+            utterance.pitch = 1.1;
+
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length) {
+                const preferred = voices.find(v =>
+                    /female|zira|samantha|google us english/i.test(v.name || '')
+                );
+                if (preferred) {
+                    utterance.voice = preferred;
+                }
+            }
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function playOutgoingToneOnce() {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return;
+
+            const context = new AudioContextClass();
+            if (context.state === 'suspended') {
+                context.resume().catch(() => null);
+            }
+
+            const gainNode = context.createGain();
+            gainNode.connect(context.destination);
+
+            const makeTone = (frequency, startOffset, endOffset) => {
+                const oscillator = context.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.value = frequency;
+                oscillator.connect(gainNode);
+                oscillator.start(context.currentTime + startOffset);
+                oscillator.stop(context.currentTime + endOffset);
+            };
+
+            gainNode.gain.setValueAtTime(0.0001, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.11, context.currentTime + 0.03);
+            gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.95);
+
+            makeTone(660, 0.00, 0.35);
+            makeTone(660, 0.45, 0.80);
+
+            setTimeout(() => {
+                context.close().catch(() => null);
+            }, 1200);
+        }
+
+        function startOutgoingTone() {
+            if (callState.outgoingToneTimer) return;
+            playOutgoingToneOnce();
+            callState.outgoingToneTimer = setInterval(() => {
+                playOutgoingToneOnce();
+            }, 2600);
+        }
+
+        function stopOutgoingTone() {
+            if (!callState.outgoingToneTimer) return;
+            clearInterval(callState.outgoingToneTimer);
+            callState.outgoingToneTimer = null;
+        }
+
+        function parsePreferredReceptionId() {
+            const select = document.getElementById('preferredReceptionSelect');
+            if (!select || !select.value) return null;
+            const parsed = Number.parseInt(select.value, 10);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function formatReceptionStatus(status) {
+            if (status === 'available') return 'Available';
+            if (status === 'busy') return 'Busy On Call';
+            if (status === 'offline') return 'Offline';
+            if (status === 'away') return 'Unavailable';
+            return 'Unknown';
+        }
+
+        function getReceptionStatusColor(status) {
+            if (status === 'available') return '#1f9d63';
+            if (status === 'busy') return '#c05621';
+            if (status === 'offline') return '#64748b';
+            return '#6b7280';
+        }
+
+        function selectPreferredReception(receptionId) {
+            const select = document.getElementById('preferredReceptionSelect');
+            if (!select) return;
+            select.value = String(receptionId || '');
+            callState.selectedReceptionId = parsePreferredReceptionId();
+        }
+
+        function callSelectedReception(receptionId) {
+            selectPreferredReception(receptionId);
+            initiateCall();
+        }
+
+        function renderReceptionAvailability(data) {
+            const select = document.getElementById('preferredReceptionSelect');
+            const list = document.getElementById('receptionAvailabilityList');
+            const summary = document.getElementById('receptionAvailabilitySummary');
+            if (!select || !list || !summary) return;
+
+            const receptionists = Array.isArray(data.receptionists) ? data.receptionists : [];
+            const currentValue = select.value || '';
+
+            select.innerHTML = '<option value=\"\">Auto-assign available receptionist</option>';
+            receptionists.forEach((receptionist) => {
+                const option = document.createElement('option');
+                option.value = String(receptionist.id);
+                option.textContent = `${receptionist.full_name} (${formatReceptionStatus(receptionist.availability)})`;
+                select.appendChild(option);
+            });
+
+            if (currentValue && Array.from(select.options).some((opt) => opt.value === currentValue)) {
+                select.value = currentValue;
+            }
+            callState.selectedReceptionId = parsePreferredReceptionId();
+
+            const stats = data.summary || {};
+            summary.textContent = `Available: ${stats.available || 0} | Busy: ${stats.busy || 0} | Offline: ${stats.offline || 0} | Away: ${stats.away || 0}`;
+
+            if (!receptionists.length) {
+                list.innerHTML = '<p style=\"margin: 0; padding: 0.65rem; color: #789; font-size: 0.82rem; text-align: center;\">No active receptionist records found.</p>';
+                return;
+            }
+
+            list.innerHTML = receptionists.map((receptionist) => {
+                const statusColor = getReceptionStatusColor(receptionist.availability);
+                const safeName = escapeHtml(receptionist.full_name || 'Receptionist');
+                const department = escapeHtml(receptionist.department || 'general');
+                const shift = escapeHtml(receptionist.shift || 'general');
+                const canCallDirectly = receptionist.availability === 'available';
+                return `
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.55rem 0.65rem; border-bottom: 1px solid #edf3ff;">
+                        <div>
+                            <div style="font-size: 0.84rem; font-weight: 600; color: #2c3e50;">${safeName}</div>
+                            <div style="font-size: 0.74rem; color: #667a93;">${department} | ${shift}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.45rem;">
+                            <span style="display: inline-flex; align-items: center; padding: 0.18rem 0.45rem; border-radius: 999px; border: 1px solid ${statusColor}; color: ${statusColor}; font-size: 0.7rem; font-weight: 700;">
+                                ${formatReceptionStatus(receptionist.availability)}
+                            </span>
+                            <button type="button" onclick="selectPreferredReception(${receptionist.id})" style="border: 1px solid #c4d8f3; background: #edf4ff; color: #0f5db6; border-radius: 6px; padding: 0.24rem 0.42rem; font-size: 0.72rem; cursor: pointer;">
+                                Select
+                            </button>
+                            <button type="button" onclick="callSelectedReception(${receptionist.id})" ${canCallDirectly ? '' : 'disabled'} style="border: 1px solid ${canCallDirectly ? '#bde2c8' : '#d7dce2'}; background: ${canCallDirectly ? '#edf9f1' : '#f3f4f6'}; color: ${canCallDirectly ? '#1f9d63' : '#97a1ad'}; border-radius: 6px; padding: 0.24rem 0.42rem; font-size: 0.72rem; cursor: ${canCallDirectly ? 'pointer' : 'not-allowed'};">
+                                Call
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function refreshReceptionAvailability(showErrorNotification = false) {
+            const list = document.getElementById('receptionAvailabilityList');
+            if (list && !list.dataset.loaded) {
+                list.innerHTML = '<p style="margin: 0; padding: 0.65rem; color: #789; font-size: 0.82rem; text-align: center;">Loading receptionists...</p>';
+            }
+
+            try {
+                const response = await fetch('/api/receptionists-availability');
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Unable to load receptionist availability');
+                }
+                renderReceptionAvailability(data);
+                if (list) list.dataset.loaded = '1';
+            } catch (error) {
+                if (showErrorNotification) {
+                    showCommNotification(error.message || 'Unable to load receptionist availability.', 'error');
+                }
+                if (list) {
+                    list.innerHTML = '<p style="margin: 0; padding: 0.65rem; color: #a65; font-size: 0.82rem; text-align: center;">Unable to load receptionists right now.</p>';
+                }
+            }
+        }
+
+        function startReceptionAvailabilityPolling() {
+            if (callState.availabilityTimer) return;
+            refreshReceptionAvailability(false);
+            callState.availabilityTimer = setInterval(() => {
+                refreshReceptionAvailability(false);
+            }, 10000);
+        }
+
+        function stopReceptionAvailabilityPolling() {
+            if (!callState.availabilityTimer) return;
+            clearInterval(callState.availabilityTimer);
+            callState.availabilityTimer = null;
+        }
+
+        window.selectPreferredReception = selectPreferredReception;
+        window.callSelectedReception = callSelectedReception;
+        window.refreshReceptionAvailability = refreshReceptionAvailability;
+
+        function getCommSocket() {
+            if (commSocket && commSocket.connected) {
+                return commSocket;
+            }
+
+            if (rtcRuntime.checked && !rtcRuntime.enabled) {
+                return null;
+            }
+
+            if (typeof io === 'undefined') {
+                return null;
+            }
+
+            commSocket = io({
+                path: '/socket.io',
+                transports: ['websocket', 'polling']
+            });
+
+            commSocket.on('call_connected', async (payload) => {
+                if (!callState.callId || payload.call_id !== callState.callId) return;
+                callState.status = 'connected';
+                if (payload.room_name) callState.roomName = payload.room_name;
+                if (Array.isArray(payload.ice_servers)) callState.iceServers = payload.ice_servers;
+                await joinCurrentCallRoom('patient');
+                await beginCallerOffer();
+                applyCallStatus('connected', payload.message || 'Connected');
+            });
+
+            commSocket.on('call_participant_joined', async (payload) => {
+                if (!callState.callId || payload.call_id !== callState.callId) return;
+                if (payload.role === 'reception' && callState.lastStatus === 'connected') {
+                    await beginCallerOffer();
+                }
+            });
+
+            commSocket.on('call_rejected', (payload) => {
+                if (!callState.callId || payload.call_id !== callState.callId) return;
+                applyCallStatus('rejected', payload.message || 'Call was rejected.');
+            });
+
+            commSocket.on('call_ended', (payload) => {
+                if (!callState.callId || payload.call_id !== callState.callId) return;
+                applyCallStatus('ended', payload.message || 'Call ended.');
+            });
+
+            commSocket.on('call_on_hold', (payload) => {
+                if (!callState.callId || payload.call_id !== callState.callId) return;
+                applyCallStatus('on_hold', payload.message || 'You are on hold.');
+            });
+
+            commSocket.on('webrtc_offer', async (payload) => {
+                if (!callState.callId || payload.call_id !== callState.callId) return;
+                await handleIncomingOffer(payload.offer);
+            });
+
+            commSocket.on('webrtc_answer', async (payload) => {
+                if (!callState.callId || payload.call_id !== callState.callId) return;
+                if (!callState.peerConnection) return;
+                try {
+                    await callState.peerConnection.setRemoteDescription(new RTCSessionDescription(payload.answer));
+                } catch (error) {
+                    showCommNotification('Error applying answer: ' + error.message, 'error');
+                }
+            });
+
+            commSocket.on('webrtc_ice_candidate', async (payload) => {
+                if (!callState.callId || payload.call_id !== callState.callId) return;
+                if (!callState.peerConnection || !payload.candidate) return;
+                try {
+                    await callState.peerConnection.addIceCandidate(new RTCIceCandidate(payload.candidate));
+                } catch (error) {
+                    // Ignore invalid candidates from timing races.
+                }
+            });
+
+            return commSocket;
+        }
+
+        async function joinCurrentCallRoom(role) {
+            const socket = getCommSocket();
+            if (!socket || !callState.callId) return;
+            if (callState.joinedRoom) return;
+
+            if (!socket.connected) {
+                await new Promise((resolve) => {
+                    socket.once('connect', resolve);
+                });
+            }
+
+            socket.emit('join_call_room', {
+                call_id: callState.callId,
+                role: role || 'patient'
+            });
+            callState.joinedRoom = true;
+        }
+
+        async function ensureLocalAudioStream() {
+            if (callState.localStream) return callState.localStream;
+            callState.localStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: false
+            });
+            return callState.localStream;
+        }
+
+        function closeRealtimeMedia() {
+            if (callState.peerConnection) {
+                try {
+                    callState.peerConnection.close();
+                } catch (error) {
+                    // no-op
+                }
+                callState.peerConnection = null;
+            }
+
+            if (callState.localStream) {
+                callState.localStream.getTracks().forEach((track) => track.stop());
+                callState.localStream = null;
+            }
+
+            const audioEl = document.getElementById('callRemoteAudio');
+            if (audioEl) {
+                audioEl.srcObject = null;
+            }
+        }
+
+        async function createPeerConnection() {
+            if (callState.peerConnection) {
+                return callState.peerConnection;
+            }
+
+            const configuration = {
+                iceServers: Array.isArray(callState.iceServers) && callState.iceServers.length
+                    ? callState.iceServers
+                    : []
+            };
+
+            const peerConnection = new RTCPeerConnection(configuration);
+            callState.peerConnection = peerConnection;
+
+            const localStream = await ensureLocalAudioStream();
+            localStream.getTracks().forEach((track) => {
+                peerConnection.addTrack(track, localStream);
+            });
+
+            peerConnection.ontrack = (event) => {
+                const remoteAudio = document.getElementById('callRemoteAudio');
+                if (remoteAudio && event.streams && event.streams[0]) {
+                    remoteAudio.srcObject = event.streams[0];
+                }
+            };
+
+            peerConnection.onicecandidate = (event) => {
+                if (!event.candidate) return;
+                const socket = getCommSocket();
+                if (!socket || !callState.callId) return;
+                socket.emit('webrtc_ice_candidate', {
+                    call_id: callState.callId,
+                    candidate: event.candidate
+                });
+            };
+
+            peerConnection.onconnectionstatechange = () => {
+                const state = peerConnection.connectionState;
+                if (state === 'failed' || state === 'disconnected') {
+                    showCommNotification('Call connection interrupted.', 'error');
+                }
+            };
+
+            return peerConnection;
+        }
+
+        async function beginCallerOffer() {
+            try {
+                const socket = getCommSocket();
+                if (!socket || !callState.callId) return;
+                const peerConnection = await createPeerConnection();
+                if (peerConnection.localDescription && !peerConnection.remoteDescription) {
+                    socket.emit('webrtc_offer', {
+                        call_id: callState.callId,
+                        offer: peerConnection.localDescription
+                    });
+                    return;
+                }
+                if (peerConnection.localDescription && peerConnection.remoteDescription) return;
+                const offer = await peerConnection.createOffer({
+                    offerToReceiveAudio: true
+                });
+                await peerConnection.setLocalDescription(offer);
+                socket.emit('webrtc_offer', {
+                    call_id: callState.callId,
+                    offer: offer
+                });
+            } catch (error) {
+                showCommNotification('Could not start media call: ' + error.message, 'error');
+            }
+        }
+
+        async function handleIncomingOffer(offer) {
+            try {
+                const socket = getCommSocket();
+                if (!socket || !callState.callId) return;
+                const peerConnection = await createPeerConnection();
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                socket.emit('webrtc_answer', {
+                    call_id: callState.callId,
+                    answer: answer
+                });
+            } catch (error) {
+                showCommNotification('Could not answer media call: ' + error.message, 'error');
+            }
+        }
+
+        function showBusyActions(show) {
+            const busyActions = document.getElementById('callBusyActions');
+            const holdBtn = document.getElementById('holdCallBtn');
+            if (busyActions) {
+                busyActions.style.display = show ? 'block' : 'none';
+            }
+            if (holdBtn) {
+                holdBtn.disabled = false;
+                holdBtn.style.opacity = '1';
+                holdBtn.innerHTML = '<i class="fas fa-pause-circle"></i> Hold';
+            }
+            if (!show) {
+                const messageBox = document.getElementById('callMessageBox');
+                const messageInput = document.getElementById('callMessageInput');
+                if (messageBox) messageBox.style.display = 'none';
+                if (messageInput) messageInput.value = '';
+            }
+        }
+
+        function setCallButtons(callActive) {
+            const startBtn = document.getElementById('startCallBtn');
+            const endBtn = document.getElementById('endCallBtn');
+            const emergencyBtn = document.getElementById('emergencyCallBtn');
+
+            if (startBtn) startBtn.style.display = callActive ? 'none' : 'block';
+            if (endBtn) endBtn.style.display = callActive ? 'block' : 'none';
+            if (emergencyBtn) emergencyBtn.style.display = callActive ? 'none' : 'block';
+        }
+
+        function resetCallState() {
+            const previousCallId = callState.callId;
+
+            callState.isActive = false;
+            callState.callId = null;
+            callState.startTime = null;
+            callState.duration = 0;
+            callState.callType = 'customer_care';
+            callState.roomName = null;
+            callState.iceServers = [];
+            callState.joinedRoom = false;
+            callState.lastStatus = null;
+            callState.patientName = 'Walk-in Patient';
+            callState.patientPhone = '';
+            callState.patientEmail = '';
+            callState.selectedReceptionId = parsePreferredReceptionId();
+
+            stopCallStatusPolling();
+            stopCallDuration();
+            stopOutgoingTone();
+            closeRealtimeMedia();
+
+            if (commSocket && previousCallId) {
+                commSocket.emit('leave_call_room', {
+                    call_id: previousCallId,
+                    role: 'patient'
+                });
+            }
+
+            const durationElement = document.getElementById('callDuration');
+            const durationDiv = document.getElementById('callDurationDiv');
+            if (durationElement) durationElement.textContent = '0:00';
+            if (durationDiv) durationDiv.style.display = 'none';
+
+            setCallButtons(false);
+            showBusyActions(false);
+            refreshReceptionAvailability(false);
+        }
+
+        async function initiateCall(event) {
+            if (event) event.preventDefault();
+            if (callState.isActive) {
+                showCommNotification('You already have an active call request.', 'error');
+                return;
+            }
+
+            try {
+                const rtcReady = await ensureRtcRuntime(true);
+                if (!rtcReady) return;
+
+                switchCommTab('call');
+                const caller = getCallerDetails();
+                const preferredReceptionId = parsePreferredReceptionId();
+
+                callState.callType = 'customer_care';
+                callState.patientName = caller.name;
+                callState.patientPhone = caller.phone;
+                callState.patientEmail = caller.email;
+                callState.selectedReceptionId = preferredReceptionId;
+
+                const response = await fetch('{{ url_for("initiate_call") if url_for else "/api/initiate-call" }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        patient_name: caller.name,
+                        patient_phone: caller.phone,
+                        patient_email: caller.email,
+                        preferred_reception_id: preferredReceptionId
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to initiate call');
+                }
+
+                callState.isActive = true;
+                callState.callId = data.call_id;
+                callState.startTime = null;
+                callState.duration = 0;
+                callState.roomName = data.room_name || null;
+                callState.iceServers = Array.isArray(data.ice_servers) ? data.ice_servers : [];
+                callState.joinedRoom = false;
+                if (data.assigned_reception && data.assigned_reception.id) {
+                    selectPreferredReception(data.assigned_reception.id);
+                }
+
+                setCallButtons(true);
+                showBusyActions(false);
+
+                await joinCurrentCallRoom('patient');
+                applyCallStatus(data.status || 'ringing', data.message);
+                startCallStatusPolling();
+                displayCallHistory();
+                refreshReceptionAvailability(false);
+
+                if (data.status === 'busy') {
+                    speakBusyPrompt(data.voice_prompt);
+                    showCommNotification(data.message || 'The selected receptionist is on another call. You can hold, try again later, or send a message.', 'error');
+                } else {
+                    showCommNotification(data.message || 'Calling customer care...', 'success');
+                }
+            } catch (error) {
+                resetCallState();
+                showCommNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function initiateEmergencyCall(event) {
+            if (event) event.preventDefault();
+            if (callState.isActive) {
+                showCommNotification('You already have an active call request.', 'error');
+                return;
+            }
+
+            try {
+                const rtcReady = await ensureRtcRuntime(true);
+                if (!rtcReady) return;
+
+                switchCommTab('call');
+                const caller = getCallerDetails();
+                const preferredReceptionId = parsePreferredReceptionId();
+
+                callState.callType = 'emergency';
+                callState.patientName = caller.name || 'Emergency Alert';
+                callState.patientPhone = 'SYSTEM';
+                callState.patientEmail = caller.email || '';
+                callState.selectedReceptionId = preferredReceptionId;
+
+                const response = await fetch('/api/initiate-emergency-call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        patient_name: callState.patientName,
+                        patient_email: callState.patientEmail,
+                        preferred_reception_id: preferredReceptionId
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to initiate emergency call');
+                }
+
+                callState.isActive = true;
+                callState.callId = data.call_id;
+                callState.startTime = null;
+                callState.duration = 0;
+                callState.roomName = data.room_name || null;
+                callState.iceServers = Array.isArray(data.ice_servers) ? data.ice_servers : [];
+                callState.joinedRoom = false;
+                if (data.assigned_reception && data.assigned_reception.id) {
+                    selectPreferredReception(data.assigned_reception.id);
+                }
+
+                setCallButtons(true);
+                showBusyActions(false);
+                await joinCurrentCallRoom('patient');
+                applyCallStatus(data.status || 'dialing', data.message);
+                startCallStatusPolling();
+                displayCallHistory();
+                refreshReceptionAvailability(false);
+                if (data.status === 'busy') {
+                    speakBusyPrompt(data.voice_prompt);
+                    showCommNotification(data.message || 'Emergency line busy. You can hold, try again later, or send a message.', 'error');
+                } else {
+                    showCommNotification(data.message || 'Emergency call initiated.', 'success');
+                }
+            } catch (error) {
+                resetCallState();
+                showCommNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function endCall(event) {
+            if (event) event.preventDefault();
+            if (!callState.callId) {
+                showCommNotification('No active call to end.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('{{ url_for("end_call") if url_for else "/api/end-call" }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        call_id: callState.callId,
+                        duration: callState.duration
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to end call');
+                }
+
+                const endedDuration = callState.duration;
+                displayCallStatus('Call ended', 'ended');
+                resetCallState();
+                showCommNotification('Call ended. Duration: ' + formatDuration(endedDuration), 'success');
+
+                setTimeout(() => {
+                    displayCallStatus('Ready to call', 'idle');
+                }, 2000);
+            } catch (error) {
+                showCommNotification('Error ending call: ' + error.message, 'error');
+            }
+        }
+
+        async function holdCurrentCall() {
+            if (!callState.callId) {
+                showCommNotification('No active call to hold.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/hold-call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        call_id: callState.callId
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to hold call');
+                }
+
+                applyCallStatus('on_hold', data.message);
+                showCommNotification(data.message, 'success');
+            } catch (error) {
+                showCommNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        function toggleCallMessageBox() {
+            const messageBox = document.getElementById('callMessageBox');
+            if (!messageBox) return;
+            messageBox.style.display = messageBox.style.display === 'none' || !messageBox.style.display ? 'block' : 'none';
+        }
+
+        async function sendCallMessage() {
+            if (!callState.callId) {
+                showCommNotification('No active call context for message.', 'error');
+                return;
+            }
+
+            const messageInput = document.getElementById('callMessageInput');
+            const message = messageInput && messageInput.value ? messageInput.value.trim() : '';
+            if (!message) {
+                showCommNotification('Please type a message before sending.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/send-call-message', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        call_id: callState.callId,
+                        patient_name: callState.patientName,
+                        patient_phone: callState.patientPhone,
+                        patient_email: callState.patientEmail,
+                        message: message
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to send call message');
+                }
+
+                displayCallStatus('Message sent to receptionist', 'ended');
+                resetCallState();
+                showCommNotification(data.message, 'success');
+                displayCallHistory();
+
+                setTimeout(() => {
+                    displayCallStatus('Ready to call', 'idle');
+                }, 2000);
+            } catch (error) {
+                showCommNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        function startCallStatusPolling() {
+            stopCallStatusPolling();
+            refreshCallStatus();
+            callState.statusPollTimer = setInterval(refreshCallStatus, 2500);
+        }
+
+        function stopCallStatusPolling() {
+            if (callState.statusPollTimer) {
+                clearInterval(callState.statusPollTimer);
+                callState.statusPollTimer = null;
+            }
+        }
+
+        async function refreshCallStatus() {
+            if (!callState.callId || !callState.isActive) return;
+
+            try {
+                const response = await fetch(`/api/call-status/${encodeURIComponent(callState.callId)}`);
+                const data = await response.json();
+                if (!response.ok || !data.success) return;
+
+                if (data.room_name) callState.roomName = data.room_name;
+                if (Array.isArray(data.ice_servers)) callState.iceServers = data.ice_servers;
+                applyCallStatus(data.status, data.message);
+            } catch (error) {
+                // Keep silent and let polling continue.
+            }
+        }
+
+        function applyCallStatus(status, messageText) {
+            if (!status) return;
+            const previousStatus = callState.lastStatus;
+            callState.lastStatus = status;
+
+            if (status === 'busy') {
+                stopOutgoingTone();
+                const busyNotice = document.getElementById('callBusyNotice');
+                if (busyNotice) {
+                    const baseText = messageText || (
+                        callState.callType === 'emergency'
+                            ? 'Emergency receptionist is currently on another call.'
+                            : 'Customer care is currently on another call.'
+                    );
+                    busyNotice.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${baseText}`;
+                }
+                displayCallStatus(messageText || 'Customer care is currently on another call.', 'busy');
+                showBusyActions(true);
+                setCallButtons(true);
+                if (previousStatus !== 'busy') {
+                    speakBusyPrompt(messageText);
+                }
+                return;
+            }
+
+            if (status === 'dialing') {
+                startOutgoingTone();
+                displayCallStatus(messageText || 'Dialing both parties now...', 'waiting');
+                showBusyActions(false);
+                setCallButtons(true);
+                return;
+            }
+
+            if (status === 'on_hold') {
+                stopOutgoingTone();
+                displayCallStatus(messageText || 'You are on hold. Please wait...', 'hold');
+                showBusyActions(true);
+                setCallButtons(true);
+
+                const holdBtn = document.getElementById('holdCallBtn');
+                if (holdBtn) {
+                    holdBtn.disabled = true;
+                    holdBtn.style.opacity = '0.7';
+                    holdBtn.innerHTML = '<i class="fas fa-clock"></i> On Hold';
+                }
+                return;
+            }
+
+            if (status === 'ringing' || status === 'initiated') {
+                startOutgoingTone();
+                const waitingMessage = messageText || (
+                    callState.callType === 'emergency'
+                        ? 'Calling emergency reception...'
+                        : 'Calling customer care...'
+                );
+                displayCallStatus(waitingMessage, 'waiting');
+                showBusyActions(false);
+                setCallButtons(true);
+                return;
+            }
+
+            if (status === 'connected') {
+                stopOutgoingTone();
+                const connectedLabel = callState.callType === 'emergency' ? 'Emergency line connected' : 'Connected to customer care';
+                displayCallStatus(connectedLabel, 'connected');
+                showBusyActions(false);
+                setCallButtons(true);
+
+                joinCurrentCallRoom('patient').then(() => beginCallerOffer());
+
+                const durationDiv = document.getElementById('callDurationDiv');
+                if (durationDiv) durationDiv.style.display = 'block';
+
+                if (!callState.startTime) {
+                    callState.startTime = Date.now();
+                    startCallDuration();
+                }
+                return;
+            }
+
+            if (status === 'ended') {
+                stopOutgoingTone();
+                displayCallStatus('Call ended', 'ended');
+                resetCallState();
+                setTimeout(() => {
+                    displayCallStatus('Ready to call', 'idle');
+                }, 2000);
+                displayCallHistory();
+                return;
+            }
+
+            if (status === 'rejected') {
+                stopOutgoingTone();
+                displayCallStatus('Call could not be connected', 'ended');
+                resetCallState();
+                showCommNotification(messageText || 'Customer care rejected the call.', 'error');
+                setTimeout(() => {
+                    displayCallStatus('Ready to call', 'idle');
+                }, 2000);
+                displayCallHistory();
+                return;
+            }
+
+            if (status === 'message_left') {
+                stopOutgoingTone();
+                displayCallStatus('Message sent to receptionist', 'ended');
+                resetCallState();
+                setTimeout(() => {
+                    displayCallStatus('Ready to call', 'idle');
+                }, 2000);
+                displayCallHistory();
+            }
+        }
+        
+        function displayCallStatus(status, state) {
+            const statusElement = document.getElementById('callStatus');
+            const statusBadge = document.getElementById('callStatusBadge');
+            
+            if (statusElement) {
+                statusElement.textContent = status;
+                
+                // Update status badge color
+                if (statusBadge) {
+                    statusBadge.style.backgroundColor = 
+                        state === 'waiting' ? '#f39c12' :
+                        state === 'hold' ? '#f39c12' :
+                        state === 'busy' ? '#d35400' :
+                        state === 'connected' ? '#27ae60' :
+                        state === 'ended' ? '#e74c3c' : '#95a5a6';
+                }
+            }
+        }
+        
+        function startCallDuration() {
+            const durationElement = document.getElementById('callDuration');
+            if (!durationElement) return;
+
+            stopCallDuration();
+            callState.durationTimer = setInterval(() => {
+                if (!callState.isActive) return;
+                callState.duration++;
+                durationElement.textContent = formatDuration(callState.duration);
+            }, 1000);
+        }
+
+        function stopCallDuration() {
+            if (callState.durationTimer) {
+                clearInterval(callState.durationTimer);
+                callState.durationTimer = null;
+            }
+        }
+        
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+            return `${minutes}:${String(secs).padStart(2, '0')}`;
+        }
+        
+        async function displayCallHistory() {
+            const historyDiv = document.getElementById('callHistory');
+            if (!historyDiv) return;
+
+            try {
+                const response = await fetch('/api/get-call-history');
+                const data = await response.json();
+                if (!response.ok || !data.success || !Array.isArray(data.calls)) {
+                    throw new Error('Failed to load call history');
+                }
+
+                if (data.calls.length === 0) {
+                    historyDiv.innerHTML = '<p style="text-align: center; color: #95a5a6; font-size: 0.9rem; margin: 0;">No recent calls</p>';
+                    return;
+                }
+
+                historyDiv.innerHTML = data.calls.slice(0, 5).map(call => (
+                    `<div style="padding: 0.5rem 0; border-bottom: 1px solid #f1f3f5;">
+                        <div style="font-size: 0.88rem; color: #2c3e50; font-weight: 600;">${call.patient_name || 'Patient'} • ${call.call_type || 'customer_care'} • ${call.status}</div>
+                        <div style="font-size: 0.8rem; color: #7f8c8d;">Duration: ${call.duration || '0:00'}</div>
+                    </div>`
+                )).join('');
+            } catch (error) {
+                historyDiv.innerHTML = '<p style="text-align: center; color: #e74c3c; font-size: 0.9rem; margin: 0;">Unable to load call history</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            startPublicLiveStatsPolling();
+            initializeMessageConversationFromStorage(false);
+            const preferredSelect = document.getElementById('preferredReceptionSelect');
+            if (preferredSelect) {
+                preferredSelect.addEventListener('change', () => {
+                    callState.selectedReceptionId = parsePreferredReceptionId();
+                });
+            }
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') {
+                    refreshPublicLiveStats(false);
+                }
+            });
+        });
+
+        window.addEventListener('beforeunload', () => {
+            stopPublicLiveStatsPolling();
+            stopMessageConversationPolling();
+            stopReceptionAvailabilityPolling();
+        });
+    </script>
+    
+    <!-- Communication Widget -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>About Us</h3>
+                    <p>{{ site_content.footer_about_text }}</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('about') }}">About</a></li>
+                        <li><a href="{{ url_for('index') }}#services-offered">Services</a></li>
+                        <li><a href="{{ url_for('doctors_page') }}">Doctors</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Contact Info</h3>
+                    <p>
+                        <i class="fas fa-phone"></i>
+                        {% if site_content.contact_phone_lines %}
+                            {{ site_content.contact_phone_lines[0] }}
+                        {% else %}
+                            +254 (0) 123 456 789
+                        {% endif %}
+                        <br>
+                        <i class="fas fa-envelope"></i>
+                        {% if site_content.contact_email_lines %}
+                            {{ site_content.contact_email_lines[0] }}
+                        {% else %}
+                            info@makokhamedical.com
+                        {% endif %}
+                        <br>
+                        <i class="fas fa-map-marker-alt"></i>
+                        {% if site_content.contact_address_lines %}
+                            {{ site_content.contact_address_lines|join(', ') }}
+                        {% else %}
+                            Maliki, Kenya
+                        {% endif %}
+                    </p>
+                    <div class="footer-contact-actions">
+                        <button type="button" class="footer-contact-btn footer-contact-btn-emergency" onclick="initiateEmergencyCall()">
+                            <i class="fas fa-triangle-exclamation"></i> Emergency Call
+                        </button>
+                        <button type="button" class="footer-contact-btn footer-contact-btn-care" onclick="initiateCall()">
+                            <i class="fas fa-headset"></i> Call Customer Care
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h3>Follow Us</h3>
+                    <div class="social-links">
+                        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 Makokha Medical Centre. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        // {% block inline_js %}{% endblock %}
+    </script>
+</body>
+</html>

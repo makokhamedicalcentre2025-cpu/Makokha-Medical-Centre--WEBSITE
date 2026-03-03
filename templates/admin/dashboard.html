@@ -1,0 +1,390 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Dashboard - Admin Panel - Makokha Medical Centre{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-intro {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+
+    .dashboard-title {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        color: #1f2a37;
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .dashboard-subtitle {
+        margin: 0.35rem 0 0;
+        color: #5f6b7a;
+        font-size: 0.98rem;
+    }
+
+    .dashboard-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .dashboard-stat-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #dfe7f3;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+        padding: 1.15rem 1.15rem 1rem;
+        display: flex;
+        flex-direction: column;
+        min-height: 142px;
+    }
+
+    .dashboard-stat-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+
+    .dashboard-stat-label {
+        color: #5f6b7a;
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+    }
+
+    .dashboard-stat-value {
+        color: #1f2a37;
+        font-size: 1.95rem;
+        line-height: 1;
+        font-weight: 700;
+    }
+
+    .dashboard-stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    .dashboard-icon-doctors { background: #e8f2ff; color: #0f5db6; }
+    .dashboard-icon-founders { background: #f3ecff; color: #6a43b3; }
+    .dashboard-icon-partners { background: #e8f7f5; color: #0f8a79; }
+    .dashboard-icon-events { background: #eafbf4; color: #1f9d63; }
+    .dashboard-icon-photos { background: #fff3e7; color: #c97d18; }
+    .dashboard-icon-reviews { background: #fff1ef; color: #c0392b; }
+    .dashboard-icon-comms { background: #edf0ff; color: #495dc9; }
+
+    .dashboard-stat-link {
+        margin-top: auto;
+        font-weight: 600;
+        color: #005bb8;
+        text-decoration: none;
+        font-size: 0.9rem;
+    }
+
+    .dashboard-stat-link:hover {
+        color: #0f5db6;
+        text-decoration: underline;
+    }
+
+    .dashboard-actions {
+        background: #fff;
+        border: 1px solid #dfe7f3;
+        border-radius: 14px;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+        padding: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .dashboard-actions h3 {
+        margin: 0 0 1rem;
+        color: #1f2a37;
+        font-size: 1.12rem;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .dashboard-action-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.85rem;
+    }
+
+    .dashboard-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.8rem 0.9rem;
+        border-radius: 10px;
+        border: 1px solid #d4deec;
+        background: #f9fbff;
+        color: #204064;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.93rem;
+        transition: all 0.2s ease;
+    }
+
+    .dashboard-action-btn:hover {
+        border-color: #8fb0d5;
+        color: #0d4f97;
+        background: #eef5ff;
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .dashboard-lower-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .dashboard-list {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid #dfe7f3;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+        padding: 1.2rem;
+    }
+
+    .dashboard-list h3 {
+        margin: 0 0 0.9rem;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.08rem;
+        color: #1f2a37;
+    }
+
+    .dashboard-list-item {
+        padding: 0.75rem 0.2rem;
+        border-bottom: 1px solid #ecf1f8;
+    }
+
+    .dashboard-list-item:last-child {
+        border-bottom: none;
+    }
+
+    .dashboard-list-main {
+        color: #1f2a37;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+
+    .dashboard-list-sub {
+        color: #5f6b7a;
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+
+    .dashboard-rating {
+        color: #d99118;
+        font-size: 0.86rem;
+        margin-top: 0.3rem;
+    }
+
+    .dashboard-empty {
+        color: #71839b;
+        font-size: 0.94rem;
+        margin: 0.2rem 0;
+    }
+
+    @media (max-width: 1300px) {
+        .dashboard-stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .dashboard-action-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 860px) {
+        .dashboard-stats-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .dashboard-lower-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 540px) {
+        .dashboard-stats-grid,
+        .dashboard-action-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .dashboard-title {
+            font-size: 1.52rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-intro">
+    <div>
+        <h1 class="dashboard-title">Operations Overview</h1>
+        <p class="dashboard-subtitle">Monitor services, manage medical content, and respond to patient interactions.</p>
+    </div>
+</div>
+
+<div class="dashboard-stats-grid">
+    <article class="dashboard-stat-card">
+        <div class="dashboard-stat-top">
+            <div>
+                <div class="dashboard-stat-label">Doctors</div>
+                <div class="dashboard-stat-value">{{ total_doctors }}</div>
+            </div>
+            <span class="dashboard-stat-icon dashboard-icon-doctors"><i class="fas fa-user-md"></i></span>
+        </div>
+        <a class="dashboard-stat-link" href="{{ url_for('admin_doctors') }}">Manage doctors</a>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="dashboard-stat-top">
+            <div>
+                <div class="dashboard-stat-label">Founders</div>
+                <div class="dashboard-stat-value">{{ total_founders }}</div>
+            </div>
+            <span class="dashboard-stat-icon dashboard-icon-founders"><i class="fas fa-people-group"></i></span>
+        </div>
+        <a class="dashboard-stat-link" href="{{ url_for('admin_founders') }}">Manage founders</a>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="dashboard-stat-top">
+            <div>
+                <div class="dashboard-stat-label">Partners</div>
+                <div class="dashboard-stat-value">{{ total_partners }}</div>
+            </div>
+            <span class="dashboard-stat-icon dashboard-icon-partners"><i class="fas fa-handshake"></i></span>
+        </div>
+        <a class="dashboard-stat-link" href="{{ url_for('admin_partners') }}">Manage partners</a>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="dashboard-stat-top">
+            <div>
+                <div class="dashboard-stat-label">Events</div>
+                <div class="dashboard-stat-value">{{ total_events }}</div>
+            </div>
+            <span class="dashboard-stat-icon dashboard-icon-events"><i class="fas fa-calendar-alt"></i></span>
+        </div>
+        <a class="dashboard-stat-link" href="{{ url_for('admin_events') }}">View events</a>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="dashboard-stat-top">
+            <div>
+                <div class="dashboard-stat-label">Photos</div>
+                <div class="dashboard-stat-value">{{ total_photos }}</div>
+            </div>
+            <span class="dashboard-stat-icon dashboard-icon-photos"><i class="fas fa-images"></i></span>
+        </div>
+        <a class="dashboard-stat-link" href="{{ url_for('admin_photos') }}">Open gallery</a>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="dashboard-stat-top">
+            <div>
+                <div class="dashboard-stat-label">Reviews</div>
+                <div class="dashboard-stat-value">{{ total_reviews }}</div>
+            </div>
+            <span class="dashboard-stat-icon dashboard-icon-reviews"><i class="fas fa-star"></i></span>
+        </div>
+        <a class="dashboard-stat-link" href="{{ url_for('admin_reviews') }}">Read feedback</a>
+    </article>
+
+    <article class="dashboard-stat-card">
+        <div class="dashboard-stat-top">
+            <div>
+                <div class="dashboard-stat-label">Open Messages</div>
+                <div class="dashboard-stat-value">{{ active_communications }}</div>
+            </div>
+            <span class="dashboard-stat-icon dashboard-icon-comms"><i class="fas fa-envelope-open-text"></i></span>
+        </div>
+        <a class="dashboard-stat-link" href="{{ url_for('admin_communications') }}">Review communications</a>
+    </article>
+</div>
+
+<section class="dashboard-actions">
+    <h3>Quick Actions</h3>
+    <div class="dashboard-action-grid">
+        <a href="{{ url_for('admin_add_doctor') }}" class="dashboard-action-btn">
+            <i class="fas fa-plus-circle"></i>
+            Add Doctor
+        </a>
+        <a href="{{ url_for('admin_add_founder') }}" class="dashboard-action-btn">
+            <i class="fas fa-people-group"></i>
+            Add Founder
+        </a>
+        <a href="{{ url_for('admin_add_partner') }}" class="dashboard-action-btn">
+            <i class="fas fa-handshake"></i>
+            Add Partner
+        </a>
+        <a href="{{ url_for('admin_add_event') }}" class="dashboard-action-btn">
+            <i class="fas fa-calendar-plus"></i>
+            Schedule Event
+        </a>
+        <a href="{{ url_for('admin_upload_photo') }}" class="dashboard-action-btn">
+            <i class="fas fa-upload"></i>
+            Upload Photo
+        </a>
+        <a href="{{ url_for('admin_reception') }}" class="dashboard-action-btn">
+            <i class="fas fa-headset"></i>
+            Manage Customer Care
+        </a>
+        <a href="{{ url_for('admin_site_content') }}" class="dashboard-action-btn">
+            <i class="fas fa-pen-ruler"></i>
+            Edit Website Content
+        </a>
+    </div>
+</section>
+
+<div class="dashboard-lower-grid">
+    <section class="dashboard-list">
+        <h3>Recent Patient Reviews</h3>
+        {% if recent_reviews %}
+            {% for review in recent_reviews %}
+                <div class="dashboard-list-item">
+                    <div class="dashboard-list-main">{{ review.patient_name }}</div>
+                    <div class="dashboard-list-sub">{{ review.review_text[:120] }}{% if review.review_text|length > 120 %}...{% endif %}</div>
+                    <div class="dashboard-rating">
+                        {% for i in range(1, review.rating + 1) %}
+                            <i class="fas fa-star"></i>
+                        {% endfor %}
+                        <span style="margin-left: 0.45rem; color: #738399;">{{ review.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="dashboard-empty">No reviews have been submitted yet.</p>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-list">
+        <h3>Latest Communication Queue</h3>
+        {% if recent_messages %}
+            {% for item in recent_messages %}
+                <div class="dashboard-list-item">
+                    <div class="dashboard-list-main">{{ item.patient_name }} <span style="font-weight: 500; color: #6b7a8c;">({{ item.message_type }})</span></div>
+                    <div class="dashboard-list-sub">{{ item.message_content[:120] }}{% if item.message_content|length > 120 %}...{% endif %}</div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="dashboard-empty">No communication records yet.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

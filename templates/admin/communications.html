@@ -1,0 +1,95 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Communications - Admin Panel{% endblock %}
+{% block page_title %}Communications{% endblock %}
+
+{% block content %}
+<div class="admin-list-header">
+    <div class="admin-list-title">
+        <h1><i class="fas fa-envelope"></i> Communications</h1>
+        <p>Track patient messages, call requests, and response progress.</p>
+    </div>
+</div>
+
+{% if communications.items %}
+<div class="admin-table-shell">
+    <div class="admin-table-scroll">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>From</th>
+                    <th>Type</th>
+                    <th>Assigned To</th>
+                    <th>Message</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for comm in communications.items %}
+                <tr>
+                    <td>
+                        <div class="admin-primary-text">{{ comm.patient_name }}</div>
+                        <div class="admin-secondary-text">{{ comm.patient_email }}</div>
+                    </td>
+                    <td>
+                        {% if comm.message_type == 'call' %}
+                            <span class="admin-chip admin-chip-info">Call</span>
+                        {% elif comm.message_type == 'email' %}
+                            <span class="admin-chip admin-chip-neutral">Email</span>
+                        {% elif comm.message_type == 'appointment' %}
+                            <span class="admin-chip admin-chip-warning">Appointment</span>
+                        {% else %}
+                            <span class="admin-chip admin-chip-success">{{ comm.message_type }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if comm.reception_id %}
+                            <span class="admin-chip admin-chip-info">Reception #{{ comm.reception_id }}</span>
+                        {% else %}
+                            <span class="admin-chip admin-chip-neutral">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ comm.message_content[:110] }}{% if comm.message_content|length > 110 %}...{% endif %}</td>
+                    <td>
+                        {% if comm.is_resolved %}
+                            <span class="admin-chip admin-chip-success">Resolved</span>
+                        {% elif comm.reply_content %}
+                            <span class="admin-chip admin-chip-info">Replied</span>
+                        {% else %}
+                            <span class="admin-chip admin-chip-warning">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ comm.created_at.strftime('%b %d, %Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if communications.has_prev or communications.has_next %}
+<div class="admin-pagination">
+    {% if communications.has_prev %}
+        <a href="{{ url_for('admin_communications', page=communications.prev_num) }}" class="admin-page-btn">
+            <i class="fas fa-chevron-left"></i>&nbsp;Previous
+        </a>
+    {% endif %}
+
+    <span class="admin-page-meta">Page {{ communications.page }} of {{ communications.pages }}</span>
+
+    {% if communications.has_next %}
+        <a href="{{ url_for('admin_communications', page=communications.next_num) }}" class="admin-page-btn">
+            Next&nbsp;<i class="fas fa-chevron-right"></i>
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="admin-empty-state">
+    <i class="fas fa-inbox"></i>
+    <p>No communications yet.</p>
+</div>
+{% endif %}
+{% endblock %}

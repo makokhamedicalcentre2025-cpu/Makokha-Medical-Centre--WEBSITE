@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}About Us - Makokha Medical Centre{% endblock %}
+{% block description %}Learn about Makokha Medical Centre's mission, vision, and experienced team of healthcare professionals{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ABOUT PAGE STYLES */
+    
+    .breadcrumb {
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-top: -70px;
+        padding-top: 5rem;
+    }
+    
+    .breadcrumb-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .breadcrumb a {
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .breadcrumb a:hover {
+        color: white;
+    }
+    
+    .breadcrumb span {
+        color: white;
+    }
+    
+    .about-intro {
+        padding: 4rem 0;
+        background: white;
+    }
+    
+    .intro-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        align-items: center;
+    }
+    
+    .intro-text h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .intro-text p {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        line-height: 1.8;
+    }
+    
+    .intro-image {
+        background: linear-gradient(135deg, #e6f0ff 0%, #cce5ff 100%);
+        height: 400px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 5rem;
+        color: #0066cc;
+    }
+    
+    .mission-vision {
+        background: #f8f9fa;
+        padding: 4rem 0;
+    }
+    
+    .mv-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .mv-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .mv-icon {
+        font-size: 2.5rem;
+        color: #0066cc;
+        margin-bottom: 1rem;
+    }
+    
+    .mv-card h3 {
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+    
+    .mv-card p {
+        color: #666;
+        line-height: 1.8;
+    }
+    
+    .team-section {
+        background: white;
+        padding: 4rem 0;
+    }
+    
+    .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .team-member {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+    
+    .team-member:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(-8px);
+    }
+    
+    .member-image {
+        width: 100%;
+        height: 250px;
+        background: linear-gradient(135deg, #e6f0ff 0%, #cce5ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: #0066cc;
+    }
+    
+    .member-info {
+        padding: 1.5rem;
+    }
+    
+    .member-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+    
+    .member-role {
+        color: #0066cc;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+    
+    .member-bio {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.6;
+    }
+    
+    .values-section {
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        color: white;
+        padding: 4rem 0;
+    }
+    
+    .values-section h2 {
+        color: white;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    
+    .values-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+    
+    .value-item {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .value-item:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-4px);
+    }
+    
+    .value-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .value-item h3 {
+        color: white;
+        margin-bottom: 0.5rem;
+    }
+    
+    .value-item p {
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    @media (min-width: 1025px) and (max-width: 1280px) {
+        .intro-grid {
+            gap: 2.3rem;
+        }
+
+        .mv-grid {
+            gap: 1.6rem;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .intro-grid,
+        .mv-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .intro-image {
+            height: 340px;
+            font-size: 3.4rem;
+        }
+        
+        .intro-text h1 {
+            font-size: 2.1rem;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 767px) {
+        .intro-grid,
+        .mv-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .intro-image {
+            height: 300px;
+            font-size: 3rem;
+        }
+
+        .intro-text h1 {
+            font-size: 1.9rem;
+        }
+    }
+
+    @media (min-width: 320px) and (max-width: 480px) {
+        .about-intro,
+        .mission-vision,
+        .team-section,
+        .values-section {
+            padding: 2.6rem 0;
+        }
+
+        .intro-grid,
+        .mv-grid {
+            grid-template-columns: 1fr;
+            gap: 1.2rem;
+        }
+
+        .intro-image {
+            height: 235px;
+            font-size: 2.6rem;
+        }
+
+        .intro-text h1 {
+            font-size: 1.62rem;
+        }
+
+        .intro-text p {
+            font-size: 0.96rem;
+            line-height: 1.7;
+        }
+
+        .mv-card,
+        .value-item {
+            padding: 1.25rem;
+        }
+
+        .team-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .member-image {
+            height: 220px;
+            font-size: 3.2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set initial_live_stats = live_stats if live_stats is defined else {} %}
+<!-- BREADCRUMB -->
+<section class="breadcrumb">
+    <div class="container">
+        <div class="breadcrumb-content">
+            <a href="{{ url_for('index') }}">Home</a>
+            <span>/</span>
+            <span>About Us</span>
+        </div>
+        <h1 style="color: white; margin-top: 1rem;">About Makokha Medical Centre</h1>
+    </div>
+</section>
+
+<!-- ABOUT INTRO -->
+<section class="about-intro">
+    <div class="container">
+        <div class="intro-grid">
+            <div class="intro-text">
+                <h1>{{ site_content.about_heading }}</h1>
+                <p>
+                    {{ site_content.about_intro_primary }}
+                </p>
+                <p>
+                    {{ site_content.about_intro_secondary }}
+                </p>
+            </div>
+            <div class="intro-image">
+                <i class="fas fa-hospital"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- MISSION & VISION -->
+<section class="mission-vision">
+    <div class="container">
+        <h2 class="text-center">Our Mission & Vision</h2>
+        
+        <div class="mv-grid">
+            <div class="mv-card fade-in">
+                <div class="mv-icon">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <h3>Our Mission</h3>
+                <p>
+                    {{ site_content.mission_text }}
+                </p>
+            </div>
+            
+            <div class="mv-card fade-in">
+                <div class="mv-icon">
+                    <i class="fas fa-telescope"></i>
+                </div>
+                <h3>Our Vision</h3>
+                <p>
+                    {{ site_content.vision_text }}
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- VALUES SECTION -->
+<section class="values-section">
+    <div class="container">
+        <h2>Our Core Values</h2>
+        
+        <div class="values-grid">
+            <div class="value-item fade-in">
+                <div class="value-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h3>Compassion</h3>
+                <p>We care for our patients with empathy and understanding, treating them as we would our own family members.</p>
+            </div>
+            
+            <div class="value-item fade-in">
+                <div class="value-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h3>Excellence</h3>
+                <p>We maintain the highest standards of medical practice and continuous improvement in all our services.</p>
+            </div>
+            
+            <div class="value-item fade-in">
+                <div class="value-icon">
+                    <i class="fas fa-handshake"></i>
+                </div>
+                <h3>Integrity</h3>
+                <p>We operate with honesty, transparency, and accountability in all our dealings with patients and stakeholders.</p>
+            </div>
+            
+            <div class="value-item fade-in">
+                <div class="value-icon">
+                    <i class="fas fa-accessibility"></i>
+                </div>
+                <h3>Accessibility</h3>
+                <p>We strive to make healthcare accessible and affordable to everyone in our community.</p>
+            </div>
+            
+            <div class="value-item fade-in">
+                <div class="value-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Teamwork</h3>
+                <p>We believe in collaborative care and work as a unified team to achieve the best patient outcomes.</p>
+            </div>
+            
+            <div class="value-item fade-in">
+                <div class="value-icon">
+                    <i class="fas fa-lightbulb"></i>
+                </div>
+                <h3>Innovation</h3>
+                <p>We embrace new technologies and methodologies to enhance our medical services continuously.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TEAM SECTION -->
+{% if doctors %}
+<section class="team-section">
+    <div class="container">
+        <h2 class="text-center">Our Medical Team</h2>
+        <p class="text-center" style="color: #666; margin-bottom: 2rem;">Meet the dedicated healthcare professionals caring for your health</p>
+        
+        <div class="team-grid">
+            {% for doctor in doctors %}
+            <div class="team-member fade-in">
+                <div class="member-image">
+                    {% if doctor.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' + doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }}%;">
+                    {% else %}
+                        <i class="fas fa-user-md"></i>
+                    {% endif %}
+                </div>
+                <div class="member-info">
+                    <div class="member-name">{{ doctor.full_name() }}</div>
+                    <div class="member-role">{{ doctor.specialty }}</div>
+                    {% if doctor.bio %}
+                    <div class="member-bio">{{ doctor.bio[:80] }}...</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- STATISTICS -->
+<section class="about-intro">
+    <div class="container">
+        <h2 class="text-center" style="margin-bottom: 2rem;">By The Numbers</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; text-align: center;">
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #0066cc;" data-live-stat="total_doctors">{{ initial_live_stats.get('total_doctors', total_doctors or 0) }}</div>
+                <div style="color: #666; margin-top: 0.5rem;">Qualified Doctors</div>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #0066cc;" data-live-stat="total_interactions">{{ initial_live_stats.get('total_interactions', total_patients or 0) }}</div>
+                <div style="color: #666; margin-top: 0.5rem;">Patient Interactions</div>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #0066cc;" data-live-stat="emergency_today_calls">{{ initial_live_stats.get('emergency_today_calls', 0) }}</div>
+                <div style="color: #666; margin-top: 0.5rem;">Emergency Calls Today</div>
+            </div>
+            <div>
+                <div style="font-size: 2.5rem; font-weight: 700; color: #0066cc;">
+                    <span data-live-stat="patient_satisfaction_percent">{{ initial_live_stats.get('patient_satisfaction_percent', 0) }}</span>%
+                </div>
+                <div style="color: #666; margin-top: 0.5rem;">Patient Satisfaction</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block inline_js %}
+    // Animate elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.mv-card, .value-item, .team-member').forEach(el => {
+        observer.observe(el);
+    });
+{% endblock %}

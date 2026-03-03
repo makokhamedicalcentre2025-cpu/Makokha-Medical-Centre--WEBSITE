@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Our Doctors - Makokha Medical Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .breadcrumb {
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-top: -70px;
+        padding-top: 5rem;
+    }
+    
+    .doctors-page-section {
+        padding: 4rem 0;
+    }
+    
+    .doctors-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .doctor-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .doctor-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        transform: translateY(-8px);
+    }
+    
+    .doctor-image {
+        width: 100%;
+        height: 300px;
+        background: linear-gradient(135deg, #e6f0ff 0%, #cce5ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 5rem;
+        color: #0066cc;
+    }
+    
+    .doctor-card-content {
+        padding: 1.5rem;
+    }
+    
+    .doctor-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+    
+    .doctor-specialty {
+        color: #0066cc;
+        font-weight: 500;
+        margin-bottom: 1rem;
+    }
+    
+    .doctor-qualification {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1rem;
+    }
+    
+    .doctor-bio {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .doctor-details {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+    }
+    
+    .doctor-details i {
+        color: #0066cc;
+        width: 20px;
+    }
+    
+    .doctor-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .btn-small {
+        flex: 1;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    @media (min-width: 1025px) and (max-width: 1280px) {
+        .doctors-grid {
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.6rem;
+        }
+
+        .doctor-image {
+            height: 280px;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .doctors-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 1.35rem;
+        }
+
+        .doctor-image {
+            height: 260px;
+        }
+
+        .doctor-card-content {
+            padding: 1.2rem;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 767px) {
+        .doctors-page-section {
+            padding: 3rem 0;
+        }
+
+        .doctors-grid {
+            grid-template-columns: 1fr;
+            gap: 1.15rem;
+        }
+
+        .doctor-image {
+            height: 248px;
+        }
+
+        .doctor-card-content {
+            padding: 1.1rem;
+        }
+
+        .doctor-actions {
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+    }
+
+    @media (min-width: 320px) and (max-width: 480px) {
+        .doctors-page-section {
+            padding: 2.6rem 0;
+        }
+
+        .doctors-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1.3rem;
+        }
+
+        .doctor-image {
+            height: 225px;
+        }
+
+        .doctor-card-content {
+            padding: 1rem;
+        }
+
+        .doctor-name {
+            font-size: 1.1rem;
+        }
+
+        .doctor-specialty,
+        .doctor-qualification,
+        .doctor-bio,
+        .doctor-details {
+            font-size: 0.88rem;
+        }
+
+        .doctor-actions {
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="breadcrumb">
+    <div class="container">
+        <a href="{{ url_for('index') }}" style="color: rgba(255, 255, 255, 0.8);">Home</a>
+        <span style="color: white;">/ Doctors</span>
+        <h1 style="color: white; margin-top: 1rem;">Our Medical Team</h1>
+    </div>
+</section>
+
+<section class="doctors-page-section">
+    <div class="container">
+        <p class="text-center" style="color: #666; margin-bottom: 2rem; font-size: 1.1rem;">
+            Meet our team of experienced and qualified healthcare professionals dedicated to your care
+        </p>
+        
+        {% if doctors %}
+            <div class="doctors-grid">
+                {% for doctor in doctors %}
+                <div class="doctor-card fade-in">
+                    <div class="doctor-image">
+                        {% if doctor.image_filename %}
+                            <img src="{{ url_for('static', filename='uploads/' + doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }}%;">
+                        {% else %}
+                            <i class="fas fa-user-md"></i>
+                        {% endif %}
+                    </div>
+                    <div class="doctor-card-content">
+                        <div class="doctor-name">{{ doctor.full_name() }}</div>
+                        <div class="doctor-specialty">{{ doctor.specialty }}</div>
+                        
+                        {% if doctor.qualification %}
+                        <div class="doctor-qualification">
+                            <i class="fas fa-certificate"></i> {{ doctor.qualification }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if doctor.bio %}
+                        <div class="doctor-bio">{{ doctor.bio }}</div>
+                        {% endif %}
+                        
+                        {% if doctor.email %}
+                        <div class="doctor-details">
+                            <i class="fas fa-envelope"></i> {{ doctor.email }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if doctor.phone %}
+                        <div class="doctor-details">
+                            <i class="fas fa-phone"></i> {{ doctor.phone }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if doctor.consulting_hours %}
+                        <div class="doctor-details">
+                            <i class="fas fa-clock"></i> {{ doctor.consulting_hours }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="doctor-actions">
+                            <a href="{{ url_for('contact') }}" class="btn btn-primary btn-small">Book Appointment</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center" style="padding: 3rem;">
+                <p style="color: #666; font-size: 1.1rem;">No doctors available at the moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
+
+{% block inline_js %}
+    // Animate elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.doctor-card').forEach(el => {
+        observer.observe(el);
+    });
+{% endblock %}

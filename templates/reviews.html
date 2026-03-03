@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Reviews - Makokha Medical Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .breadcrumb {
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-top: -70px;
+        padding-top: 5rem;
+    }
+    
+    .reviews-section {
+        padding: 4rem 0;
+    }
+    
+    .reviews-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .rating-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        margin: 1.5rem 0;
+    }
+    
+    .rating-large {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #0066cc;
+    }
+    
+    .stars {
+        display: flex;
+        gap: 0.25rem;
+        justify-content: center;
+    }
+    
+    .stars i {
+        color: #ffc107;
+        font-size: 1.5rem;
+    }
+    
+    .reviews-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .review-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .review-card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+    
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+    
+    .review-author {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1rem;
+    }
+    
+    .review-rating {
+        display: flex;
+        gap: 0.25rem;
+    }
+    
+    .review-rating i {
+        color: #ffc107;
+    }
+    
+    .review-text {
+        color: #666;
+        line-height: 1.8;
+        font-size: 0.95rem;
+    }
+    
+    .review-meta {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+        font-size: 0.85rem;
+        color: #999;
+    }
+    
+    .submit-review-section {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        margin-bottom: 3rem;
+    }
+    
+    .rating-input {
+        display: flex;
+        gap: 0.5rem;
+        margin: 1rem 0;
+        font-size: 2rem;
+    }
+    
+    .rating-input .star {
+        cursor: pointer;
+        color: #ddd;
+        transition: all 0.2s ease;
+    }
+    
+    .rating-input .star:hover,
+    .rating-input .star.active {
+        color: #ffc107;
+        transform: scale(1.2);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #666;
+    }
+
+    @media (min-width: 1025px) and (max-width: 1280px) {
+        .reviews-grid {
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 1.6rem;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .rating-display {
+            gap: 1.2rem;
+        }
+
+        .reviews-grid {
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.35rem;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 767px) {
+        .reviews-section {
+            padding: 3rem 0;
+        }
+
+        .reviews-header,
+        .submit-review-section,
+        .review-card {
+            padding: 1.2rem;
+        }
+
+        .rating-display {
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .reviews-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .review-form-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem !important;
+        }
+
+        .review-form-actions {
+            flex-direction: column;
+        }
+    }
+
+    @media (min-width: 320px) and (max-width: 480px) {
+        .reviews-section {
+            padding: 2.6rem 0;
+        }
+
+        .reviews-header,
+        .submit-review-section,
+        .review-card {
+            padding: 1rem;
+        }
+
+        .reviews-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .rating-display {
+            flex-direction: column;
+            gap: 0.65rem;
+            margin: 1rem 0;
+        }
+
+        .rating-large {
+            font-size: 2.25rem;
+        }
+
+        .stars i {
+            font-size: 1.22rem;
+        }
+
+        .reviews-grid {
+            grid-template-columns: 1fr;
+            gap: 0.8rem;
+            margin-top: 1.2rem;
+        }
+
+        .review-form-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.85rem !important;
+        }
+
+        .review-form-actions {
+            flex-direction: column;
+            gap: 0.6rem !important;
+        }
+
+        .rating-input {
+            font-size: 1.7rem;
+            gap: 0.35rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="breadcrumb">
+    <div class="container">
+        <a href="{{ url_for('index') }}" style="color: rgba(255, 255, 255, 0.8);">Home</a>
+        <span style="color: white;">/ Reviews</span>
+        <h1 style="color: white; margin-top: 1rem;">Patient Reviews & Ratings</h1>
+    </div>
+</section>
+
+<section class="reviews-section">
+    <div class="container">
+        <!-- RATING DISPLAY -->
+        <div class="reviews-header">
+            <h2>What Our Patients Say</h2>
+            <div class="rating-display">
+                <div>
+                    <div class="rating-large">{{ avg_rating }}</div>
+                    <div class="stars">
+                        {% for i in range(1, 6) %}
+                            {% if i <= avg_rating|int %}
+                                <i class="fas fa-star"></i>
+                            {% elif i - 0.5 <= avg_rating %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <p style="margin-top: 0.5rem; color: #666;">Based on {{ total_ratings }} ratings</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SUBMIT REVIEW FORM -->
+        <div class="submit-review-section">
+            <h2 style="margin-bottom: 1.5rem;">Share Your Experience</h2>
+            
+            <form id="reviewForm" data-validate>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <div class="review-form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="name" id="reviewName" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" id="reviewEmail" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Rating</label>
+                    <div class="rating-input" id="ratingInput">
+                        <span class="star" data-value="1"><i class="fas fa-star"></i></span>
+                        <span class="star" data-value="2"><i class="fas fa-star"></i></span>
+                        <span class="star" data-value="3"><i class="fas fa-star"></i></span>
+                        <span class="star" data-value="4"><i class="fas fa-star"></i></span>
+                        <span class="star" data-value="5"><i class="fas fa-star"></i></span>
+                    </div>
+                    <input type="hidden" name="rating" id="ratingValue" value="5" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Your Review</label>
+                    <textarea name="review" id="reviewText" class="form-textarea" placeholder="Share your experience at Makokha Medical Centre..." required></textarea>
+                </div>
+                
+                <div class="review-form-actions" style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                    <button type="reset" class="btn btn-outline">Clear</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- REVIEWS LIST -->
+        {% if reviews %}
+            <h2 style="margin-top: 3rem; margin-bottom: 2rem;">Recent Reviews</h2>
+            <div class="reviews-grid">
+                {% for review in reviews %}
+                <div class="review-card fade-in">
+                    <div class="review-header">
+                        <div>
+                            <div class="review-author">{{ review.patient_name }}</div>
+                            <div class="review-rating">
+                                {% for i in range(1, review.rating + 1) %}
+                                    <i class="fas fa-star"></i>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-text">{{ review.review_text }}</div>
+                    <div class="review-meta">
+                        Posted on {{ review.created_at.strftime('%B %d, %Y') }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p style="font-size: 1.1rem;">No reviews yet. Be the first to share your experience!</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
+
+{% block inline_js %}
+    // Rating input functionality
+    const ratingStars = document.querySelectorAll('#ratingInput .star');
+    const ratingValue = document.getElementById('ratingValue');
+    
+    ratingStars.forEach(star => {
+        star.addEventListener('click', function() {
+            const value = this.dataset.value;
+            ratingValue.value = value;
+            
+            ratingStars.forEach(s => {
+                if (s.dataset.value <= value) {
+                    s.classList.add('active');
+                } else {
+                    s.classList.remove('active');
+                }
+            });
+        });
+        
+        star.addEventListener('mouseenter', function() {
+            const value = this.dataset.value;
+            ratingStars.forEach(s => {
+                if (s.dataset.value <= value) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#ddd';
+                }
+            });
+        });
+    });
+    
+    document.getElementById('ratingInput').addEventListener('mouseleave', function() {
+        const value = ratingValue.value;
+        ratingStars.forEach(s => {
+            if (s.dataset.value <= value) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    });
+    
+    // Initialize stars as active
+    ratingStars[4].classList.add('active');
+    
+    // Form submission
+    document.getElementById('reviewForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            name: document.getElementById('reviewName').value,
+            email: document.getElementById('reviewEmail').value,
+            rating: document.getElementById('ratingValue').value,
+            review: document.getElementById('reviewText').value
+        };
+        
+        try {
+            const response = await fetch('{{ url_for("submit_review") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification(data.message, 'success');
+                document.getElementById('reviewForm').reset();
+                ratingValue.value = 5;
+                ratingStars.forEach(s => s.classList.remove('active'));
+                ratingStars[4].classList.add('active');
+                
+                // Reload page after 2 seconds to show new review
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        } catch (error) {
+            showNotification('Error submitting review: ' + error.message, 'danger');
+        }
+    });
+    
+    // Animate elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.review-card').forEach(el => {
+        observer.observe(el);
+    });
+{% endblock %}

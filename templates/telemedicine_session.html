@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Telemedicine Session - Makokha Medical Centre{% endblock %}
+
+{% block content %}
+<section style="padding: 2.2rem 0 2.6rem;">
+    <div class="container" style="max-width: 900px;">
+        <div style="background: #fff; border-radius: 12px; box-shadow: 0 10px 24px rgba(0,0,0,0.08); padding: 1.3rem 1.3rem 1.5rem;">
+            {% if token_valid %}
+                <h1 style="margin: 0 0 0.55rem; color: #1f2a37; font-size: 1.7rem;">
+                    <i class="fas fa-video"></i> Telemedicine Session Access
+                </h1>
+                <p style="margin: 0 0 1rem; color: #4f5f73;">
+                    Your secure session link is active. Use the patient desk to start your live consultation call.
+                </p>
+
+                <div style="display: grid; gap: 0.7rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1rem;">
+                    <div style="background: #f5f9ff; border: 1px solid #dbe8ff; border-radius: 10px; padding: 0.8rem;">
+                        <strong style="display: block; color: #243247; margin-bottom: 0.2rem;">Patient</strong>
+                        <span style="color: #4f5f73;">{{ appointment.patient_name }}</span>
+                    </div>
+                    <div style="background: #f5f9ff; border: 1px solid #dbe8ff; border-radius: 10px; padding: 0.8rem;">
+                        <strong style="display: block; color: #243247; margin-bottom: 0.2rem;">Appointment</strong>
+                        <span style="color: #4f5f73;">{{ appointment.appointment_date.strftime('%B %d, %Y at %I:%M %p') if appointment.appointment_date else 'TBD' }}</span>
+                    </div>
+                    <div style="background: #f5f9ff; border: 1px solid #dbe8ff; border-radius: 10px; padding: 0.8rem;">
+                        <strong style="display: block; color: #243247; margin-bottom: 0.2rem;">Assigned Doctor</strong>
+                        <span style="color: #4f5f73;">{{ doctor_name }}</span>
+                    </div>
+                    <div style="background: #f5f9ff; border: 1px solid #dbe8ff; border-radius: 10px; padding: 0.8rem;">
+                        <strong style="display: block; color: #243247; margin-bottom: 0.2rem;">Link Expires</strong>
+                        <span style="color: #4f5f73;">{{ expires_at.strftime('%B %d, %Y at %I:%M %p UTC') if expires_at else 'N/A' }}</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center;">
+                    <button id="telemedicineOpenDesk" type="button" style="border: none; border-radius: 8px; background: #0f5db6; color: #fff; padding: 0.75rem 1.05rem; font-weight: 700; cursor: pointer;">
+                        <i class="fas fa-headset"></i> Open Patient Desk
+                    </button>
+                    <a href="{{ url_for('index') }}?{{ prefill_params }}" style="border-radius: 8px; background: #edf2fb; color: #1f2a37; text-decoration: none; padding: 0.72rem 1rem; font-weight: 600;">
+                        <i class="fas fa-house"></i> Open Home Page
+                    </a>
+                </div>
+                <p style="margin: 0.8rem 0 0; color: #5f6f83;">
+                    Tip: Click <strong>Open Patient Desk</strong>, then use the <strong>Call</strong> tab to start your telemedicine call.
+                </p>
+
+                <script id="telemedicinePayload" type="application/json">
+                    {{ {
+                        'name': appointment.patient_name or '',
+                        'email': appointment.patient_email or '',
+                        'phone': appointment.patient_phone or ''
+                    } | tojson }}
+                </script>
+            {% else %}
+                <h1 style="margin: 0 0 0.55rem; color: #9a2b2b; font-size: 1.6rem;">
+                    <i class="fas fa-link-slash"></i> Telemedicine Link Unavailable
+                </h1>
+                <p style="margin: 0; color: #4f5f73;">
+                    {% if token_status == 'expired' %}
+                        This telemedicine link has expired. Request a fresh link from reception.
+                    {% else %}
+                        This telemedicine link is invalid. Please check your email link or contact reception.
+                    {% endif %}
+                </p>
+                <div style="margin-top: 1rem;">
+                    <a href="{{ url_for('contact') }}" style="display: inline-block; border-radius: 8px; background: #0f5db6; color: #fff; text-decoration: none; padding: 0.72rem 1rem; font-weight: 700;">
+                        Contact Reception
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+{% if token_valid %}
+<script>
+    (function () {
+        const btn = document.getElementById('telemedicineOpenDesk');
+        const payloadNode = document.getElementById('telemedicinePayload');
+        if (!btn || !payloadNode) return;
+
+        let payload = {};
+        try {
+            payload = JSON.parse(payloadNode.textContent || '{}');
+        } catch (_error) {
+            payload = {};
+        }
+
+        function setField(formSelector, fieldName, value) {
+            const form = document.querySelector(formSelector);
+            if (!form) return;
+            const field = form.querySelector(`[name="${fieldName}"]`);
+            if (!field) return;
+            field.value = value || '';
+        }
+
+        btn.addEventListener('click', function () {
+            setField('#messageForm', 'name', payload.name || '');
+            setField('#messageForm', 'email', payload.email || '');
+            setField('#messageForm', 'phone', payload.phone || '');
+            setField('#appointmentForm', 'name', payload.name || '');
+            setField('#appointmentForm', 'email', payload.email || '');
+            setField('#appointmentForm', 'phone', payload.phone || '');
+
+            if (typeof callState !== 'undefined' && callState) {
+                callState.patientName = payload.name || callState.patientName || 'Patient';
+                callState.patientEmail = payload.email || callState.patientEmail || '';
+                callState.patientPhone = payload.phone || callState.patientPhone || '';
+            }
+
+            const panel = document.getElementById('commWidgetPanel');
+            if (panel && panel.style.display !== 'flex' && typeof toggleCommWidget === 'function') {
+                toggleCommWidget();
+            }
+            if (typeof switchCommTab === 'function') {
+                switchCommTab('call');
+            }
+
+            btn.innerHTML = '<i class="fas fa-check"></i> Patient Desk Ready';
+        });
+    })();
+</script>
+{% endif %}
+{% endblock %}

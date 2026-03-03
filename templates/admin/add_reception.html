@@ -1,0 +1,84 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Add Reception Staff - Admin Panel{% endblock %}
+{% block page_title %}Add Reception Staff{% endblock %}
+
+{% block content %}
+<div class="admin-form-layout">
+    <div class="admin-page-intro">
+        <h1><i class="fas fa-user-plus"></i> Add Reception Staff</h1>
+        <p>Create a new customer care account with role and shift details.</p>
+    </div>
+
+    <form method="POST" class="admin-form-shell">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input type="text" name="full_name" class="form-control" required placeholder="Enter full name">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Username *</label>
+                <input type="text" name="username" class="form-control" required placeholder="Enter username">
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" name="email" class="form-control" required placeholder="Enter email address">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone (optional for callback records)</label>
+                <input type="tel" name="phone" class="form-control" placeholder="+2547XXXXXXXX">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Password *</label>
+            <div class="password-field">
+                <input id="receptionPasswordCreate" type="password" name="password" class="form-control" required placeholder="Enter password">
+                <button class="password-toggle" type="button" aria-label="Show password" title="Show password" onclick="togglePassword('receptionPasswordCreate', this)">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Department</label>
+                <select name="department" class="form-control">
+                    <option value="">Select Department</option>
+                    <option value="general">General</option>
+                    <option value="calls">Calls</option>
+                    <option value="emails">Emails</option>
+                    <option value="appointments">Appointments</option>
+                    <option value="customer_care">Customer Care</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Shift</label>
+                <select name="shift" class="form-control">
+                    <option value="">Select Shift</option>
+                    <option value="morning">Morning (6 AM - 2 PM)</option>
+                    <option value="evening">Evening (2 PM - 10 PM)</option>
+                    <option value="night">Night (10 PM - 6 AM)</option>
+                    <option value="flexible">Flexible</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Add Reception Staff
+            </button>
+            <a href="{{ url_for('admin_reception') }}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

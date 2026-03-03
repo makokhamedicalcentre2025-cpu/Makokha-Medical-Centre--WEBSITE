@@ -1,0 +1,87 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Appointments - Admin Panel{% endblock %}
+{% block page_title %}Appointments{% endblock %}
+
+{% block content %}
+<div class="admin-list-header">
+    <div class="admin-list-title">
+        <h1><i class="fas fa-calendar-check"></i> Appointments</h1>
+        <p>Review incoming appointment requests and current status at a glance.</p>
+    </div>
+</div>
+
+{% if appointments.items %}
+<div class="admin-table-shell">
+    <div class="admin-table-scroll">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Patient</th>
+                    <th>Email</th>
+                    <th>Appointment Date</th>
+                    <th>Assigned To</th>
+                    <th>Status</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for appt in appointments.items %}
+                <tr>
+                    <td>
+                        <div class="admin-primary-text">{{ appt.patient_name }}</div>
+                        <div class="admin-secondary-text">{{ appt.patient_phone or 'Phone not provided' }}</div>
+                    </td>
+                    <td>{{ appt.patient_email }}</td>
+                    <td>{{ appt.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}</td>
+                    <td>
+                        {% if appt.reception_id %}
+                            <span class="admin-chip admin-chip-info">Reception #{{ appt.reception_id }}</span>
+                        {% else %}
+                            <span class="admin-chip admin-chip-neutral">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if appt.status == 'confirmed' %}
+                            <span class="admin-chip admin-chip-success">Confirmed</span>
+                        {% elif appt.status == 'completed' %}
+                            <span class="admin-chip admin-chip-info">Completed</span>
+                        {% elif appt.status == 'cancelled' %}
+                            <span class="admin-chip admin-chip-danger">Cancelled</span>
+                        {% else %}
+                            <span class="admin-chip admin-chip-warning">{{ appt.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ (appt.reason or '-')[:100] }}{% if appt.reason and appt.reason|length > 100 %}...{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if appointments.has_prev or appointments.has_next %}
+<div class="admin-pagination">
+    {% if appointments.has_prev %}
+        <a href="{{ url_for('admin_appointments', page=appointments.prev_num) }}" class="admin-page-btn">
+            <i class="fas fa-chevron-left"></i>&nbsp;Previous
+        </a>
+    {% endif %}
+
+    <span class="admin-page-meta">Page {{ appointments.page }} of {{ appointments.pages }}</span>
+
+    {% if appointments.has_next %}
+        <a href="{{ url_for('admin_appointments', page=appointments.next_num) }}" class="admin-page-btn">
+            Next&nbsp;<i class="fas fa-chevron-right"></i>
+        </a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="admin-empty-state">
+    <i class="fas fa-calendar"></i>
+    <p>No appointments yet.</p>
+</div>
+{% endif %}
+{% endblock %}

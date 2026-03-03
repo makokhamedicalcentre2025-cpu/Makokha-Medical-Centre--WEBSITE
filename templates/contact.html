@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Contact Us - Makokha Medical Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .breadcrumb {
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-top: -70px;
+        padding-top: 5rem;
+    }
+    
+    .contact-section {
+        padding: 4rem 0;
+    }
+    
+    .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        margin-top: 2rem;
+    }
+    
+    .contact-info-card {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 12px;
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+    }
+    
+    .contact-icon {
+        font-size: 1.75rem;
+        color: #0066cc;
+        width: 50px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    
+    .contact-detail h3 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .contact-detail p {
+        color: #666;
+    }
+    
+    .contact-form {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .emergency-call-btn {
+        margin-top: 0.7rem;
+        width: 100%;
+        padding: 0.72rem 0.85rem;
+        background: #c62828;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+
+    .emergency-call-btn:hover {
+        background: #b71c1c;
+    }
+
+    .emergency-live-stats {
+        margin-top: 0.75rem;
+        padding: 0.6rem 0.7rem;
+        border-radius: 8px;
+        background: #fff4f4;
+        border: 1px solid #f2cccc;
+        color: #8c2d2d;
+        font-size: 0.86rem;
+    }
+    
+    @media (min-width: 1025px) and (max-width: 1280px) {
+        .contact-grid {
+            gap: 2.2rem;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+            gap: 1.8rem;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 767px) {
+        .contact-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .contact-info-card,
+        .contact-form {
+            padding: 1.3rem;
+        }
+    }
+
+    @media (min-width: 320px) and (max-width: 480px) {
+        .contact-section {
+            padding: 2.6rem 0;
+        }
+
+        .contact-grid {
+            grid-template-columns: 1fr;
+            gap: 1.1rem;
+            margin-top: 1.1rem;
+        }
+
+        .contact-info-card {
+            padding: 1rem;
+            gap: 0.85rem;
+            margin-bottom: 0.9rem;
+        }
+
+        .contact-icon {
+            font-size: 1.35rem;
+            width: 34px;
+        }
+
+        .contact-detail h3 {
+            font-size: 1rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .contact-detail p {
+            font-size: 0.9rem;
+        }
+
+        .contact-form {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% set initial_live_stats = live_stats if live_stats is defined else {} %}
+<section class="breadcrumb">
+    <div class="container">
+        <a href="{{ url_for('index') }}" style="color: rgba(255, 255, 255, 0.8);">Home</a>
+        <span style="color: white;">/ Contact Us</span>
+        <h1 style="color: white; margin-top: 1rem;">Get In Touch</h1>
+    </div>
+</section>
+
+<section class="contact-section">
+    <div class="container">
+        <div class="contact-grid">
+            <div>
+                <h2>Contact Information</h2>
+                
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="contact-detail">
+                        <h3>Location</h3>
+                        <p>
+                            {% if site_content.contact_address_lines %}
+                                {% for address_line in site_content.contact_address_lines %}
+                                    {{ address_line }}{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            {% else %}
+                                Makokha Medical Centre<br>Maliki, Kenya
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="contact-detail">
+                        <h3>Phone</h3>
+                        <p>
+                            {% if site_content.contact_phone_lines %}
+                                {% for phone_line in site_content.contact_phone_lines %}
+                                    <a href="tel:{{ phone_line|replace(' ', '')|replace('(', '')|replace(')', '') }}">{{ phone_line }}</a>{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            {% else %}
+                                +254 (0) 123 456 789<br>+254 (0) 987 654 321
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="contact-detail">
+                        <h3>Email</h3>
+                        <p>
+                            {% if site_content.contact_email_lines %}
+                                {% for email_line in site_content.contact_email_lines %}
+                                    <a href="mailto:{{ email_line }}">{{ email_line }}</a>{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <a href="mailto:info@makokhamedical.com">info@makokhamedical.com</a><br>
+                                <a href="mailto:appointments@makokhamedical.com">appointments@makokhamedical.com</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="contact-detail">
+                        <h3>Hours</h3>
+                        <p>
+                            {% if site_content.opening_hours_lines %}
+                                {% for opening_line in site_content.opening_hours_lines %}
+                                    {{ opening_line }}{% if not loop.last %}<br>{% endif %}
+                                {% endfor %}
+                            {% else %}
+                                Monday - Friday: 9:00 AM - 5:00 PM<br>Saturday: 9:00 AM - 1:00 PM<br>Sunday: Emergency Only
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="contact-info-card">
+                    <div class="contact-icon">
+                        <i class="fas fa-triangle-exclamation"></i>
+                    </div>
+                    <div class="contact-detail">
+                        <h3>{{ site_content.emergency_call_title }}</h3>
+                        <p>{{ site_content.emergency_call_description }}</p>
+                        <button type="button" class="emergency-call-btn" onclick="initiateEmergencyCall(event)">
+                            <i class="fas fa-phone-volume"></i> Emergency Call Without Phone
+                        </button>
+                        <div class="emergency-live-stats">
+                            Active now: <strong data-live-stat="emergency_active_calls">{{ initial_live_stats.get('emergency_active_calls', 0) }}</strong> |
+                            Answered today: <strong data-live-stat="emergency_answered_calls">{{ initial_live_stats.get('emergency_answered_calls', 0) }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="contact-form">
+                    <h2 style="margin-bottom: 1.5rem;">Send us a Message</h2>
+                    
+                    <form id="messageForm" method="POST" data-validate>
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <div class="form-group">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input type="tel" name="phone" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Subject</label>
+                            <input type="text" name="subject" class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Message</label>
+                            <textarea name="message" class="form-textarea" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

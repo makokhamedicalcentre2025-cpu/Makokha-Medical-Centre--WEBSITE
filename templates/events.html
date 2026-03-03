@@ -1,0 +1,672 @@
+{% extends "base.html" %}
+
+{% block title %}Events - Makokha Medical Centre{% endblock %}
+
+{% block extra_css %}
+<style>
+    .breadcrumb {
+        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-top: -70px;
+        padding-top: 5rem;
+    }
+    
+    .events-page-section {
+        padding: 4rem 0;
+    }
+
+    .events-toolbar {
+        margin-bottom: 1.8rem;
+    }
+
+    .events-toolbar h2 {
+        margin: 0;
+        color: #1f2a37;
+    }
+
+    .events-toolbar p {
+        margin: 0.35rem 0 0;
+        color: #5f6b7a;
+    }
+    
+    .events-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.4rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .tab-btn {
+        padding: 1rem 1.5rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #666;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.3s ease;
+    }
+    
+    .tab-btn.active {
+        color: #0066cc;
+        border-bottom-color: #0066cc;
+    }
+
+    .events-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .event-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 36%);
+        transition: all 0.25s ease;
+    }
+
+    .event-card:hover {
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+        transform: translateY(-3px);
+    }
+
+    .event-card.event-card-past {
+        grid-template-columns: minmax(260px, 36%) minmax(0, 1fr);
+    }
+
+    .event-media {
+        min-height: 240px;
+        background: linear-gradient(135deg, #e6f0ff 0%, #cce5ff 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #0066cc;
+    }
+
+    .event-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .event-media-telemedicine {
+        background: linear-gradient(135deg, #e9f3ff 0%, #d8eaff 100%);
+    }
+
+    .event-media-telemedicine i {
+        font-size: 3.2rem;
+        color: #0f5db6;
+    }
+
+    .event-content {
+        padding: 1.2rem 1.25rem;
+    }
+
+    .event-topline {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.65rem;
+    }
+
+    .event-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+    }
+
+    .event-badge-type {
+        background: #e6f0ff;
+        color: #0f5db6;
+    }
+
+    .event-badge-status {
+        background: #eef8f1;
+        color: #1c7d4f;
+    }
+
+    .event-title {
+        margin: 0 0 0.65rem;
+        font-size: 1.15rem;
+        color: #1f2a37;
+        font-weight: 700;
+    }
+
+    .event-meta {
+        display: grid;
+        gap: 0.42rem;
+        margin-bottom: 0.7rem;
+        color: #3e4b5c;
+        font-size: 0.92rem;
+    }
+
+    .event-meta-row {
+        display: flex;
+        gap: 0.45rem;
+        align-items: flex-start;
+    }
+
+    .event-meta-row i {
+        color: #0f5db6;
+        margin-top: 0.12rem;
+        width: 14px;
+    }
+
+    .event-description {
+        color: #4f5d70;
+        line-height: 1.58;
+        margin: 0;
+        white-space: pre-line;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+
+    .past-events-footer {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    .load-more-btn {
+        border: none;
+        background: #0f5db6;
+        color: #fff;
+        border-radius: 10px;
+        padding: 0.65rem 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .load-more-btn:hover {
+        background: #0b4b92;
+        transform: translateY(-1px);
+    }
+
+    .load-more-btn:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    @media (min-width: 1025px) and (max-width: 1280px) {
+        .event-card {
+            grid-template-columns: minmax(0, 1fr) minmax(240px, 34%);
+        }
+
+        .event-card.event-card-past {
+            grid-template-columns: minmax(240px, 34%) minmax(0, 1fr);
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .events-tabs {
+            flex-wrap: wrap;
+            gap: 0.55rem;
+        }
+
+        .tab-btn {
+            padding: 0.8rem 1rem;
+        }
+
+        .event-card,
+        .event-card.event-card-past {
+            grid-template-columns: 1fr;
+        }
+
+        .event-media {
+            min-height: 228px;
+        }
+    }
+
+    @media (min-width: 481px) and (max-width: 767px) {
+        .events-page-section {
+            padding: 3rem 0;
+        }
+
+        .events-tabs {
+            flex-wrap: wrap;
+            gap: 0.45rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 0.95rem;
+            font-size: 0.95rem;
+        }
+
+        .event-card,
+        .event-card.event-card-past {
+            grid-template-columns: 1fr;
+        }
+
+        .event-media {
+            min-height: 210px;
+        }
+    }
+
+    @media (min-width: 320px) and (max-width: 480px) {
+        .events-page-section {
+            padding: 2.6rem 0;
+        }
+
+        .events-tabs {
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .tab-btn {
+            width: 100%;
+            text-align: left;
+            padding: 0.7rem 0.85rem;
+            font-size: 0.9rem;
+        }
+
+        .event-card,
+        .event-card.event-card-past {
+            grid-template-columns: 1fr;
+        }
+
+        .event-media {
+            min-height: 195px;
+        }
+
+        .event-content {
+            padding: 1rem;
+        }
+
+        .event-title {
+            font-size: 1.03rem;
+        }
+
+        .event-meta,
+        .event-description {
+            font-size: 0.88rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="breadcrumb">
+    <div class="container">
+        <a href="{{ url_for('index') }}" style="color: rgba(255, 255, 255, 0.8);">Home</a>
+        <span style="color: white;">/ Events</span>
+        <h1 style="color: white; margin-top: 1rem;">Medical Events</h1>
+    </div>
+</section>
+
+<section class="events-page-section">
+    <div class="container">
+        <div class="events-toolbar">
+            <div>
+                <h2>Events Directory</h2>
+                <p>Every event below shows full title, date, time, location, type, status, and full description. Category filter: {{ selected_event_type_label }} (change from the Events navigation dropdown).</p>
+            </div>
+        </div>
+
+        <div class="events-tabs">
+            <button class="tab-btn active" onclick="showTab('upcoming', this)">
+                <i class="fas fa-arrow-right"></i> Upcoming Events
+            </button>
+            <button class="tab-btn" onclick="showTab('past', this)">
+                <i class="fas fa-history"></i> Past Events
+            </button>
+        </div>
+        
+        <!-- UPCOMING EVENTS -->
+        <div id="upcoming" class="tab-content active">
+            {% set show_telemedicine = telemedicine and (selected_event_type or 'all') == 'all' %}
+            {% if upcoming or show_telemedicine %}
+                <div class="events-list">
+                    {% if show_telemedicine %}
+                    <article class="event-card event-card-upcoming fade-in">
+                        <div class="event-content">
+                            <div class="event-topline">
+                                <span class="event-badge event-badge-type">Telemedicine</span>
+                                <span class="event-badge event-badge-status">Upcoming</span>
+                            </div>
+                            <h3 class="event-title">{{ telemedicine.title }}</h3>
+                            <div class="event-meta">
+                                <div class="event-meta-row">
+                                    <i class="fas fa-laptop-medical"></i>
+                                    <span><strong>Mode:</strong> Virtual Consultation</span>
+                                </div>
+                                <div class="event-meta-row">
+                                    <i class="fas fa-circle-info"></i>
+                                    <span><strong>Subtitle:</strong> {{ telemedicine.subtitle }}</span>
+                                </div>
+                                <div class="event-meta-row">
+                                    <i class="fas fa-clock"></i>
+                                    <span><strong>Launch Window:</strong> {{ telemedicine.launch_window }}</span>
+                                </div>
+                            </div>
+                            <p class="event-description">{{ telemedicine.description }}</p>
+                        </div>
+                        <div class="event-media event-media-telemedicine">
+                            {% if telemedicine.image_url %}
+                                <img src="{{ telemedicine.image_url }}" alt="{{ telemedicine.title }}">
+                            {% else %}
+                                <i class="fas fa-laptop-medical"></i>
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% endif %}
+
+                    {% for event in upcoming %}
+                    {% set status_value = event.normalized_status() %}
+                    {% if status_value == 'ongoing' %}
+                        {% set status_label = 'Ongoing' %}
+                    {% elif status_value == 'completed' %}
+                        {% set status_label = 'Past' %}
+                    {% else %}
+                        {% set status_label = 'Upcoming' %}
+                    {% endif %}
+                    <article class="event-card event-card-upcoming fade-in">
+                        <div class="event-content">
+                            <div class="event-topline">
+                                <span class="event-badge event-badge-type">{{ (event.event_type or 'general')|replace('_', ' ')|title }}</span>
+                                <span class="event-badge event-badge-status">{{ status_label }}</span>
+                            </div>
+                            <h3 class="event-title">{{ event.title }}</h3>
+                            <div class="event-meta">
+                                <div class="event-meta-row">
+                                    <i class="fas fa-calendar-day"></i>
+                                    <span><strong>Date:</strong> {{ event.event_date.strftime('%b %d, %Y') }}</span>
+                                </div>
+                                <div class="event-meta-row">
+                                    <i class="fas fa-clock"></i>
+                                    <span><strong>Time:</strong> {{ event.event_date.strftime('%I:%M %p') }}</span>
+                                </div>
+                                <div class="event-meta-row">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span><strong>Location:</strong> {{ event.location or 'Not specified' }}</span>
+                                </div>
+                            </div>
+                            <p class="event-description">{{ event.description }}</p>
+                        </div>
+                        <div class="event-media">
+                            {% set media_slides = event_slides_map.get(event.id, []) %}
+                            {% if media_slides %}
+                                <img
+                                    src="{{ media_slides[0].url }}"
+                                    alt="{{ event.title }}"
+                                    class="event-auto-image"
+                                    data-event-slides='{{ media_slides|tojson }}'
+                                    style="object-position: {{ '%.2f'|format((media_slides[0].x if media_slides[0].x is not none else 50.0)) }}% {{ '%.2f'|format((media_slides[0].y if media_slides[0].y is not none else 50.0)) }}%;"
+                                >
+                            {% else %}
+                                <i class="fas fa-calendar-alt"></i>
+                            {% endif %}
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center" style="padding: 3rem;">
+                    <p style="color: #666; font-size: 1.1rem;">No upcoming events found for this category.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- PAST EVENTS -->
+        <div id="past" class="tab-content">
+            {% if past %}
+                <div id="pastEventsGrid" class="events-list">
+                    {% for event in past %}
+                    {% set status_value = event.normalized_status() %}
+                    {% if status_value == 'ongoing' %}
+                        {% set status_label = 'Ongoing' %}
+                    {% elif status_value == 'completed' %}
+                        {% set status_label = 'Past' %}
+                    {% else %}
+                        {% set status_label = 'Upcoming' %}
+                    {% endif %}
+                    <article class="event-card event-card-past fade-in">
+                        <div class="event-media" style="opacity: 0.88;">
+                            {% set media_slides = event_slides_map.get(event.id, []) %}
+                            {% if media_slides %}
+                                <img
+                                    src="{{ media_slides[0].url }}"
+                                    alt="{{ event.title }}"
+                                    class="event-auto-image"
+                                    data-event-slides='{{ media_slides|tojson }}'
+                                    style="object-position: {{ '%.2f'|format((media_slides[0].x if media_slides[0].x is not none else 50.0)) }}% {{ '%.2f'|format((media_slides[0].y if media_slides[0].y is not none else 50.0)) }}%;"
+                                >
+                            {% else %}
+                                <i class="fas fa-calendar-alt"></i>
+                            {% endif %}
+                        </div>
+                        <div class="event-content">
+                            <div class="event-topline">
+                                <span class="event-badge event-badge-type">{{ (event.event_type or 'general')|replace('_', ' ')|title }}</span>
+                                <span class="event-badge event-badge-status">{{ status_label }}</span>
+                            </div>
+                            <h3 class="event-title">{{ event.title }}</h3>
+                            <div class="event-meta">
+                                <div class="event-meta-row">
+                                    <i class="fas fa-calendar-day"></i>
+                                    <span><strong>Date:</strong> {{ event.event_date.strftime('%b %d, %Y') }}</span>
+                                </div>
+                                <div class="event-meta-row">
+                                    <i class="fas fa-clock"></i>
+                                    <span><strong>Time:</strong> {{ event.event_date.strftime('%I:%M %p') }}</span>
+                                </div>
+                                <div class="event-meta-row">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span><strong>Location:</strong> {{ event.location or 'Not specified' }}</span>
+                                </div>
+                            </div>
+                            <p class="event-description">{{ event.description }}</p>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% if has_more_past %}
+                <div class="past-events-footer">
+                    <button
+                        id="loadPastEventsBtn"
+                        class="load-more-btn"
+                        type="button"
+                        data-next-page="2"
+                        data-page-size="{{ past_page_size }}"
+                        onclick="loadMorePastEvents(this)"
+                    >
+                        <i class="fas fa-clock-rotate-left"></i> Load More Past Events
+                    </button>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="text-center" style="padding: 3rem;">
+                    <p style="color: #666; font-size: 1.1rem;">No past events found for this category.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block inline_js %}
+    function showTab(tabName, triggerButton) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Deactivate all buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName).classList.add('active');
+        
+        // Activate clicked button
+        if (triggerButton) {
+            triggerButton.classList.add('active');
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/\"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function renderPastEventCard(event) {
+        const slides = Array.isArray(event.image_slides) ? event.image_slides : [];
+        const firstSlide = slides.length ? slides[0] : null;
+        const focusX = firstSlide && Number.isFinite(Number(firstSlide.x))
+            ? Number(firstSlide.x)
+            : (Number.isFinite(Number(event.image_focus_x)) ? Number(event.image_focus_x) : 50);
+        const focusY = firstSlide && Number.isFinite(Number(firstSlide.y))
+            ? Number(firstSlide.y)
+            : (Number.isFinite(Number(event.image_focus_y)) ? Number(event.image_focus_y) : 50);
+        const firstUrl = firstSlide && firstSlide.url ? firstSlide.url : event.image_url;
+        const imageMarkup = firstUrl
+            ? `<img src="${escapeHtml(firstUrl)}" alt="${escapeHtml(event.title)}" class="event-auto-image" data-event-slides='${escapeHtml(JSON.stringify(slides))}' style="object-position: ${focusX.toFixed(2)}% ${focusY.toFixed(2)}%;">`
+            : '<i class="fas fa-calendar-alt"></i>';
+
+        return `
+            <article class="event-card event-card-past fade-in">
+                <div class="event-media" style="opacity: 0.88;">
+                    ${imageMarkup}
+                </div>
+                <div class="event-content">
+                    <div class="event-topline">
+                        <span class="event-badge event-badge-type">${escapeHtml(event.event_type || '')}</span>
+                        <span class="event-badge event-badge-status">${escapeHtml(event.status_label || 'Past')}</span>
+                    </div>
+                    <h3 class="event-title">${escapeHtml(event.title)}</h3>
+                    <div class="event-meta">
+                        <div class="event-meta-row">
+                            <i class="fas fa-calendar-day"></i>
+                            <span><strong>Date:</strong> ${escapeHtml(event.display_date || '')}</span>
+                        </div>
+                        <div class="event-meta-row">
+                            <i class="fas fa-clock"></i>
+                            <span><strong>Time:</strong> ${escapeHtml(event.display_time || '')}</span>
+                        </div>
+                        <div class="event-meta-row">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span><strong>Location:</strong> ${escapeHtml(event.location || 'Not specified')}</span>
+                        </div>
+                    </div>
+                    <p class="event-description">${escapeHtml(event.description || '')}</p>
+                </div>
+            </article>
+        `;
+    }
+
+    async function loadMorePastEvents(buttonElement) {
+        if (!buttonElement) return;
+        const nextPage = parseInt(buttonElement.dataset.nextPage || '1', 10);
+        const pageSize = parseInt(buttonElement.dataset.pageSize || '6', 10);
+        const eventsGrid = document.getElementById('pastEventsGrid');
+        if (!eventsGrid || !Number.isFinite(nextPage) || !Number.isFinite(pageSize)) return;
+        const selectedEventType = "{{ selected_event_type or 'all' }}";
+
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+
+        try {
+            const params = new URLSearchParams({
+                page: String(nextPage),
+                page_size: String(pageSize),
+                event_type: selectedEventType
+            });
+            const response = await fetch(`/api/events/past?${params.toString()}`);
+            const data = await response.json();
+            if (!response.ok || !data.success || !Array.isArray(data.events)) {
+                throw new Error(data.message || 'Unable to load more past events.');
+            }
+
+            data.events.forEach((eventItem) => {
+                eventsGrid.insertAdjacentHTML('beforeend', renderPastEventCard(eventItem));
+            });
+            initEventCardImageSlides(eventsGrid);
+
+            if (data.has_more && data.next_page) {
+                buttonElement.dataset.nextPage = String(data.next_page);
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = '<i class="fas fa-clock-rotate-left"></i> Load More Past Events';
+            } else {
+                buttonElement.remove();
+            }
+        } catch (error) {
+            buttonElement.disabled = false;
+            buttonElement.innerHTML = '<i class="fas fa-rotate-right"></i> Retry Loading';
+        }
+    }
+
+    function initEventCardImageSlides(scopeNode) {
+        const rootNode = scopeNode && scopeNode.querySelectorAll ? scopeNode : document;
+        const imageNodes = rootNode.querySelectorAll('.event-auto-image[data-event-slides]');
+
+        imageNodes.forEach((imageNode) => {
+            if (imageNode.dataset.sliderReady === '1') return;
+
+            let slides = [];
+            try {
+                slides = JSON.parse(imageNode.dataset.eventSlides || '[]');
+            } catch (error) {
+                slides = [];
+            }
+            if (!Array.isArray(slides) || slides.length <= 1) {
+                imageNode.dataset.sliderReady = '1';
+                return;
+            }
+
+            let index = 0;
+            imageNode.dataset.sliderReady = '1';
+            setInterval(() => {
+                index = (index + 1) % slides.length;
+                const current = slides[index] || {};
+                if (!current.url) return;
+                const x = Number.isFinite(Number(current.x)) ? Number(current.x) : 50;
+                const y = Number.isFinite(Number(current.y)) ? Number(current.y) : 50;
+                imageNode.src = current.url;
+                imageNode.style.objectPosition = `${x.toFixed(2)}% ${y.toFixed(2)}%`;
+            }, 5000);
+        });
+    }
+    
+    // Animate elements on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -100px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fade-in');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    document.querySelectorAll('.event-card').forEach(el => {
+        observer.observe(el);
+    });
+    initEventCardImageSlides(document);
+{% endblock %}

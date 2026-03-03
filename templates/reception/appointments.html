@@ -1,0 +1,140 @@
+{% extends "reception/base.html" %}
+
+{% block reception_content %}
+<div style="padding: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">
+        <i class="fas fa-calendar-check"></i> Manage Appointments
+    </h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div style="margin-bottom: 0.8rem; padding: 0.8rem 1rem; border-radius: 6px; background: {% if category == 'success' %}#edf9f1{% elif category == 'warning' %}#fff8e6{% elif category == 'error' %}#fff1f1{% else %}#eef5ff{% endif %}; border-left: 4px solid {% if category == 'success' %}#27ae60{% elif category == 'warning' %}#d89410{% elif category == 'error' %}#e74c3c{% else %}#0f5db6{% endif %}; color: #2c3e50;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="GET" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.85rem; margin-bottom: 1.25rem; background: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div>
+            <label style="display: block; font-size: 0.82rem; margin-bottom: 0.35rem; color: #5b6878; font-weight: 600;">Status</label>
+            <select name="status" style="width: 100%; padding: 0.6rem; border: 1px solid #d7dfeb; border-radius: 6px;">
+                {% set status_options = ['all', 'pending', 'confirmed', 'completed', 'cancelled'] %}
+                {% for option in status_options %}
+                <option value="{{ option }}" {% if status_filter == option %}selected{% endif %}>{{ option|title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="display: flex; align-items: end; gap: 0.55rem;">
+            <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 600; cursor: pointer;">
+                Apply
+            </button>
+            <a href="{{ url_for('reception_appointments') }}" style="padding: 0.62rem 0.9rem; border-radius: 6px; background: #eef4ff; color: #0f5db6; text-decoration: none; font-weight: 600;">
+                Reset
+            </a>
+        </div>
+    </form>
+
+    {% if appointments.items %}
+        <div style="display: grid; gap: 1rem;">
+            {% for appt in appointments.items %}
+                <form method="POST" action="{{ url_for('reception_update_appointment', appointment_id=appt.id, status=status_filter) }}" style="background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <div style="padding: 1rem; border-bottom: 1px solid #edf2f8; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                        <div>
+                            <div style="font-size: 1.03rem; font-weight: 700; color: #243247;">{{ appt.patient_name }}</div>
+                            <div style="font-size: 0.84rem; color: #5f6f83; margin-top: 0.2rem;">
+                                <i class="fas fa-envelope"></i> {{ appt.patient_email }}
+                            </div>
+                            <div style="font-size: 0.84rem; color: #5f6f83; margin-top: 0.16rem;">
+                                <i class="fas fa-phone"></i> {{ appt.patient_phone }}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.82rem; color: #6b7788;">Current Status</div>
+                            <span style="display: inline-flex; margin-top: 0.2rem; padding: 0.2rem 0.6rem; border-radius: 999px; background: #eef4ff; color: #0f5db6; font-weight: 600; font-size: 0.78rem;">
+                                {{ appt.status|title }}
+                            </span>
+                            <div style="font-size: 0.82rem; color: #6b7788; margin-top: 0.4rem;">
+                                {{ appt.appointment_date.strftime('%b %d, %Y at %I:%M %p') }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="padding: 1rem; display: grid; gap: 0.8rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.8rem;">
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; margin-bottom: 0.3rem; color: #5f6f83; font-weight: 600;">Status</label>
+                                <select name="status" style="width: 100%; padding: 0.58rem; border: 1px solid #d7dfeb; border-radius: 6px;">
+                                    <option value="pending" {% if appt.status == 'pending' %}selected{% endif %}>Pending</option>
+                                    <option value="confirmed" {% if appt.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                    <option value="completed" {% if appt.status == 'completed' %}selected{% endif %}>Completed</option>
+                                    <option value="cancelled" {% if appt.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; margin-bottom: 0.3rem; color: #5f6f83; font-weight: 600;">Assigned Doctor</label>
+                                <select name="doctor_id" style="width: 100%; padding: 0.58rem; border: 1px solid #d7dfeb; border-radius: 6px;">
+                                    <option value="">Not assigned</option>
+                                    {% for doctor in doctors %}
+                                    <option value="{{ doctor.id }}" {% if appt.doctor_id == doctor.id %}selected{% endif %}>
+                                        {{ doctor.full_name() }} - {{ doctor.specialty }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.8rem; margin-bottom: 0.3rem; color: #5f6f83; font-weight: 600;">Appointment Date & Time</label>
+                                <input type="datetime-local" name="appointment_date" value="{{ appt.appointment_date.strftime('%Y-%m-%dT%H:%M') if appt.appointment_date else '' }}" style="width: 100%; padding: 0.58rem; border: 1px solid #d7dfeb; border-radius: 6px;">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: 0.8rem; margin-bottom: 0.3rem; color: #5f6f83; font-weight: 600;">Reception Notes</label>
+                            <textarea name="notes" rows="2" style="width: 100%; padding: 0.58rem; border: 1px solid #d7dfeb; border-radius: 6px; font-family: inherit;">{{ appt.notes or '' }}</textarea>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                            <div style="display: flex; flex-direction: column; gap: 0.32rem;">
+                                <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.86rem; color: #44556b;">
+                                    <input type="checkbox" name="send_email">
+                                    Email patient after update
+                                </label>
+                                <label style="display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.86rem; color: #44556b;">
+                                    <input type="checkbox" name="send_telemedicine_link">
+                                    Send telemedicine link (Resend)
+                                </label>
+                            </div>
+                            <button type="submit" style="padding: 0.62rem 1rem; border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 700; cursor: pointer;">
+                                <i class="fas fa-save"></i> Save Appointment
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% endfor %}
+        </div>
+
+        {% if appointments.has_prev or appointments.has_next %}
+        <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem; align-items: center;">
+            {% if appointments.has_prev %}
+                <a href="{{ url_for('reception_appointments', page=appointments.prev_num, status=status_filter) }}" style="padding: 0.5rem 0.8rem; background: #0f5db6; color: #fff; border-radius: 6px; text-decoration: none;">
+                    Previous
+                </a>
+            {% endif %}
+            <span style="color: #5b6878;">Page {{ appointments.page }} of {{ appointments.pages }}</span>
+            {% if appointments.has_next %}
+                <a href="{{ url_for('reception_appointments', page=appointments.next_num, status=status_filter) }}" style="padding: 0.5rem 0.8rem; background: #0f5db6; color: #fff; border-radius: 6px; text-decoration: none;">
+                    Next
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% else %}
+        <div style="background: #fff; border-radius: 8px; padding: 2.2rem; text-align: center; color: #6b7280; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+            <i class="fas fa-calendar-xmark" style="font-size: 2rem; color: #b4c1d3; margin-bottom: 0.7rem;"></i>
+            <p style="margin: 0;">No appointments found for the selected filter.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

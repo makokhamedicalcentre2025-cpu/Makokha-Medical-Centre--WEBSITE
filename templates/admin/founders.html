@@ -1,0 +1,82 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Manage Founders - Admin Panel{% endblock %}
+{% block page_title %}Manage Founders{% endblock %}
+
+{% block content %}
+<div class="admin-list-header">
+    <div class="admin-list-title">
+        <h1><i class="fas fa-people-group"></i> Founders</h1>
+        <p>Manage founder profiles shown in the public founders section.</p>
+    </div>
+    <div class="admin-list-actions">
+        <a href="{{ url_for('admin_add_founder') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Founder
+        </a>
+    </div>
+</div>
+
+{% if founders %}
+<div class="admin-table-shell">
+    <div class="admin-table-scroll">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Founder</th>
+                    <th>Title</th>
+                    <th>Display Order</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for founder in founders %}
+                <tr>
+                    <td>
+                        <div class="admin-row-main">
+                            {% if founder.image_filename %}
+                                <img src="{{ url_for('static', filename='uploads/' + founder.image_filename) }}" alt="{{ founder.full_name }}" class="admin-avatar-sm">
+                            {% else %}
+                                <span class="admin-avatar-placeholder"><i class="fas fa-user-tie"></i></span>
+                            {% endif %}
+                            <div>
+                                <div class="admin-primary-text">{{ founder.full_name }}</div>
+                                <div class="admin-secondary-text">{{ founder.bio[:80] ~ ('...' if founder.bio and founder.bio|length > 80 else '') if founder.bio else 'No bio added' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ founder.title }}</td>
+                    <td>{{ founder.display_order }}</td>
+                    <td>
+                        {% if founder.is_active %}
+                            <span style="color: #1f9d63; font-weight: 600;">Active</span>
+                        {% else %}
+                            <span style="color: #c0392b; font-weight: 600;">Hidden</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('admin_edit_founder', founder_id=founder.id) }}" class="admin-btn-inline admin-btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form method="POST" action="{{ url_for('admin_delete_founder', founder_id=founder.id) }}" class="admin-inline-form" onsubmit="return confirm('Delete this founder profile?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <button type="submit" class="admin-btn-inline admin-btn-delete">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="admin-empty-state">
+    <i class="fas fa-people-group"></i>
+    <p>No founder profiles found.</p>
+    <p><a href="{{ url_for('admin_add_founder') }}">Add your first founder</a></p>
+</div>
+{% endif %}
+{% endblock %}
+

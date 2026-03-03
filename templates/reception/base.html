@@ -1,0 +1,572 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; height: 100vh; margin-top: 60px;">
+    <!-- Sidebar -->
+    <aside style="width: 250px; background: #2c3e50; color: white; overflow-y: auto; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
+        <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-headset"></i> Reception
+            </h3>
+            <p style="font-size: 0.9rem; opacity: 0.8;">{{ session.full_name }}</p>
+        </div>
+        
+        <nav style="padding: 1rem 0;">
+            <a href="{{ url_for('reception_dashboard') }}" style="display: flex; align-items: center; padding: 1rem 1.5rem; color: white; text-decoration: none; transition: all 0.3s; border-left: 3px solid transparent;">
+                <i class="fas fa-chart-line" style="width: 20px;"></i>
+                <span style="margin-left: 0.75rem;">Dashboard</span>
+            </a>
+            
+            <a href="{{ url_for('reception_messages') }}" style="display: flex; align-items: center; padding: 1rem 1.5rem; color: white; text-decoration: none; transition: all 0.3s; border-left: 3px solid transparent;">
+                <i class="fas fa-envelope" style="width: 20px;"></i>
+                <span style="margin-left: 0.75rem;">Messages</span>
+                <span style="margin-left: auto; background: #e74c3c; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.75rem;">{{ unread_messages if unread_messages is defined else 0 }}</span>
+            </a>
+            
+            <a href="{{ url_for('reception_messages', filter='pending') }}" style="display: flex; align-items: center; padding: 1rem 1.5rem; color: white; text-decoration: none; transition: all 0.3s; border-left: 3px solid transparent;">
+                <i class="fas fa-clock" style="width: 20px;"></i>
+                <span style="margin-left: 0.75rem;">Pending</span>
+            </a>
+
+            <a href="{{ url_for('reception_appointments') }}" style="display: flex; align-items: center; padding: 1rem 1.5rem; color: white; text-decoration: none; transition: all 0.3s; border-left: 3px solid transparent;">
+                <i class="fas fa-calendar-check" style="width: 20px;"></i>
+                <span style="margin-left: 0.75rem;">Appointments</span>
+            </a>
+
+            <a href="{{ url_for('reception_call_logs') }}" style="display: flex; align-items: center; padding: 1rem 1.5rem; color: white; text-decoration: none; transition: all 0.3s; border-left: 3px solid transparent;">
+                <i class="fas fa-phone-volume" style="width: 20px;"></i>
+                <span style="margin-left: 0.75rem;">Call Logs</span>
+            </a>
+        </nav>
+        
+        <div style="padding: 1rem; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="{{ url_for('logout') }}" style="display: flex; align-items: center; padding: 0.75rem 1rem; color: white; text-decoration: none; background: rgba(255,255,255,0.1); border-radius: 6px; transition: all 0.3s;">
+                <i class="fas fa-sign-out-alt" style="width: 20px;"></i>
+                <span style="margin-left: 0.75rem;">Logout</span>
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main style="flex: 1; overflow-y: auto; background: #f5f7fa;">
+        {% block reception_content %}
+        <!-- Reception content goes here -->
+        {% endblock %}
+    </main>
+</div>
+<audio id="receptionRemoteAudio" autoplay playsinline style="display: none;"></audio>
+<div id="incomingCallPrompt" style="display: none; position: fixed; right: 24px; bottom: 24px; width: 320px; background: #fff; border: 1px solid #d7e3f3; border-radius: 12px; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.18); z-index: 12050; overflow: hidden;">
+    <div id="incomingCallHeader" style="background: #0f5db6; color: #fff; padding: 0.85rem 1rem; font-weight: 600;">
+        Incoming Call
+    </div>
+    <div style="padding: 0.9rem 1rem;">
+        <div id="incomingCallText" style="color: #1f2a37; font-size: 0.92rem; margin-bottom: 0.85rem;"></div>
+        <div style="display: flex; gap: 0.55rem;">
+            <button id="incomingAnswerBtn" type="button" style="flex: 1; border: none; border-radius: 8px; background: #27ae60; color: #fff; padding: 0.6rem; cursor: pointer; font-weight: 600;">Answer</button>
+            <button id="incomingRejectBtn" type="button" style="flex: 1; border: none; border-radius: 8px; background: #e74c3c; color: #fff; padding: 0.6rem; cursor: pointer; font-weight: 600;">Reject</button>
+        </div>
+        <button id="incomingEndBtn" type="button" style="display: none; width: 100%; margin-top: 0.55rem; border: none; border-radius: 8px; background: #e74c3c; color: #fff; padding: 0.6rem; cursor: pointer; font-weight: 600;">End Call</button>
+    </div>
+</div>
+
+<style>
+    aside a {
+        border-left-color: transparent;
+    }
+    
+    aside a:hover {
+        background: rgba(255,255,255,0.1);
+        border-left-color: #0066cc;
+    }
+</style>
+
+<script>
+    let receptionSocket = null;
+    let receptionRtcRuntime = {
+        checked: false,
+        enabled: false,
+        message: ''
+    };
+    let receptionCallState = {
+        callId: null,
+        roomName: null,
+        iceServers: [],
+        peerConnection: null,
+        localStream: null,
+        joinedRoom: false
+    };
+    let incomingRingtoneTimer = null;
+
+    function playIncomingTone(callType = 'customer_care') {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+
+        const context = new AudioContextClass();
+        if (context.state === 'suspended') {
+            context.resume().catch(() => null);
+        }
+
+        const oscillator = context.createOscillator();
+        const gainNode = context.createGain();
+        oscillator.type = 'sine';
+        oscillator.frequency.value = callType === 'emergency' ? 920 : 740;
+
+        const now = context.currentTime;
+        gainNode.gain.setValueAtTime(0.0001, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.12, now + 0.03);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(context.destination);
+        oscillator.start(now);
+        oscillator.stop(now + 0.43);
+        oscillator.onended = () => context.close();
+    }
+
+    function startIncomingRingtone(callType = 'customer_care') {
+        stopIncomingRingtone();
+        playIncomingTone(callType);
+        const intervalMs = callType === 'emergency' ? 1000 : 1500;
+        incomingRingtoneTimer = setInterval(() => {
+            playIncomingTone(callType);
+        }, intervalMs);
+    }
+
+    function stopIncomingRingtone() {
+        if (!incomingRingtoneTimer) return;
+        clearInterval(incomingRingtoneTimer);
+        incomingRingtoneTimer = null;
+    }
+
+    function speakIncomingAnnouncement(callType = 'customer_care') {
+        if (!('speechSynthesis' in window)) return;
+        const announcement = callType === 'emergency'
+            ? 'Incoming medical emergency call.'
+            : 'Incoming customer care call.';
+
+        const utterance = new SpeechSynthesisUtterance(announcement);
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }
+
+    async function ensureReceptionRtcRuntime(showErrorNotification = false) {
+        if (receptionRtcRuntime.checked && receptionRtcRuntime.enabled) {
+            return true;
+        }
+        if (receptionRtcRuntime.checked && !receptionRtcRuntime.enabled) {
+            if (showErrorNotification && receptionRtcRuntime.message) {
+                showNotification(receptionRtcRuntime.message, 'error');
+            }
+            return false;
+        }
+
+        try {
+            const response = await fetch('/api/webrtc-config');
+            const data = await response.json();
+            receptionRtcRuntime.checked = true;
+            receptionRtcRuntime.enabled = !!(response.ok && data.success);
+            receptionRtcRuntime.message = data.message || '';
+
+            if (!receptionRtcRuntime.enabled && showErrorNotification) {
+                showNotification(
+                    receptionRtcRuntime.message || 'Real-time communication is not configured.',
+                    'error'
+                );
+            }
+            return receptionRtcRuntime.enabled;
+        } catch (error) {
+            receptionRtcRuntime.checked = true;
+            receptionRtcRuntime.enabled = false;
+            receptionRtcRuntime.message = error.message || 'Unable to verify real-time communication setup.';
+            if (showErrorNotification) {
+                showNotification(receptionRtcRuntime.message, 'error');
+            }
+            return false;
+        }
+    }
+
+    function ensureReceptionSocket() {
+        if (receptionSocket && receptionSocket.connected) {
+            return receptionSocket;
+        }
+        if (receptionRtcRuntime.checked && !receptionRtcRuntime.enabled) {
+            return null;
+        }
+        if (typeof io === 'undefined') {
+            return null;
+        }
+
+        receptionSocket = io({
+            path: '/socket.io',
+            transports: ['websocket', 'polling']
+        });
+
+        receptionSocket.on('incoming_call', (payload) => {
+            showIncomingPrompt(payload);
+        });
+
+        receptionSocket.on('call_connected', async (payload) => {
+            if (!receptionCallState.callId || payload.call_id !== receptionCallState.callId) return;
+            if (payload.room_name) receptionCallState.roomName = payload.room_name;
+            if (Array.isArray(payload.ice_servers)) receptionCallState.iceServers = payload.ice_servers;
+            stopIncomingRingtone();
+            await joinReceptionCallRoom();
+            const prompt = document.getElementById('incomingCallPrompt');
+            const text = document.getElementById('incomingCallText');
+            const answerBtn = document.getElementById('incomingAnswerBtn');
+            const rejectBtn = document.getElementById('incomingRejectBtn');
+            const endBtn = document.getElementById('incomingEndBtn');
+            if (prompt) prompt.style.display = 'block';
+            if (text) text.textContent = 'Call connected. Use End Call to disconnect both sides.';
+            if (answerBtn) answerBtn.style.display = 'none';
+            if (rejectBtn) rejectBtn.style.display = 'none';
+            if (endBtn) {
+                endBtn.style.display = 'inline-block';
+                endBtn.onclick = () => endCallFromDashboard(payload.call_id);
+            }
+            showNotification('Call connected.', 'success');
+        });
+
+        receptionSocket.on('call_ended', (payload) => {
+            if (!receptionCallState.callId || payload.call_id !== receptionCallState.callId) return;
+            stopIncomingRingtone();
+            cleanupReceptionCall();
+            showNotification('Call ended.', 'success');
+        });
+
+        receptionSocket.on('call_rejected', (payload) => {
+            if (!receptionCallState.callId || payload.call_id !== receptionCallState.callId) return;
+            stopIncomingRingtone();
+            cleanupReceptionCall();
+            showNotification(payload.message || 'Call rejected.', 'error');
+        });
+
+        receptionSocket.on('webrtc_offer', async (payload) => {
+            if (!receptionCallState.callId || payload.call_id !== receptionCallState.callId) return;
+            await handleReceptionOffer(payload.offer);
+        });
+
+        receptionSocket.on('webrtc_answer', async (payload) => {
+            if (!receptionCallState.peerConnection || !payload.answer) return;
+            try {
+                await receptionCallState.peerConnection.setRemoteDescription(new RTCSessionDescription(payload.answer));
+            } catch (error) {
+                showNotification('Error applying answer: ' + error.message, 'error');
+            }
+        });
+
+        receptionSocket.on('webrtc_ice_candidate', async (payload) => {
+            if (!receptionCallState.peerConnection || !payload.candidate) return;
+            try {
+                await receptionCallState.peerConnection.addIceCandidate(new RTCIceCandidate(payload.candidate));
+            } catch (error) {
+                // Ignore race-condition candidate errors
+            }
+        });
+
+        return receptionSocket;
+    }
+
+    async function ensureReceptionLocalStream() {
+        if (receptionCallState.localStream) return receptionCallState.localStream;
+        receptionCallState.localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: false
+        });
+        return receptionCallState.localStream;
+    }
+
+    async function ensureReceptionPeerConnection() {
+        if (receptionCallState.peerConnection) return receptionCallState.peerConnection;
+
+        const peerConnection = new RTCPeerConnection({
+            iceServers: Array.isArray(receptionCallState.iceServers) ? receptionCallState.iceServers : []
+        });
+        receptionCallState.peerConnection = peerConnection;
+
+        const localStream = await ensureReceptionLocalStream();
+        localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream);
+        });
+
+        peerConnection.ontrack = (event) => {
+            const remoteAudio = document.getElementById('receptionRemoteAudio');
+            if (remoteAudio && event.streams && event.streams[0]) {
+                remoteAudio.srcObject = event.streams[0];
+            }
+        };
+
+        peerConnection.onicecandidate = (event) => {
+            if (!event.candidate || !receptionCallState.callId) return;
+            const socket = ensureReceptionSocket();
+            if (!socket) return;
+            socket.emit('webrtc_ice_candidate', {
+                call_id: receptionCallState.callId,
+                candidate: event.candidate
+            });
+        };
+
+        return peerConnection;
+    }
+
+    async function handleReceptionOffer(offer) {
+        try {
+            const socket = ensureReceptionSocket();
+            if (!socket || !receptionCallState.callId) return;
+            const peerConnection = await ensureReceptionPeerConnection();
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socket.emit('webrtc_answer', {
+                call_id: receptionCallState.callId,
+                answer: answer
+            });
+        } catch (error) {
+            showNotification('Could not answer media call: ' + error.message, 'error');
+        }
+    }
+
+    async function joinReceptionCallRoom() {
+        const socket = ensureReceptionSocket();
+        if (!socket || !receptionCallState.callId || receptionCallState.joinedRoom) return;
+
+        if (!socket.connected) {
+            await new Promise((resolve) => socket.once('connect', resolve));
+        }
+
+        socket.emit('join_call_room', {
+            call_id: receptionCallState.callId,
+            role: 'reception'
+        });
+        receptionCallState.joinedRoom = true;
+    }
+
+    function cleanupReceptionCall() {
+        stopIncomingRingtone();
+        if (receptionSocket && receptionCallState.callId) {
+            receptionSocket.emit('leave_call_room', {
+                call_id: receptionCallState.callId,
+                role: 'reception'
+            });
+        }
+
+        if (receptionCallState.peerConnection) {
+            try {
+                receptionCallState.peerConnection.close();
+            } catch (error) {
+                // no-op
+            }
+        }
+        receptionCallState.peerConnection = null;
+
+        if (receptionCallState.localStream) {
+            receptionCallState.localStream.getTracks().forEach((track) => track.stop());
+        }
+        receptionCallState.localStream = null;
+        receptionCallState.joinedRoom = false;
+        receptionCallState.callId = null;
+        receptionCallState.roomName = null;
+        receptionCallState.iceServers = [];
+
+        const remoteAudio = document.getElementById('receptionRemoteAudio');
+        if (remoteAudio) remoteAudio.srcObject = null;
+        hideIncomingPrompt();
+    }
+
+    function showIncomingPrompt(payload) {
+        const prompt = document.getElementById('incomingCallPrompt');
+        const header = document.getElementById('incomingCallHeader');
+        const text = document.getElementById('incomingCallText');
+        const answerBtn = document.getElementById('incomingAnswerBtn');
+        const rejectBtn = document.getElementById('incomingRejectBtn');
+        const endBtn = document.getElementById('incomingEndBtn');
+        if (!prompt || !text || !answerBtn || !rejectBtn || !endBtn) return;
+
+        receptionCallState.callId = payload.call_id;
+        receptionCallState.roomName = payload.room_name || null;
+        receptionCallState.iceServers = Array.isArray(payload.ice_servers) ? payload.ice_servers : [];
+        receptionCallState.joinedRoom = false;
+
+        const callType = (payload.call_type || 'customer_care').toLowerCase();
+        const isEmergency = callType === 'emergency';
+        const patientName = payload.patient_name || 'Caller';
+        const patientPhone = payload.patient_phone || 'No phone provided';
+        const readableCallType = isEmergency ? 'emergency' : 'customer care';
+        text.textContent = `${patientName} (${patientPhone}) is requesting a ${readableCallType} call.`;
+
+        if (header) {
+            header.textContent = isEmergency ? 'Emergency Call' : 'Incoming Call';
+            header.style.background = isEmergency ? '#c62828' : '#0f5db6';
+        }
+        startIncomingRingtone(callType);
+        speakIncomingAnnouncement(callType);
+
+        answerBtn.style.display = 'inline-block';
+        rejectBtn.style.display = 'inline-block';
+        rejectBtn.textContent = 'Reject';
+        endBtn.style.display = 'none';
+
+        answerBtn.onclick = () => answerCallFromDashboard(payload.call_id);
+        rejectBtn.onclick = () => rejectCallFromDashboard(payload.call_id);
+        endBtn.onclick = () => endCallFromDashboard(payload.call_id);
+        prompt.style.display = 'block';
+    }
+
+    function hideIncomingPrompt() {
+        const prompt = document.getElementById('incomingCallPrompt');
+        const header = document.getElementById('incomingCallHeader');
+        const answerBtn = document.getElementById('incomingAnswerBtn');
+        const rejectBtn = document.getElementById('incomingRejectBtn');
+        const endBtn = document.getElementById('incomingEndBtn');
+        stopIncomingRingtone();
+        if (header) {
+            header.textContent = 'Incoming Call';
+            header.style.background = '#0f5db6';
+        }
+        if (answerBtn) answerBtn.style.display = 'inline-block';
+        if (rejectBtn) {
+            rejectBtn.style.display = 'inline-block';
+            rejectBtn.textContent = 'Reject';
+        }
+        if (endBtn) endBtn.style.display = 'none';
+        if (prompt) prompt.style.display = 'none';
+    }
+
+    // Call handling functions for reception dashboard
+    async function answerCallFromDashboard(callId) {
+        try {
+            const response = await fetch('{{ url_for("answer_call") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    call_id: callId
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                stopIncomingRingtone();
+                receptionCallState.callId = data.call_id;
+                receptionCallState.roomName = data.room_name || receptionCallState.roomName;
+                receptionCallState.iceServers = Array.isArray(data.ice_servers) ? data.ice_servers : [];
+                await joinReceptionCallRoom();
+                const prompt = document.getElementById('incomingCallPrompt');
+                const text = document.getElementById('incomingCallText');
+                const answerBtn = document.getElementById('incomingAnswerBtn');
+                const rejectBtn = document.getElementById('incomingRejectBtn');
+                const endBtn = document.getElementById('incomingEndBtn');
+                if (prompt) prompt.style.display = 'block';
+                if (text) {
+                    text.textContent = 'Call connected. Use End Call to disconnect both sides.';
+                }
+                if (answerBtn) answerBtn.style.display = 'none';
+                if (rejectBtn) rejectBtn.style.display = 'none';
+                if (endBtn) {
+                    endBtn.style.display = 'inline-block';
+                    endBtn.onclick = () => endCallFromDashboard(data.call_id);
+                }
+                showNotification('Call answered successfully!', 'success');
+                return;
+            }
+            showNotification(data.message || 'Failed to answer call', 'error');
+        } catch (error) {
+            showNotification('Error: ' + error.message, 'error');
+        }
+    }
+
+    async function rejectCallFromDashboard(callId) {
+        try {
+            const response = await fetch('{{ url_for("reject_call") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    call_id: callId,
+                    reason: 'Rejected by receptionist'
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                stopIncomingRingtone();
+                cleanupReceptionCall();
+                showNotification('Call rejected', 'success');
+                return;
+            }
+            showNotification(data.message || 'Failed to reject call', 'error');
+        } catch (error) {
+            showNotification('Error: ' + error.message, 'error');
+        }
+    }
+
+    async function endCallFromDashboard(callId) {
+        const resolvedCallId = callId || receptionCallState.callId;
+        if (!resolvedCallId) {
+            showNotification('No active call to end.', 'error');
+            return;
+        }
+
+        try {
+            const response = await fetch('{{ url_for("end_call") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    call_id: resolvedCallId
+                })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                cleanupReceptionCall();
+                showNotification('Call ended', 'success');
+                return;
+            }
+            showNotification(data.message || 'Failed to end call', 'error');
+        } catch (error) {
+            showNotification('Error: ' + error.message, 'error');
+        }
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: ${type === 'success' ? '#27ae60' : '#e74c3c'};
+            color: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 4000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        ensureReceptionRtcRuntime().then((isEnabled) => {
+            if (!isEnabled) return;
+            ensureReceptionSocket();
+        });
+    });
+</script>
+{% endblock %}

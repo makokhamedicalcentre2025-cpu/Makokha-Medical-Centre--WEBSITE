@@ -1,0 +1,363 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Event - Admin Panel{% endblock %}
+{% block page_title %}Edit Event: {{ event.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .event-photo-grid {
+        margin: 0.55rem 0 0.9rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .event-photo-editor {
+        border: 1px solid #ceddf0;
+        border-radius: 10px;
+        background: #ffffff;
+        padding: 0.55rem;
+    }
+
+    .event-photo-editor.is-marked-remove {
+        opacity: 0.55;
+    }
+
+    .event-photo-title {
+        margin-bottom: 0.4rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #38567a;
+    }
+
+    .event-photo-stage {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #d6e3f3;
+        background: #0f2f4e;
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .event-photo-stage.dragging {
+        cursor: grabbing;
+    }
+
+    .event-adjust-image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .event-photo-toolbar {
+        margin-top: 0.45rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .event-remove {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.84rem;
+        color: #445164;
+    }
+
+    .event-position-label {
+        font-size: 0.78rem;
+        color: #607186;
+        white-space: nowrap;
+    }
+
+    .event-form-help {
+        font-size: 0.82rem;
+        color: #5f6b7a;
+        margin-top: 0.35rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-form-layout">
+    <div class="admin-page-intro">
+        <h1><i class="fas fa-calendar-check"></i> Edit Event</h1>
+        <p>Update schedule, details, and media for this event.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="admin-form-shell">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="form-group">
+            <label class="form-label">Event Title</label>
+            <input type="text" name="title" class="form-control" value="{{ event.title }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-textarea" required>{{ event.description }}</textarea>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Event Date</label>
+                <input type="date" name="event_date" class="form-control" value="{{ event.event_date.strftime('%Y-%m-%d') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Event Time</label>
+                <input type="time" name="event_time" class="form-control" value="{{ event.event_date.strftime('%H:%M') }}" required>
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Location</label>
+                <input type="text" name="location" class="form-control" value="{{ event.location or '' }}">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Event Type</label>
+                <select name="event_type" class="form-control" required>
+                    <option value="general" {% if event.event_type == 'general' %}selected{% endif %}>General</option>
+                    <option value="health_camp" {% if event.event_type == 'health_camp' %}selected{% endif %}>Health Camp</option>
+                    <option value="workshop" {% if event.event_type == 'workshop' %}selected{% endif %}>Workshop</option>
+                    <option value="seminar" {% if event.event_type == 'seminar' %}selected{% endif %}>Seminar</option>
+                    <option value="vaccination" {% if event.event_type == 'vaccination' %}selected{% endif %}>Vaccination Drive</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Event Status</label>
+            <select name="status" class="form-control" required>
+                <option value="upcoming" {% if event.normalized_status() == 'upcoming' %}selected{% endif %}>Upcoming</option>
+                <option value="ongoing" {% if event.normalized_status() == 'ongoing' %}selected{% endif %}>Ongoing</option>
+                <option value="completed" {% if event.normalized_status() == 'completed' %}selected{% endif %}>Completed (Past Event)</option>
+            </select>
+            <small class="admin-field-note">Set to "Completed" to show this event under past happened events.</small>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Uploaded Event Photos</label>
+            <input type="hidden" id="eventCoverPositionJson" name="event_cover_position_json" value='{{ cover_focus|tojson }}'>
+            <input type="hidden" id="eventPhotoPositionsJson" name="event_photo_positions_json" value='{{ event_photo_positions|tojson }}'>
+
+            {% if event.image_filename or event_photos %}
+            <div class="event-photo-grid">
+                {% if event.image_filename %}
+                <div class="event-photo-editor" data-photo-kind="cover">
+                    <div class="event-photo-title">Cover Photo</div>
+                    <div class="event-photo-stage">
+                        <img
+                            src="{{ url_for('static', filename='uploads/' + event.image_filename) }}"
+                            alt="{{ event.title }}"
+                            class="event-adjust-image"
+                            style="object-position: {{ '%.2f'|format(cover_focus.x) }}% {{ '%.2f'|format(cover_focus.y) }}%;"
+                        >
+                    </div>
+                    <div class="event-photo-toolbar">
+                        <label class="event-remove">
+                            <input type="checkbox" name="remove_event_cover" value="1">
+                            Remove photo
+                        </label>
+                        <span class="event-position-label" data-position-label>{{ '%.0f'|format(cover_focus.x) }}% x / {{ '%.0f'|format(cover_focus.y) }}% y</span>
+                    </div>
+                    <p class="event-form-help">Drag inside frame to adjust what stays visible.</p>
+                </div>
+                {% endif %}
+
+                {% for photo in event_photos %}
+                <div class="event-photo-editor" data-photo-id="{{ photo.id }}">
+                    <div class="event-photo-title">Gallery Photo {{ loop.index }}</div>
+                    <div class="event-photo-stage">
+                        <img
+                            src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+                            alt="Event photo {{ loop.index }}"
+                            class="event-adjust-image"
+                            style="object-position: {{ '%.2f'|format((photo.focus_x if photo.focus_x is not none else 50.0)) }}% {{ '%.2f'|format((photo.focus_y if photo.focus_y is not none else 50.0)) }}%;"
+                        >
+                    </div>
+                    <div class="event-photo-toolbar">
+                        <label class="event-remove">
+                            <input type="checkbox" name="remove_event_photo_ids" value="{{ photo.id }}">
+                            Remove photo
+                        </label>
+                        <span class="event-position-label" data-position-label>{{ '%.0f'|format((photo.focus_x if photo.focus_x is not none else 50.0)) }}% x / {{ '%.0f'|format((photo.focus_y if photo.focus_y is not none else 50.0)) }}% y</span>
+                    </div>
+                    <p class="event-form-help">Drag inside frame to adjust what stays visible.</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="event-form-help">No photos uploaded for this event yet.</p>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Add More Event Images</label>
+            <input type="file" name="image" class="form-control" accept="image/*" multiple>
+            <small class="admin-field-note">Leave blank to keep current cover image. If files are uploaded, the first becomes the new cover and the rest are added to the event gallery.</small>
+        </div>
+
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Update Event
+            </button>
+            <a href="{{ url_for('admin_events') }}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function initEventPhotoEditors() {
+        const coverInput = document.getElementById('eventCoverPositionJson');
+        const galleryInput = document.getElementById('eventPhotoPositionsJson');
+        const editors = Array.from(document.querySelectorAll('.event-photo-editor[data-photo-kind], .event-photo-editor[data-photo-id]'));
+        if (!editors.length) return;
+
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+        let coverPosition = { x: 50, y: 50 };
+        if (coverInput) {
+            try {
+                const parsed = JSON.parse(coverInput.value || '{}');
+                coverPosition = {
+                    x: clamp(Number(parsed.x) || 50, 0, 100),
+                    y: clamp(Number(parsed.y) || 50, 0, 100)
+                };
+            } catch (error) {
+                coverPosition = { x: 50, y: 50 };
+            }
+        }
+
+        let galleryPositions = {};
+        if (galleryInput) {
+            try {
+                const parsed = JSON.parse(galleryInput.value || '{}');
+                if (parsed && typeof parsed === 'object') {
+                    galleryPositions = parsed;
+                }
+            } catch (error) {
+                galleryPositions = {};
+            }
+        }
+
+        const syncCoverInput = () => {
+            if (!coverInput) return;
+            coverInput.value = JSON.stringify(coverPosition);
+        };
+
+        const syncGalleryInput = () => {
+            if (!galleryInput) return;
+            galleryInput.value = JSON.stringify(galleryPositions);
+        };
+
+        const bindEditor = (editor, position, onChange) => {
+            const stage = editor.querySelector('.event-photo-stage');
+            const image = editor.querySelector('.event-adjust-image');
+            const removeBox = editor.querySelector('input[type=\"checkbox\"]');
+            const label = editor.querySelector('[data-position-label]');
+
+            if (!stage || !image) return;
+
+            const renderPosition = () => {
+                image.style.objectPosition = `${position.x.toFixed(2)}% ${position.y.toFixed(2)}%`;
+                if (label) {
+                    label.textContent = `${Math.round(position.x)}% x / ${Math.round(position.y)}% y`;
+                }
+            };
+
+            renderPosition();
+
+            if (removeBox) {
+                editor.classList.toggle('is-marked-remove', removeBox.checked);
+                removeBox.addEventListener('change', () => {
+                    editor.classList.toggle('is-marked-remove', removeBox.checked);
+                });
+            }
+
+            let dragging = false;
+            let startX = 0;
+            let startY = 0;
+            let originX = position.x;
+            let originY = position.y;
+
+            stage.addEventListener('pointerdown', (event) => {
+                if (removeBox && removeBox.checked) return;
+                dragging = true;
+                startX = event.clientX;
+                startY = event.clientY;
+                originX = position.x;
+                originY = position.y;
+                stage.classList.add('dragging');
+                stage.setPointerCapture(event.pointerId);
+                event.preventDefault();
+            });
+
+            stage.addEventListener('pointermove', (event) => {
+                if (!dragging) return;
+                const width = Math.max(stage.clientWidth, 1);
+                const height = Math.max(stage.clientHeight, 1);
+                const dx = event.clientX - startX;
+                const dy = event.clientY - startY;
+
+                position.x = clamp(originX + ((dx / width) * 100), 0, 100);
+                position.y = clamp(originY + ((dy / height) * 100), 0, 100);
+                renderPosition();
+                onChange();
+            });
+
+            const stopDragging = (event) => {
+                if (!dragging) return;
+                dragging = false;
+                stage.classList.remove('dragging');
+                try {
+                    stage.releasePointerCapture(event.pointerId);
+                } catch (error) {
+                    // no-op
+                }
+            };
+
+            stage.addEventListener('pointerup', stopDragging);
+            stage.addEventListener('pointercancel', stopDragging);
+            stage.addEventListener('lostpointercapture', stopDragging);
+        };
+
+        editors.forEach((editor) => {
+            const photoId = editor.dataset.photoId;
+            if (photoId) {
+                const parsed = galleryPositions[photoId] || { x: 50, y: 50 };
+                const position = {
+                    x: clamp(Number(parsed.x) || 50, 0, 100),
+                    y: clamp(Number(parsed.y) || 50, 0, 100)
+                };
+                galleryPositions[photoId] = position;
+                bindEditor(editor, position, syncGalleryInput);
+                return;
+            }
+
+            if (editor.dataset.photoKind === 'cover') {
+                coverPosition = {
+                    x: clamp(Number(coverPosition.x) || 50, 0, 100),
+                    y: clamp(Number(coverPosition.y) || 50, 0, 100)
+                };
+                bindEditor(editor, coverPosition, syncCoverInput);
+            }
+        });
+
+        syncCoverInput();
+        syncGalleryInput();
+    })();
+</script>
+{% endblock %}

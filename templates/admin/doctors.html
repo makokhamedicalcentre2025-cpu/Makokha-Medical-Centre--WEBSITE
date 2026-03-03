@@ -1,0 +1,79 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Manage Doctors - Admin Panel{% endblock %}
+{% block page_title %}Manage Doctors{% endblock %}
+
+{% block content %}
+<div class="admin-list-header">
+    <div class="admin-list-title">
+        <h1><i class="fas fa-stethoscope"></i> Doctors</h1>
+        <p>Manage doctor profiles, specialties, and availability details.</p>
+    </div>
+    <div class="admin-list-actions">
+        <a href="{{ url_for('admin_add_doctor') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Doctor
+        </a>
+    </div>
+</div>
+
+{% if doctors %}
+<div class="admin-table-shell">
+    <div class="admin-table-scroll">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Specialty</th>
+                    <th>Qualification</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Consulting Hours</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doctor in doctors %}
+                <tr>
+                    <td>
+                        <div class="admin-row-main">
+                            {% if doctor.image_filename %}
+                                <img src="{{ url_for('static', filename='uploads/' + doctor.image_filename) }}" alt="{{ doctor.full_name() }}" class="admin-avatar-sm" style="object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }};">
+                            {% else %}
+                                <span class="admin-avatar-placeholder"><i class="fas fa-user-md"></i></span>
+                            {% endif %}
+                            <div>
+                                <div class="admin-primary-text">{{ doctor.full_name() }}</div>
+                                <div class="admin-secondary-text">{{ doctor.available_days or 'Availability not set' }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ doctor.specialty }}</td>
+                    <td>{{ doctor.qualification or 'N/A' }}</td>
+                    <td>{{ doctor.email or 'N/A' }}</td>
+                    <td>{{ doctor.phone or 'N/A' }}</td>
+                    <td>{{ doctor.consulting_hours or 'N/A' }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_edit_doctor', doctor_id=doctor.id) }}" class="admin-btn-inline admin-btn-edit">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form method="POST" action="{{ url_for('admin_delete_doctor', doctor_id=doctor.id) }}" class="admin-inline-form" onsubmit="return confirm('Delete this doctor profile?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <button type="submit" class="admin-btn-inline admin-btn-delete">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="admin-empty-state">
+    <i class="fas fa-stethoscope"></i>
+    <p>No doctor records found.</p>
+    <p><a href="{{ url_for('admin_add_doctor') }}">Add your first doctor</a></p>
+</div>
+{% endif %}
+{% endblock %}

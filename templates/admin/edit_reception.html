@@ -1,0 +1,91 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Reception Staff - Admin Panel{% endblock %}
+{% block page_title %}Edit Reception Staff{% endblock %}
+
+{% block content %}
+<div class="admin-form-layout">
+    <div class="admin-page-intro">
+        <h1><i class="fas fa-user-edit"></i> Edit Reception Staff</h1>
+        <p>Update profile, shift, and account status settings.</p>
+    </div>
+
+    <form method="POST" class="admin-form-shell">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input type="text" name="full_name" value="{{ reception.full_name }}" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input type="email" name="email" value="{{ reception.email }}" class="form-control" required>
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Password (leave blank to keep current)</label>
+                <div class="password-field">
+                    <input id="receptionPasswordEdit" type="password" name="password" class="form-control" placeholder="Enter new password (optional)">
+                    <button class="password-toggle" type="button" aria-label="Show password" title="Show password" onclick="togglePassword('receptionPasswordEdit', this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone (optional for callback records)</label>
+                <input type="tel" name="phone" value="{{ reception.phone or '' }}" class="form-control" placeholder="+2547XXXXXXXX">
+            </div>
+        </div>
+
+        <div class="admin-grid-2">
+            <div class="form-group">
+                <label class="form-label">Department</label>
+                <select name="department" class="form-control">
+                    <option value="">Select Department</option>
+                    <option value="general" {% if reception.department == 'general' %}selected{% endif %}>General</option>
+                    <option value="calls" {% if reception.department == 'calls' %}selected{% endif %}>Calls</option>
+                    <option value="emails" {% if reception.department == 'emails' %}selected{% endif %}>Emails</option>
+                    <option value="appointments" {% if reception.department == 'appointments' %}selected{% endif %}>Appointments</option>
+                    <option value="customer_care" {% if reception.department == 'customer_care' %}selected{% endif %}>Customer Care</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Shift</label>
+                <select name="shift" class="form-control">
+                    <option value="">Select Shift</option>
+                    <option value="morning" {% if reception.shift == 'morning' %}selected{% endif %}>Morning (6 AM - 2 PM)</option>
+                    <option value="evening" {% if reception.shift == 'evening' %}selected{% endif %}>Evening (2 PM - 10 PM)</option>
+                    <option value="night" {% if reception.shift == 'night' %}selected{% endif %}>Night (10 PM - 6 AM)</option>
+                    <option value="flexible" {% if reception.shift == 'flexible' %}selected{% endif %}>Flexible</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="admin-check-grid">
+            <label class="admin-check-card">
+                <input type="checkbox" name="is_available" {% if reception.is_available %}checked{% endif %}>
+                <span>Available (Online)</span>
+            </label>
+
+            <label class="admin-check-card">
+                <input type="checkbox" name="is_active" {% if reception.is_active %}checked{% endif %}>
+                <span>Active Account</span>
+            </label>
+        </div>
+
+        <div class="admin-form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <a href="{{ url_for('admin_reception') }}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
