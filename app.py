@@ -4393,6 +4393,7 @@ def reception_update_appointment(appointment_id):
 
     try:
         appointment.reception_id = reception_id
+        previous_status = (appointment.status or '').strip().lower()
 
         requested_status = (request.form.get('status') or '').strip().lower()
         valid_statuses = {'pending', 'confirmed', 'completed', 'cancelled'}
@@ -4420,15 +4421,29 @@ def reception_update_appointment(appointment_id):
 
         send_email_requested = request.form.get('send_email') == 'on'
         send_telemedicine_requested = request.form.get('send_telemedicine_link') == 'on'
+        auto_confirmation_email = (
+            (appointment.status or '').strip().lower() == 'confirmed'
+            and previous_status != 'confirmed'
+        )
+        send_status_email = send_email_requested or auto_confirmation_email
         assigned_doctor = Doctor.query.get(appointment.doctor_id) if appointment.doctor_id else None
         doctor_name = assigned_doctor.full_name() if assigned_doctor else 'To be assigned'
 
         success_messages = []
         warning_messages = []
 
-        if send_email_requested:
+        if send_status_email:
             if not appointment.patient_email:
                 warning_messages.append('Patient email is missing; status email was not sent.')
+            elif auto_confirmation_email:
+                email_sent, email_error = _send_appointment_confirmation_email(
+                    appointment,
+                    doctor_name=doctor_name
+                )
+                if email_sent:
+                    success_messages.append('Confirmation email sent automatically to patient.')
+                else:
+                    warning_messages.append(f'Confirmation email not sent: {email_error}')
             else:
                 email_subject = f'Appointment {appointment.status.title()} - Makokha Medical Centre'
                 email_body = (
@@ -4464,7 +4479,7 @@ def reception_update_appointment(appointment_id):
                 else:
                     warning_messages.append(f'Telemedicine link not sent: {telemedicine_result}')
 
-        if not send_email_requested and not send_telemedicine_requested:
+        if not send_status_email and not send_telemedicine_requested:
             flash('Appointment updated successfully.', 'success')
         else:
             if success_messages:
