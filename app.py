@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify, flash, has_request_context
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify, flash, has_request_context, abort, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,6 +10,7 @@ from functools import wraps
 from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 import os
+import io
 import re
 import json
 import importlib
@@ -17,6 +18,7 @@ import threading
 import hashlib
 import smtplib
 import ssl
+import mimetypes
 from uuid import uuid4
 from email.message import EmailMessage
 from sqlalchemy import desc, inspect, text, or_, func
@@ -301,6 +303,8 @@ RUNTIME_SCHEMA_READY = False
 RUNTIME_SCHEMA_LOCK = threading.Lock()
 PASSWORD_RESET_TOKEN_TTL_MINUTES = max(10, _env_int('PASSWORD_RESET_TOKEN_TTL_MINUTES', 30))
 TELEMEDICINE_LINK_TTL_HOURS = max(1, _env_int('TELEMEDICINE_LINK_TTL_HOURS', 72))
+UPLOAD_ASSET_SCHEMA_READY = False
+UPLOAD_ASSET_MIGRATION_DONE = False
 
 # ==================== DATABASE MODELS ====================
 
@@ -473,6 +477,31 @@ class Photo(db.Model):
     
     def __repr__(self):
         return f'<Photo {self.filename}>'
+
+
+class UploadedAsset(db.Model):
+    """Binary upload storage for images/documents previously saved to filesystem paths."""
+    __tablename__ = 'uploaded_asset'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), unique=True, nullable=False)
+    original_filename = db.Column(db.String(255), nullable=True)
+    content_type = db.Column(db.String(120), nullable=True)
+    byte_size = db.Column(db.Integer, default=0, nullable=False)
+    file_data = db.Column(db.LargeBinary, nullable=False)
+    uploader_user_type = db.Column(db.String(20), nullable=True)
+    uploader_user_id = db.Column(db.Integer, nullable=True)
+    owner_type = db.Column(db.String(50), nullable=True)
+    owner_id = db.Column(db.Integer, nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc)
+    )
+
+    def __repr__(self):
+        return f'<UploadedAsset {self.filename}>'
 
 
 class Review(db.Model):
@@ -913,16 +942,28 @@ def _is_allowed_image_filename(filename):
     return ext in ALLOWED_IMAGE_EXTENSIONS
 
 
-def _uploaded_image_url(filename):
-    safe_name = secure_filename(str(filename or '').strip())
-    if not safe_name:
-        return ''
+def _safe_uploaded_filename(filename):
+    return secure_filename(str(filename or '').strip())
 
-    image_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
-    if not os.path.isfile(image_path):
-        return ''
 
-    return url_for('static', filename='uploads/' + safe_name)
+def _guess_mime_type(filename, default='application/octet-stream'):
+    safe_name = _safe_uploaded_filename(filename)
+    guessed_type, _ = mimetypes.guess_type(safe_name)
+    return guessed_type or default
+
+
+def _current_upload_actor():
+    if not has_request_context():
+        return None, None
+    user_type = (session.get('user_type') or '').strip().lower()
+    if user_type not in {'admin', 'reception'}:
+        user_type = None
+    raw_user_id = session.get('user_id')
+    try:
+        user_id = int(raw_user_id) if raw_user_id is not None else None
+    except (TypeError, ValueError):
+        user_id = None
+    return user_type, user_id
 
 
 def _rewind_upload_stream(file_obj):
@@ -933,133 +974,343 @@ def _rewind_upload_stream(file_obj):
         pass
 
 
+def _read_uploaded_file_bytes(file_obj):
+    _rewind_upload_stream(file_obj)
+    payload = file_obj.read()
+    if isinstance(payload, str):
+        payload = payload.encode('utf-8')
+    _rewind_upload_stream(file_obj)
+    return payload or b''
+
+
+def _get_uploaded_asset(filename):
+    safe_name = _safe_uploaded_filename(filename)
+    if not safe_name:
+        return None
+    return UploadedAsset.query.filter_by(filename=safe_name).first()
+
+
+def _uploaded_asset_exists(filename):
+    safe_name = _safe_uploaded_filename(filename)
+    if not safe_name:
+        return False
+    row = db.session.query(UploadedAsset.id).filter_by(filename=safe_name).first()
+    return row is not None
+
+
+def _store_uploaded_asset(
+    filename,
+    payload_bytes,
+    content_type=None,
+    original_filename=None,
+    owner_type=None,
+    owner_id=None
+):
+    safe_name = _safe_uploaded_filename(filename)
+    if not safe_name:
+        raise ValueError('Invalid upload filename.')
+    if not isinstance(payload_bytes, (bytes, bytearray)):
+        raise ValueError('Upload payload must be binary data.')
+
+    binary_payload = bytes(payload_bytes)
+    if not binary_payload:
+        raise ValueError('Uploaded file is empty.')
+
+    _ensure_uploaded_asset_schema()
+    asset = _get_uploaded_asset(safe_name)
+    if asset is None:
+        asset = UploadedAsset(filename=safe_name)
+        db.session.add(asset)
+
+    uploader_user_type, uploader_user_id = _current_upload_actor()
+    asset.original_filename = _safe_uploaded_filename(original_filename) or safe_name
+    asset.content_type = (content_type or '').strip() or _guess_mime_type(safe_name)
+    asset.byte_size = len(binary_payload)
+    asset.file_data = binary_payload
+    asset.uploader_user_type = uploader_user_type
+    asset.uploader_user_id = uploader_user_id
+    asset.owner_type = (str(owner_type).strip() if owner_type is not None else None) or None
+
+    if owner_id is None:
+        asset.owner_id = None
+    else:
+        try:
+            asset.owner_id = int(owner_id)
+        except (TypeError, ValueError):
+            asset.owner_id = None
+
+    asset.updated_at = datetime.now(timezone.utc)
+    return asset
+
+
+def _delete_uploaded_asset(filename):
+    safe_name = _safe_uploaded_filename(filename)
+    if not safe_name:
+        return False
+
+    asset = _get_uploaded_asset(safe_name)
+    if asset is None:
+        return False
+
+    db.session.delete(asset)
+    return True
+
+
+def _parse_filename_json_list(raw_value):
+    if not raw_value:
+        return []
+    try:
+        parsed = json.loads(raw_value)
+    except (TypeError, ValueError):
+        parsed = None
+
+    if isinstance(parsed, list):
+        values = parsed
+    elif isinstance(parsed, str):
+        values = [item for item in re.split(r'[,;\n\r\t ]+', parsed) if item]
+    else:
+        return []
+
+    filenames = []
+    seen = set()
+    for item in values:
+        safe_name = _safe_uploaded_filename(item)
+        if not safe_name or safe_name in seen:
+            continue
+        seen.add(safe_name)
+        filenames.append(safe_name)
+    return filenames
+
+
+def _migrate_legacy_upload_file_to_db(filename):
+    safe_name = _safe_uploaded_filename(filename)
+    if not safe_name:
+        return False
+    if _uploaded_asset_exists(safe_name):
+        return False
+
+    legacy_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
+    if not os.path.isfile(legacy_path):
+        return False
+
+    try:
+        with open(legacy_path, 'rb') as file_handle:
+            payload = file_handle.read()
+    except OSError:
+        return False
+    if not payload:
+        return False
+
+    _store_uploaded_asset(
+        filename=safe_name,
+        payload_bytes=payload,
+        content_type=_guess_mime_type(safe_name),
+        original_filename=safe_name
+    )
+    return True
+
+
+def _uploaded_image_url(filename):
+    safe_name = _safe_uploaded_filename(filename)
+    if not safe_name:
+        return ''
+
+    if _uploaded_asset_exists(safe_name):
+        return url_for('serve_uploaded_asset', filename=safe_name)
+
+    legacy_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
+    if os.path.isfile(legacy_path):
+        return url_for('serve_uploaded_asset', filename=safe_name)
+    return ''
+
+
+@app.route('/uploads/<path:filename>')
+def serve_uploaded_asset(filename):
+    safe_name = _safe_uploaded_filename(filename)
+    if not safe_name:
+        abort(404)
+
+    asset = _get_uploaded_asset(safe_name)
+    if asset is None:
+        try:
+            migrated = _migrate_legacy_upload_file_to_db(safe_name)
+            if migrated:
+                db.session.commit()
+                asset = _get_uploaded_asset(safe_name)
+        except Exception:
+            db.session.rollback()
+            asset = None
+
+    if asset and asset.file_data:
+        response = send_file(
+            io.BytesIO(asset.file_data),
+            mimetype=(asset.content_type or _guess_mime_type(safe_name)),
+            download_name=(asset.original_filename or safe_name),
+            as_attachment=False
+        )
+        response.headers['Cache-Control'] = 'public, max-age=31536000'
+        return response
+
+    legacy_path = os.path.join(app.config['UPLOAD_FOLDER'], safe_name)
+    if os.path.isfile(legacy_path):
+        return send_file(legacy_path, conditional=True)
+
+    abort(404)
+
+
 def _validate_uploaded_image_resolution(file_obj, image_label='Image'):
     """Resolution restrictions are intentionally disabled."""
     _rewind_upload_stream(file_obj)
     return
 
 
-def _save_uploaded_image(file_obj, filename, target_aspect_ratio=None, image_label='Image'):
+def _save_uploaded_image(
+    file_obj,
+    filename,
+    target_aspect_ratio=None,
+    image_label='Image',
+    owner_type=None,
+    owner_id=None
+):
     """
-    Save uploaded image with best-effort high-quality processing.
-    Falls back to raw save if Pillow is unavailable or processing fails.
+    Save uploaded image into database-backed storage with high-quality processing.
+    Falls back to original bytes when Pillow is unavailable or processing fails.
     """
     _validate_uploaded_image_resolution(file_obj, image_label=image_label)
 
-    output_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
+    safe_filename = _safe_uploaded_filename(filename)
+    if not safe_filename:
+        raise ValueError('Invalid image filename.')
 
-    if Image is None or ext == 'gif':
-        _rewind_upload_stream(file_obj)
-        file_obj.save(output_path)
-        return False
-
+    ext = safe_filename.rsplit('.', 1)[1].lower() if '.' in safe_filename else ''
     if ext not in ALLOWED_IMAGE_EXTENSIONS:
-        _rewind_upload_stream(file_obj)
-        file_obj.save(output_path)
-        return False
+        raise ValueError('Image must be PNG, JPG, JPEG, WEBP, or GIF.')
 
-    try:
-        _rewind_upload_stream(file_obj)
-        with Image.open(file_obj.stream) as opened_image:
-            image = ImageOps.exif_transpose(opened_image) if ImageOps else opened_image.copy()
-            image.load()
+    processed = False
+    payload = _read_uploaded_file_bytes(file_obj)
+    if not payload:
+        raise ValueError('Uploaded file is empty.')
 
-        if image.mode == 'P' and ext in {'jpg', 'jpeg', 'webp'}:
-            image = image.convert('RGB')
+    if Image is not None and ext != 'gif':
+        try:
+            with Image.open(io.BytesIO(payload)) as opened_image:
+                image = ImageOps.exif_transpose(opened_image) if ImageOps else opened_image.copy()
+                image.load()
 
-        if ext in {'jpg', 'jpeg'} and image.mode != 'RGB':
-            image = image.convert('RGB')
-        elif ext == 'png' and image.mode not in {'RGB', 'RGBA'}:
-            image = image.convert('RGBA')
-        elif ext == 'webp' and image.mode not in {'RGB', 'RGBA'}:
-            image = image.convert('RGB')
-
-        width, height = image.size
-        if target_aspect_ratio and isinstance(target_aspect_ratio, (tuple, list)) and len(target_aspect_ratio) == 2:
-            try:
-                ratio_w = float(target_aspect_ratio[0])
-                ratio_h = float(target_aspect_ratio[1])
-            except (TypeError, ValueError):
-                ratio_w = 0.0
-                ratio_h = 0.0
-
-            if ratio_w > 0.0 and ratio_h > 0.0 and width > 0 and height > 0:
-                desired_ratio = ratio_w / ratio_h
-                current_ratio = float(width) / float(height)
-
-                # Enforce a consistent frame by center-cropping to target ratio.
-                if current_ratio > desired_ratio:
-                    crop_width = max(1, int(round(height * desired_ratio)))
-                    crop_left = max(0, int(round((width - crop_width) / 2.0)))
-                    crop_right = min(width, crop_left + crop_width)
-                    image = image.crop((crop_left, 0, crop_right, height))
-                elif current_ratio < desired_ratio:
-                    crop_height = max(1, int(round(width / desired_ratio)))
-                    crop_top = max(0, int(round((height - crop_height) / 2.0)))
-                    crop_bottom = min(height, crop_top + crop_height)
-                    image = image.crop((0, crop_top, width, crop_bottom))
-
-                width, height = image.size
-
-        long_edge = max(width, height)
-        target_long_edge = max(1, int(UPLOAD_IMAGE_LONG_EDGE_TARGET))
-        if long_edge > 0 and long_edge != target_long_edge:
-            # Normalize all uploaded images to a consistent 4K-class long edge.
-            scale = target_long_edge / float(long_edge)
-            target_size = (
-                max(1, int(round(width * scale))),
-                max(1, int(round(height * scale)))
-            )
-            if hasattr(Image, 'Resampling'):
-                resample_method = Image.Resampling.BICUBIC if scale > 1.0 else Image.Resampling.LANCZOS
-            else:
-                resample_method = Image.BICUBIC if scale > 1.0 else Image.LANCZOS
-            image = image.resize(target_size, resample=resample_method)
-            if ImageFilter and scale > 1.0:
-                image = image.filter(
-                    ImageFilter.UnsharpMask(
-                        radius=0.9,
-                        percent=max(0, min(UPLOAD_IMAGE_SHARPEN_PERCENT, 120)),
-                        threshold=4
-                    )
-                )
-
-        if ext in {'jpg', 'jpeg'}:
-            if image.mode != 'RGB':
+            if image.mode == 'P' and ext in {'jpg', 'jpeg', 'webp'}:
                 image = image.convert('RGB')
-            image.save(
-                output_path,
-                format='JPEG',
-                quality=98,
-                subsampling=0,
-                optimize=True
-            )
-        elif ext == 'png':
-            image.save(
-                output_path,
-                format='PNG',
-                optimize=True,
-                compress_level=1
-            )
-        elif ext == 'webp':
-            image.save(
-                output_path,
-                format='WEBP',
-                quality=98,
-                method=6
-            )
-        else:
-            _rewind_upload_stream(file_obj)
-            file_obj.save(output_path)
-            return False
 
-        _rewind_upload_stream(file_obj)
-        return True
-    except Exception:
-        _rewind_upload_stream(file_obj)
-        file_obj.save(output_path)
-        return False
+            if ext in {'jpg', 'jpeg'} and image.mode != 'RGB':
+                image = image.convert('RGB')
+            elif ext == 'png' and image.mode not in {'RGB', 'RGBA'}:
+                image = image.convert('RGBA')
+            elif ext == 'webp' and image.mode not in {'RGB', 'RGBA'}:
+                image = image.convert('RGB')
+
+            width, height = image.size
+            if target_aspect_ratio and isinstance(target_aspect_ratio, (tuple, list)) and len(target_aspect_ratio) == 2:
+                try:
+                    ratio_w = float(target_aspect_ratio[0])
+                    ratio_h = float(target_aspect_ratio[1])
+                except (TypeError, ValueError):
+                    ratio_w = 0.0
+                    ratio_h = 0.0
+
+                if ratio_w > 0.0 and ratio_h > 0.0 and width > 0 and height > 0:
+                    desired_ratio = ratio_w / ratio_h
+                    current_ratio = float(width) / float(height)
+
+                    # Enforce a consistent frame by center-cropping to target ratio.
+                    if current_ratio > desired_ratio:
+                        crop_width = max(1, int(round(height * desired_ratio)))
+                        crop_left = max(0, int(round((width - crop_width) / 2.0)))
+                        crop_right = min(width, crop_left + crop_width)
+                        image = image.crop((crop_left, 0, crop_right, height))
+                    elif current_ratio < desired_ratio:
+                        crop_height = max(1, int(round(width / desired_ratio)))
+                        crop_top = max(0, int(round((height - crop_height) / 2.0)))
+                        crop_bottom = min(height, crop_top + crop_height)
+                        image = image.crop((0, crop_top, width, crop_bottom))
+
+                    width, height = image.size
+
+            long_edge = max(width, height)
+            target_long_edge = max(1, int(UPLOAD_IMAGE_LONG_EDGE_TARGET))
+            if long_edge > 0 and long_edge != target_long_edge:
+                # Normalize all uploaded images to a consistent 4K-class long edge.
+                scale = target_long_edge / float(long_edge)
+                target_size = (
+                    max(1, int(round(width * scale))),
+                    max(1, int(round(height * scale)))
+                )
+                if hasattr(Image, 'Resampling'):
+                    resample_method = Image.Resampling.BICUBIC if scale > 1.0 else Image.Resampling.LANCZOS
+                else:
+                    resample_method = Image.BICUBIC if scale > 1.0 else Image.LANCZOS
+                image = image.resize(target_size, resample=resample_method)
+                if ImageFilter and scale > 1.0:
+                    image = image.filter(
+                        ImageFilter.UnsharpMask(
+                            radius=0.9,
+                            percent=max(0, min(UPLOAD_IMAGE_SHARPEN_PERCENT, 120)),
+                            threshold=4
+                        )
+                    )
+
+            output_buffer = io.BytesIO()
+            if ext in {'jpg', 'jpeg'}:
+                if image.mode != 'RGB':
+                    image = image.convert('RGB')
+                image.save(
+                    output_buffer,
+                    format='JPEG',
+                    quality=98,
+                    subsampling=0,
+                    optimize=True
+                )
+            elif ext == 'png':
+                image.save(
+                    output_buffer,
+                    format='PNG',
+                    optimize=True,
+                    compress_level=1
+                )
+            elif ext == 'webp':
+                image.save(
+                    output_buffer,
+                    format='WEBP',
+                    quality=98,
+                    method=6
+                )
+            else:
+                output_buffer = None
+
+            if output_buffer is not None:
+                processed_payload = output_buffer.getvalue()
+                if processed_payload:
+                    payload = processed_payload
+                    processed = True
+        except Exception:
+            processed = False
+
+    mime_by_extension = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'webp': 'image/webp',
+        'gif': 'image/gif'
+    }
+    content_type = mime_by_extension.get(ext) or (getattr(file_obj, 'mimetype', '') or _guess_mime_type(safe_filename))
+    original_filename = _safe_uploaded_filename(getattr(file_obj, 'filename', '')) or safe_filename
+    _store_uploaded_asset(
+        filename=safe_filename,
+        payload_bytes=payload,
+        content_type=content_type,
+        original_filename=original_filename,
+        owner_type=owner_type,
+        owner_id=owner_id
+    )
+    return processed
 
 
 def _parse_uploaded_image_list(raw_value):
@@ -1283,7 +1534,8 @@ def inject_site_content():
     try:
         return {
             'site_content': get_site_content(),
-            'event_type_nav_options': nav_event_categories
+            'event_type_nav_options': nav_event_categories,
+            'uploaded_image_url': _uploaded_image_url
         }
     except Exception:
         fallback = dict(DEFAULT_SITE_SETTINGS)
@@ -1305,7 +1557,8 @@ def inject_site_content():
         fallback['opening_hours_lines'] = _split_non_empty_lines(fallback.get('opening_hours'))
         return {
             'site_content': fallback,
-            'event_type_nav_options': nav_event_categories
+            'event_type_nav_options': nav_event_categories,
+            'uploaded_image_url': _uploaded_image_url
         }
 
 
@@ -1382,7 +1635,7 @@ def _build_event_slides_map(events):
             continue
         cover_url = _uploaded_image_url(event.image_filename)
         if not cover_url:
-            cover_url = url_for('static', filename='uploads/' + event.image_filename)
+            continue
         slide_map[event.id].append({
             'url': cover_url,
             'x': _clamp_focus_percent(event.image_focus_x, 50.0),
@@ -1397,7 +1650,7 @@ def _build_event_slides_map(events):
     for photo in extra_photos:
         photo_url = _uploaded_image_url(photo.filename)
         if not photo_url:
-            photo_url = url_for('static', filename='uploads/' + photo.filename)
+            continue
         slide_map.setdefault(photo.event_id, []).append({
             'url': photo_url,
             'x': _clamp_focus_percent(photo.focus_x, 50.0),
@@ -1494,12 +1747,21 @@ def _attach_uploaded_event_images(event, uploaded_files):
     for index, (file_obj, original_name) in enumerate(uploaded_files):
         timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
         filename = f"event_{timestamp}_{index}_{original_name}"
-        _save_uploaded_image(file_obj, filename, image_label='Event image')
+        previous_cover_filename = event.image_filename if index == 0 else None
+        _save_uploaded_image(
+            file_obj,
+            filename,
+            image_label='Event image',
+            owner_type='event',
+            owner_id=event.id
+        )
 
         if index == 0:
             event.image_filename = filename
             event.image_focus_x = 50.0
             event.image_focus_y = 50.0
+            if previous_cover_filename and previous_cover_filename != filename:
+                _delete_uploaded_asset(previous_cover_filename)
             continue
 
         db.session.add(
@@ -1629,6 +1891,119 @@ def _ensure_communication_thread_table():
     if 'communication_message' not in table_names:
         CommunicationMessage.__table__.create(db.engine, checkfirst=True)
     COMMUNICATION_THREAD_TABLE_READY = True
+
+
+def _ensure_uploaded_asset_schema():
+    """Ensure uploaded_asset table/columns exist for database-backed file storage."""
+    global UPLOAD_ASSET_SCHEMA_READY
+    if UPLOAD_ASSET_SCHEMA_READY:
+        return
+
+    inspector = inspect(db.engine)
+    table_names = set(inspector.get_table_names())
+    if 'uploaded_asset' not in table_names:
+        UploadedAsset.__table__.create(db.engine, checkfirst=True)
+        inspector = inspect(db.engine)
+        table_names = set(inspector.get_table_names())
+        if 'uploaded_asset' not in table_names:
+            return
+
+    dialect_name = (db.engine.dialect.name or '').strip().lower()
+    binary_type = 'BYTEA' if dialect_name.startswith('postgres') else 'BLOB'
+    existing_columns = {column['name'] for column in inspector.get_columns('uploaded_asset')}
+    required_columns = {
+        'original_filename': 'VARCHAR(255)',
+        'content_type': 'VARCHAR(120)',
+        'byte_size': 'INTEGER DEFAULT 0',
+        'file_data': binary_type,
+        'uploader_user_type': 'VARCHAR(20)',
+        'uploader_user_id': 'INTEGER',
+        'owner_type': 'VARCHAR(50)',
+        'owner_id': 'INTEGER',
+        'created_at': 'TIMESTAMP',
+        'updated_at': 'TIMESTAMP'
+    }
+
+    schema_changed = False
+    for column_name, definition in required_columns.items():
+        if column_name not in existing_columns:
+            db.session.execute(text(f"ALTER TABLE uploaded_asset ADD COLUMN {column_name} {definition}"))
+            schema_changed = True
+
+    if schema_changed:
+        db.session.commit()
+
+    db.session.execute(text("UPDATE uploaded_asset SET byte_size = 0 WHERE byte_size IS NULL"))
+    db.session.commit()
+    UPLOAD_ASSET_SCHEMA_READY = True
+
+
+def _collect_referenced_upload_filenames():
+    filenames = set()
+
+    def _add_filename(raw_name):
+        safe_name = _safe_uploaded_filename(raw_name)
+        if safe_name:
+            filenames.add(safe_name)
+
+    for (raw_name,) in Doctor.query.with_entities(Doctor.image_filename).all():
+        _add_filename(raw_name)
+    for (raw_name,) in Founder.query.with_entities(Founder.image_filename).all():
+        _add_filename(raw_name)
+    for (raw_name,) in Partner.query.with_entities(Partner.image_filename).all():
+        _add_filename(raw_name)
+    for (raw_name,) in Event.query.with_entities(Event.image_filename).all():
+        _add_filename(raw_name)
+    for (raw_name,) in EventPhoto.query.with_entities(EventPhoto.filename).all():
+        _add_filename(raw_name)
+    for (raw_name,) in Photo.query.with_entities(Photo.filename).all():
+        _add_filename(raw_name)
+
+    ensure_site_settings()
+    site_setting_rows = SiteSetting.query.filter(
+        SiteSetting.setting_key.in_([
+            'services_banner_image',
+            'telemedicine_image',
+            'hero_background_image',
+            'hero_background_images_json'
+        ])
+    ).all()
+    for row in site_setting_rows:
+        if row.setting_key == 'hero_background_images_json':
+            for parsed_name in _parse_filename_json_list(row.setting_value):
+                _add_filename(parsed_name)
+            continue
+        _add_filename(row.setting_value)
+
+    inspector = inspect(db.engine)
+    if 'communication' in set(inspector.get_table_names()):
+        communication_columns = {column['name'] for column in inspector.get_columns('communication')}
+        if 'attachments' in communication_columns:
+            for (raw_attachments,) in Communication.query.with_entities(Communication.attachments).all():
+                for attachment_name in _parse_filename_json_list(raw_attachments):
+                    _add_filename(attachment_name)
+
+    return sorted(filenames)
+
+
+def _migrate_referenced_uploads_to_database():
+    """One-time migration of legacy static/uploads files into uploaded_asset rows."""
+    global UPLOAD_ASSET_MIGRATION_DONE
+    if UPLOAD_ASSET_MIGRATION_DONE:
+        return
+
+    _ensure_uploaded_asset_schema()
+    try:
+        migrated_count = 0
+        for filename in _collect_referenced_upload_filenames():
+            if _migrate_legacy_upload_file_to_db(filename):
+                migrated_count += 1
+        if migrated_count > 0:
+            db.session.commit()
+        UPLOAD_ASSET_MIGRATION_DONE = True
+    except Exception:
+        db.session.rollback()
+        app.logger.exception('Legacy upload migration failed; retaining fallback file serving.')
 
 
 def _seed_conversation_thread_if_needed(communication):
@@ -2129,9 +2504,11 @@ def _ensure_runtime_schema_once():
         _ensure_doctor_schema()
         _ensure_communication_schema()
         _ensure_communication_thread_table()
+        _ensure_uploaded_asset_schema()
         ensure_runtime_schema()
         ensure_event_schema()
         ensure_site_settings()
+        _migrate_referenced_uploads_to_database()
         RUNTIME_SCHEMA_READY = True
 
 
@@ -2357,8 +2734,6 @@ def index():
     gallery_photos = []
     for photo in gallery_rows:
         photo_url = _uploaded_image_url(photo.filename)
-        if not photo_url and photo.filename:
-            photo_url = url_for('static', filename='uploads/' + photo.filename)
         if not photo_url:
             continue
 
@@ -2947,12 +3322,7 @@ def admin_site_content():
 
             services_banner_filename = secure_filename(str(raw_map.get('services_banner_image') or '').strip())
             if request.form.get('remove_services_banner') == 'on' and services_banner_filename:
-                existing_banner_path = os.path.join(app.config['UPLOAD_FOLDER'], services_banner_filename)
-                if os.path.isfile(existing_banner_path):
-                    try:
-                        os.remove(existing_banner_path)
-                    except OSError:
-                        pass
+                _delete_uploaded_asset(services_banner_filename)
                 services_banner_filename = ''
 
             services_banner_file = request.files.get('services_banner_image')
@@ -2963,27 +3333,22 @@ def admin_site_content():
 
                 timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
                 new_banner_filename = f"services_banner_{timestamp}_{original_name}"
-                _save_uploaded_image(services_banner_file, new_banner_filename, image_label='Services banner image')
+                _save_uploaded_image(
+                    services_banner_file,
+                    new_banner_filename,
+                    image_label='Services banner image',
+                    owner_type='site_setting'
+                )
 
                 if services_banner_filename and services_banner_filename != new_banner_filename:
-                    previous_path = os.path.join(app.config['UPLOAD_FOLDER'], services_banner_filename)
-                    if os.path.isfile(previous_path):
-                        try:
-                            os.remove(previous_path)
-                        except OSError:
-                            pass
+                    _delete_uploaded_asset(services_banner_filename)
                 services_banner_filename = new_banner_filename
 
             updates['services_banner_image'] = services_banner_filename
 
             telemedicine_image_filename = secure_filename(str(raw_map.get('telemedicine_image') or '').strip())
             if request.form.get('remove_telemedicine_image') in {'1', 'on', 'true'} and telemedicine_image_filename:
-                existing_telemedicine_path = os.path.join(app.config['UPLOAD_FOLDER'], telemedicine_image_filename)
-                if os.path.isfile(existing_telemedicine_path):
-                    try:
-                        os.remove(existing_telemedicine_path)
-                    except OSError:
-                        pass
+                _delete_uploaded_asset(telemedicine_image_filename)
                 telemedicine_image_filename = ''
 
             telemedicine_file = request.files.get('telemedicine_image')
@@ -2994,15 +3359,15 @@ def admin_site_content():
 
                 timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
                 new_telemedicine_filename = f"telemedicine_{timestamp}_{original_name}"
-                _save_uploaded_image(telemedicine_file, new_telemedicine_filename, image_label='Telemedicine image')
+                _save_uploaded_image(
+                    telemedicine_file,
+                    new_telemedicine_filename,
+                    image_label='Telemedicine image',
+                    owner_type='site_setting'
+                )
 
                 if telemedicine_image_filename and telemedicine_image_filename != new_telemedicine_filename:
-                    previous_telemedicine_path = os.path.join(app.config['UPLOAD_FOLDER'], telemedicine_image_filename)
-                    if os.path.isfile(previous_telemedicine_path):
-                        try:
-                            os.remove(previous_telemedicine_path)
-                        except OSError:
-                            pass
+                    _delete_uploaded_asset(telemedicine_image_filename)
                 telemedicine_image_filename = new_telemedicine_filename
 
             updates['telemedicine_image'] = telemedicine_image_filename
@@ -3019,12 +3384,7 @@ def admin_site_content():
                 hero_filenames = [name for name in hero_filenames if name not in remove_names]
                 for name in remove_names:
                     hero_positions.pop(name, None)
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], name)
-                    if os.path.isfile(file_path):
-                        try:
-                            os.remove(file_path)
-                        except OSError:
-                            pass
+                    _delete_uploaded_asset(name)
 
             hero_files = [
                 file_obj for file_obj in request.files.getlist('hero_background_images')
@@ -3049,7 +3409,8 @@ def admin_site_content():
                     hero_file,
                     hero_filename,
                     target_aspect_ratio=HERO_IMAGE_ASPECT_RATIO,
-                    image_label='Hero background image'
+                    image_label='Hero background image',
+                    owner_type='site_setting'
                 )
                 hero_filenames.append(hero_filename)
                 hero_positions[hero_filename] = {'x': 50.0, 'y': 50.0}
@@ -3158,7 +3519,7 @@ def admin_add_founder():
                         raise ValueError('Founder image must be PNG, JPG, JPEG, WEBP, or GIF.')
                     timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
                     filename = f"founder_{timestamp}_{original_name}"
-                    _save_uploaded_image(file, filename, image_label='Founder image')
+                    _save_uploaded_image(file, filename, image_label='Founder image', owner_type='founder')
                     founder.image_filename = filename
 
             db.session.add(founder)
@@ -3202,13 +3563,22 @@ def admin_edit_founder(founder_id):
             if 'image' in request.files:
                 file = request.files['image']
                 if file and file.filename:
+                    previous_filename = founder.image_filename
                     original_name = secure_filename(file.filename)
                     if not _is_allowed_image_filename(original_name):
                         raise ValueError('Founder image must be PNG, JPG, JPEG, WEBP, or GIF.')
                     timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
                     filename = f"founder_{timestamp}_{original_name}"
-                    _save_uploaded_image(file, filename, image_label='Founder image')
+                    _save_uploaded_image(
+                        file,
+                        filename,
+                        image_label='Founder image',
+                        owner_type='founder',
+                        owner_id=founder.id
+                    )
                     founder.image_filename = filename
+                    if previous_filename and previous_filename != filename:
+                        _delete_uploaded_asset(previous_filename)
 
             db.session.commit()
             flash('Founder updated successfully!', 'success')
@@ -3228,12 +3598,7 @@ def admin_delete_founder(founder_id):
     try:
         founder = Founder.query.get_or_404(founder_id)
         if founder.image_filename:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], founder.image_filename)
-            if os.path.isfile(file_path):
-                try:
-                    os.remove(file_path)
-                except OSError:
-                    pass
+            _delete_uploaded_asset(founder.image_filename)
         db.session.delete(founder)
         db.session.commit()
         flash('Founder deleted successfully!', 'success')
@@ -3281,7 +3646,7 @@ def admin_add_partner():
                         raise ValueError('Partner image must be PNG, JPG, JPEG, WEBP, or GIF.')
                     timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
                     filename = f"partner_{timestamp}_{original_name}"
-                    _save_uploaded_image(file, filename, image_label='Partner image')
+                    _save_uploaded_image(file, filename, image_label='Partner image', owner_type='partner')
                     partner.image_filename = filename
 
             db.session.add(partner)
@@ -3318,13 +3683,22 @@ def admin_edit_partner(partner_id):
             if 'image' in request.files:
                 file = request.files['image']
                 if file and file.filename:
+                    previous_filename = partner.image_filename
                     original_name = secure_filename(file.filename)
                     if not _is_allowed_image_filename(original_name):
                         raise ValueError('Partner image must be PNG, JPG, JPEG, WEBP, or GIF.')
                     timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
                     filename = f"partner_{timestamp}_{original_name}"
-                    _save_uploaded_image(file, filename, image_label='Partner image')
+                    _save_uploaded_image(
+                        file,
+                        filename,
+                        image_label='Partner image',
+                        owner_type='partner',
+                        owner_id=partner.id
+                    )
                     partner.image_filename = filename
+                    if previous_filename and previous_filename != filename:
+                        _delete_uploaded_asset(previous_filename)
 
             db.session.commit()
             flash('Partner updated successfully!', 'success')
@@ -3344,12 +3718,7 @@ def admin_delete_partner(partner_id):
     try:
         partner = Partner.query.get_or_404(partner_id)
         if partner.image_filename:
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], partner.image_filename)
-            if os.path.isfile(file_path):
-                try:
-                    os.remove(file_path)
-                except OSError:
-                    pass
+            _delete_uploaded_asset(partner.image_filename)
         db.session.delete(partner)
         db.session.commit()
         flash('Partner deleted successfully!', 'success')
@@ -3389,7 +3758,7 @@ def admin_add_doctor():
                     filename = secure_filename(file.filename)
                     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
                     filename = f"doctor_{timestamp}_{filename}"
-                    _save_uploaded_image(file, filename, image_label='Doctor image')
+                    _save_uploaded_image(file, filename, image_label='Doctor image', owner_type='doctor')
                     doctor.image_filename = filename
             
             db.session.add(doctor)
@@ -3430,11 +3799,20 @@ def admin_edit_doctor(doctor_id):
             if 'image' in request.files:
                 file = request.files['image']
                 if file and file.filename:
+                    previous_filename = doctor.image_filename
                     filename = secure_filename(file.filename)
                     timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
                     filename = f"doctor_{timestamp}_{filename}"
-                    _save_uploaded_image(file, filename, image_label='Doctor image')
+                    _save_uploaded_image(
+                        file,
+                        filename,
+                        image_label='Doctor image',
+                        owner_type='doctor',
+                        owner_id=doctor.id
+                    )
                     doctor.image_filename = filename
+                    if previous_filename and previous_filename != filename:
+                        _delete_uploaded_asset(previous_filename)
             
             db.session.commit()
             flash('Doctor updated successfully!', 'success')
@@ -3457,6 +3835,8 @@ def admin_delete_doctor(doctor_id):
     _ensure_doctor_schema()
     try:
         doctor = Doctor.query.get_or_404(doctor_id)
+        if doctor.image_filename:
+            _delete_uploaded_asset(doctor.image_filename)
         db.session.delete(doctor)
         db.session.commit()
         flash('Doctor deleted successfully!', 'success')
@@ -3538,12 +3918,7 @@ def admin_edit_event(event_id):
             event.image_focus_y = cover_focus['y']
 
             if request.form.get('remove_event_cover') == 'on' and event.image_filename:
-                cover_file_path = os.path.join(app.config['UPLOAD_FOLDER'], event.image_filename)
-                if os.path.isfile(cover_file_path):
-                    try:
-                        os.remove(cover_file_path)
-                    except OSError:
-                        pass
+                _delete_uploaded_asset(event.image_filename)
                 event.image_filename = None
 
             remove_photo_ids = set()
@@ -3559,12 +3934,7 @@ def admin_edit_event(event_id):
                     EventPhoto.id.in_(remove_photo_ids)
                 ).all()
                 for removable_photo in removable_photos:
-                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], removable_photo.filename)
-                    if os.path.isfile(file_path):
-                        try:
-                            os.remove(file_path)
-                        except OSError:
-                            pass
+                    _delete_uploaded_asset(removable_photo.filename)
                     db.session.delete(removable_photo)
 
             photo_position_map = _parse_focus_position_map_json(request.form.get('event_photo_positions_json'))
@@ -3618,21 +3988,11 @@ def admin_delete_event(event_id):
         event = Event.query.get_or_404(event_id)
 
         if event.image_filename:
-            cover_path = os.path.join(app.config['UPLOAD_FOLDER'], event.image_filename)
-            if os.path.isfile(cover_path):
-                try:
-                    os.remove(cover_path)
-                except OSError:
-                    pass
+            _delete_uploaded_asset(event.image_filename)
 
         event_photos = EventPhoto.query.filter_by(event_id=event.id).all()
         for event_photo in event_photos:
-            photo_path = os.path.join(app.config['UPLOAD_FOLDER'], event_photo.filename)
-            if os.path.isfile(photo_path):
-                try:
-                    os.remove(photo_path)
-                except OSError:
-                    pass
+            _delete_uploaded_asset(event_photo.filename)
             db.session.delete(event_photo)
 
         db.session.delete(event)
@@ -3686,7 +4046,7 @@ def admin_upload_photo():
 
                 timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
                 filename = f"photo_{timestamp}_{index}_{original_name}"
-                _save_uploaded_image(file_obj, filename, image_label='Photo')
+                _save_uploaded_image(file_obj, filename, image_label='Photo', owner_type='photo')
 
                 photo_title = title_base
                 if photo_title and len(uploaded_files) > 1:
@@ -3722,9 +4082,7 @@ def admin_delete_photo(photo_id):
     """Delete photo"""
     try:
         photo = Photo.query.get_or_404(photo_id)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
-        if os.path.exists(filepath):
-            os.remove(filepath)
+        _delete_uploaded_asset(photo.filename)
         db.session.delete(photo)
         db.session.commit()
         flash('Photo deleted successfully!', 'success')
@@ -5886,9 +6244,11 @@ def init_db():
         _ensure_doctor_schema()
         _ensure_communication_schema()
         _ensure_communication_thread_table()
+        _ensure_uploaded_asset_schema()
         ensure_runtime_schema()
         ensure_event_schema()
         ensure_site_settings()
+        _migrate_referenced_uploads_to_database()
         migrate_legacy_hospital_ratings()
         create_default_admin()
         print("Database initialized successfully!")

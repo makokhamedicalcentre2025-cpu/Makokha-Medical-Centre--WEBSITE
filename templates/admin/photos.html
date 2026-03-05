@@ -21,7 +21,7 @@
     {% for photo in photos %}
     <article class="admin-photo-card">
         <div class="admin-photo-image-wrap">
-            <img src="{{ url_for('static', filename='uploads/' + photo.filename) }}" alt="{{ photo.title or photo.filename }}" class="admin-photo-image">
+            <img src="{{ uploaded_image_url(photo.filename) }}" alt="{{ photo.title or photo.filename }}" class="admin-photo-image">
         </div>
         <div class="admin-photo-body">
             <div class="admin-photo-title">{{ photo.title or photo.filename }}</div>

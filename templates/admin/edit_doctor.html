@@ -127,7 +127,7 @@
                 <div class="doctor-image-stage" id="doctorImageStage">
                     {% if doctor.image_filename %}
                     <img
-                        src="{{ url_for('static', filename='uploads/' + doctor.image_filename) }}"
+                        src="{{ uploaded_image_url(doctor.image_filename) }}"
                         alt="{{ doctor.full_name() }}"
                         id="doctorImagePreview"
                         class="doctor-adjust-image"

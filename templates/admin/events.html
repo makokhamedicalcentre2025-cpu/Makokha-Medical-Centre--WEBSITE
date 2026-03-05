@@ -36,7 +36,7 @@
                     <td>
                         <div class="admin-row-main">
                             {% if event.image_filename %}
-                                <img src="{{ url_for('static', filename='uploads/' + event.image_filename) }}" alt="{{ event.title }}" class="admin-avatar-sm" style="object-position: {{ '%.2f'|format((event.image_focus_x if event.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((event.image_focus_y if event.image_focus_y is not none else 50.0)) }}%;">
+                                <img src="{{ uploaded_image_url(event.image_filename) }}" alt="{{ event.title }}" class="admin-avatar-sm" style="object-position: {{ '%.2f'|format((event.image_focus_x if event.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((event.image_focus_y if event.image_focus_y is not none else 50.0)) }}%;">
                             {% else %}
                                 <span class="admin-avatar-placeholder"><i class="fas fa-calendar-day"></i></span>
                             {% endif %}

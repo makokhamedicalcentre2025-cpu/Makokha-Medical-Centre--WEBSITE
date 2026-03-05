@@ -156,7 +156,7 @@
                     <div class="event-photo-title">Cover Photo</div>
                     <div class="event-photo-stage">
                         <img
-                            src="{{ url_for('static', filename='uploads/' + event.image_filename) }}"
+                            src="{{ uploaded_image_url(event.image_filename) }}"
                             alt="{{ event.title }}"
                             class="event-adjust-image"
                             style="object-position: {{ '%.2f'|format(cover_focus.x) }}% {{ '%.2f'|format(cover_focus.y) }}%;"
@@ -178,7 +178,7 @@
                     <div class="event-photo-title">Gallery Photo {{ loop.index }}</div>
                     <div class="event-photo-stage">
                         <img
-                            src="{{ url_for('static', filename='uploads/' + photo.filename) }}"
+                            src="{{ uploaded_image_url(photo.filename) }}"
                             alt="Event photo {{ loop.index }}"
                             class="event-adjust-image"
                             style="object-position: {{ '%.2f'|format((photo.focus_x if photo.focus_x is not none else 50.0)) }}% {{ '%.2f'|format((photo.focus_y if photo.focus_y is not none else 50.0)) }}%;"

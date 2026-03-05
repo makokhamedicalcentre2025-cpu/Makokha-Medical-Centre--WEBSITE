@@ -427,7 +427,7 @@
             <div class="team-member fade-in">
                 <div class="member-image">
                     {% if doctor.image_filename %}
-                        <img src="{{ url_for('static', filename='uploads/' + doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }}%;">
+                        <img src="{{ uploaded_image_url(doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }};">
                     {% else %}
                         <i class="fas fa-user-md"></i>
                     {% endif %}

@@ -47,7 +47,7 @@
             <label class="form-label">Partner Photo</label>
             {% if partner.image_filename %}
             <div>
-                <img src="{{ url_for('static', filename='uploads/' + partner.image_filename) }}" alt="{{ partner.full_name }}" class="admin-image-preview">
+                <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" class="admin-image-preview">
                 <small class="admin-field-note">Current photo</small>
             </div>
             {% endif %}
@@ -66,4 +66,3 @@
     </form>
 </div>
 {% endblock %}
-

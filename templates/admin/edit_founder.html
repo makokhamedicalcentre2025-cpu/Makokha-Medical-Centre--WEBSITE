@@ -102,7 +102,7 @@
                 <div class="founder-image-stage" id="founderImageStage">
                     {% if founder.image_filename %}
                     <img
-                        src="{{ url_for('static', filename='uploads/' + founder.image_filename) }}"
+                        src="{{ uploaded_image_url(founder.image_filename) }}"
                         alt="{{ founder.full_name }}"
                         id="founderImagePreview"
                         class="founder-adjust-image"

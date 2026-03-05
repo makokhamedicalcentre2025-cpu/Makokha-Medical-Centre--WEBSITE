@@ -35,7 +35,7 @@
                     <td>
                         <div class="admin-row-main">
                             {% if founder.image_filename %}
-                                <img src="{{ url_for('static', filename='uploads/' + founder.image_filename) }}" alt="{{ founder.full_name }}" class="admin-avatar-sm">
+                                <img src="{{ uploaded_image_url(founder.image_filename) }}" alt="{{ founder.full_name }}" class="admin-avatar-sm">
                             {% else %}
                                 <span class="admin-avatar-placeholder"><i class="fas fa-user-tie"></i></span>
                             {% endif %}
@@ -79,4 +79,3 @@
 </div>
 {% endif %}
 {% endblock %}
-
