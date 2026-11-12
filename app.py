@@ -1,5 +1,5 @@
 
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify, flash, has_request_context, abort, send_file
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify, flash, has_request_context, abort, send_file, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,7 +25,6 @@ from sqlalchemy import desc, inspect, text, or_, func
 from urllib.parse import urlparse, urlencode
 from urllib import error as urllib_error
 from urllib import request as urllib_request
-from xml.sax.saxutils import escape as xml_escape
 
 
 def _load_optional_pillow_modules():
@@ -2661,73 +2660,24 @@ def _public_site_base_url():
     return 'http://localhost:5000'
 
 
-def _build_public_sitemap_urls():
-    """Public website pages that should be indexed by search engines."""
-    return [
-        {'path': '/', 'changefreq': 'daily', 'priority': '1.0'},
-        {'path': '/about', 'changefreq': 'weekly', 'priority': '0.8'},
-        {'path': '/doctors', 'changefreq': 'weekly', 'priority': '0.8'},
-        {'path': '/events', 'changefreq': 'daily', 'priority': '0.9'},
-        {'path': '/reviews', 'changefreq': 'weekly', 'priority': '0.7'},
-        {'path': '/contact', 'changefreq': 'weekly', 'priority': '0.9'}
-    ]
-
-
-def _render_sitemap_xml():
-    """Render sitemap XML for dynamic backend delivery."""
-    base_url = _public_site_base_url()
-    lastmod = datetime.now(timezone.utc).date().isoformat()
-    lines = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-    ]
-
-    for entry in _build_public_sitemap_urls():
-        path = entry.get('path', '/')
-        if path == '/':
-            loc = f'{base_url}/'
-        else:
-            loc = f'{base_url}{path}'
-        lines.extend([
-            '  <url>',
-            f'    <loc>{xml_escape(loc)}</loc>',
-            f'    <lastmod>{lastmod}</lastmod>',
-            f'    <changefreq>{entry.get("changefreq", "weekly")}</changefreq>',
-            f'    <priority>{entry.get("priority", "0.5")}</priority>',
-            '  </url>'
-        ])
-
-    lines.append('</urlset>')
-    return '\n'.join(lines)
-
-
 @app.route('/sitemap.xml')
-def sitemap_xml():
-    """Serve XML sitemap as a public dynamic endpoint."""
-    response = app.response_class(_render_sitemap_xml(), mimetype='application/xml')
-    response.headers['Cache-Control'] = 'public, max-age=3600'
-    return response
+def sitemap():
+    """Serve the static XML sitemap from the project root."""
+    return send_from_directory(
+        app.root_path,
+        'sitemap.xml',
+        mimetype='application/xml'
+    )
 
 
 @app.route('/robots.txt')
-def robots_txt():
-    """Serve robots.txt that points crawlers to the sitemap endpoint."""
-    base_url = _public_site_base_url()
-    robots_content = '\n'.join([
-        'User-agent: *',
-        'Disallow: /admin',
-        'Disallow: /reception',
-        'Disallow: /login',
-        'Disallow: /password/',
-        'Disallow: /telemedicine/session/',
-        'Disallow: /api/',
-        'Allow: /',
-        '',
-        f'Sitemap: {base_url}/sitemap.xml'
-    ])
-    response = app.response_class(robots_content, mimetype='text/plain')
-    response.headers['Cache-Control'] = 'public, max-age=3600'
-    return response
+def robots():
+    """Serve robots.txt from the project root."""
+    return send_from_directory(
+        app.root_path,
+        'robots.txt',
+        mimetype='text/plain'
+    )
 
 
 @app.route('/')

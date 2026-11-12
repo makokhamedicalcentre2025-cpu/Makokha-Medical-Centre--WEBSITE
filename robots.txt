@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Allow: /static/
+Allow: /uploads/
+
+Disallow: /admin/
+Disallow: /reception/
+Disallow: /login
+Disallow: /logout
+Disallow: /password/
+Disallow: /telemedicine/session/
+Disallow: /health
+Disallow: /db-keepalive
+
+Sitemap: https://www.orivanacare.top/sitemap.xml
