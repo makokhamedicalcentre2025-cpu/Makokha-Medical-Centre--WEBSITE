@@ -9,6 +9,7 @@
     <!-- SEO Meta Tags -->
     <meta name="description" content="{% block description %}Orivana Care Medical Centre Ltd - Providing quality healthcare services with modern facilities and experienced doctors.{% endblock %}">
     <meta name="keywords" content="{% block keywords %}medical centre, healthcare, doctors, hospital, emergency{% endblock %}">
+    <meta name="robots" content="{% block robots %}index, follow{% endblock %}">
     <meta name="author" content="Orivana Care Medical Centre Ltd">
     
     <!-- Open Graph Tags -->
@@ -30,8 +31,19 @@
             "@context": "https://schema.org",
             "@type": "MedicalClinic",
             "name": "Orivana Care Medical Centre Ltd",
-            "alternateName": "Makokha Medical Centre",
-            "url": config["PUBLIC_SITE_URL"],
+            "alternateName": ["Orivana Care Medical Centre", "Makokha Medical Centre"],
+            "url": config["PUBLIC_SITE_URL"] ~ "/",
+            "description": "Orivana Care Medical Centre Ltd provides accessible, affordable and quality healthcare services in Maliki, Kenya.",
+            "medicalSpecialty": ["PrimaryCare"],
+            "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "Maliki Market",
+                "addressLocality": "Maliki",
+                "addressRegion": "Bungoma",
+                "addressCountry": "KE"
+            },
+            "telephone": site_content.contact_phone_lines[0].rsplit(':', 1)[-1].strip() if site_content.contact_phone_lines else "",
+            "email": site_content.contact_email_lines[0] if site_content.contact_email_lines else "",
             "logo": config["PUBLIC_SITE_URL"] ~ url_for('static', filename='images/logo.png'),
             "image": config["PUBLIC_SITE_URL"] ~ url_for('static', filename='images/logo.png')
         } | tojson }}
@@ -2271,21 +2283,21 @@
                         {% if site_content.contact_phone_lines %}
                             {{ site_content.contact_phone_lines[0] }}
                         {% else %}
-                            +254 (0) 123 456 789
+                            Customer Care: +254 184 289 494
                         {% endif %}
                         <br>
                         <i class="fas fa-envelope"></i>
                         {% if site_content.contact_email_lines %}
                             {{ site_content.contact_email_lines[0] }}
                         {% else %}
-                            info@makokhamedical.com
+                            info@orivanacare.top
                         {% endif %}
                         <br>
                         <i class="fas fa-map-marker-alt"></i>
                         {% if site_content.contact_address_lines %}
                             {{ site_content.contact_address_lines|join(', ') }}
                         {% else %}
-                            Maliki, Kenya
+                            Maliki Market, Bungoma-Kenya
                         {% endif %}
                     </p>
                     <div class="footer-contact-actions">

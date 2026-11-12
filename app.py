@@ -260,9 +260,9 @@ DEFAULT_SITE_SETTINGS = {
         'Orivana Care Medical Centre Ltd is committed to providing quality healthcare services with modern '
         'facilities and experienced medical professionals.'
     ),
-    'contact_address': 'Orivana Care Medical Centre Ltd\nMaliki, Kenya',
-    'contact_phones': '+254 (0) 123 456 789\n+254 (0) 987 654 321',
-    'contact_emails': 'info@makokhamedical.com\nappointments@makokhamedical.com',
+    'contact_address': 'Orivana Care Medical Centre Ltd\nMaliki Market, Bungoma-Kenya',
+    'contact_phones': 'Customer Care: +254184289494\nAdmin: +254184279716',
+    'contact_emails': 'info@orivanacare.top',
     'opening_hours': (
         'Monday - Friday: 9:00 AM - 5:00 PM\n'
         'Saturday: 9:00 AM - 1:00 PM\n'
@@ -1420,6 +1420,15 @@ def get_site_content():
             .replace('OIrivana_Care Medical Centre', 'Orivana Care Medical Centre Ltd')
             .replace('Makokha Medical Centre', 'Orivana Care Medical Centre Ltd')
         )
+
+    legacy_contact_settings = {
+        'contact_address': 'Orivana Care Medical Centre Ltd\nMaliki, Kenya',
+        'contact_phones': '+254 (0) 123 456 789\n+254 (0) 987 654 321',
+        'contact_emails': 'info@makokhamedical.com\nappointments@makokhamedical.com'
+    }
+    for key, legacy_value in legacy_contact_settings.items():
+        if data.get(key, '').strip() == legacy_value:
+            data[key] = DEFAULT_SITE_SETTINGS[key]
 
     services = _parse_services_json(data.get('services_json'))
     data['services'] = services
@@ -2706,6 +2715,12 @@ def robots_txt():
     base_url = _public_site_base_url()
     robots_content = '\n'.join([
         'User-agent: *',
+        'Disallow: /admin',
+        'Disallow: /reception',
+        'Disallow: /login',
+        'Disallow: /password/',
+        'Disallow: /telemedicine/session/',
+        'Disallow: /api/',
         'Allow: /',
         '',
         f'Sitemap: {base_url}/sitemap.xml'

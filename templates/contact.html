@@ -175,7 +175,7 @@
                                     {{ address_line }}{% if not loop.last %}<br>{% endif %}
                                 {% endfor %}
                             {% else %}
-                                Orivana Care Medical Centre Ltd<br>Maliki, Kenya
+                                Orivana Care Medical Centre Ltd<br>Maliki Market, Bungoma-Kenya
                             {% endif %}
                         </p>
                     </div>
@@ -190,10 +190,12 @@
                         <p>
                             {% if site_content.contact_phone_lines %}
                                 {% for phone_line in site_content.contact_phone_lines %}
-                                    <a href="tel:{{ phone_line|replace(' ', '')|replace('(', '')|replace(')', '') }}">{{ phone_line }}</a>{% if not loop.last %}<br>{% endif %}
+                                    {% set phone_number = phone_line.rsplit(':', 1)[-1].strip() %}
+                                    <a href="tel:{{ phone_number|replace(' ', '')|replace('(', '')|replace(')', '') }}">{{ phone_line }}</a>{% if not loop.last %}<br>{% endif %}
                                 {% endfor %}
                             {% else %}
-                                +254 (0) 123 456 789<br>+254 (0) 987 654 321
+                                <a href="tel:+254184289494">Customer Care: +254 184 289 494</a><br>
+                                <a href="tel:+254184279716">Admin: +254 184 279 716</a>
                             {% endif %}
                         </p>
                     </div>
@@ -211,8 +213,7 @@
                                     <a href="mailto:{{ email_line }}">{{ email_line }}</a>{% if not loop.last %}<br>{% endif %}
                                 {% endfor %}
                             {% else %}
-                                <a href="mailto:info@makokhamedical.com">info@makokhamedical.com</a><br>
-                                <a href="mailto:appointments@makokhamedical.com">appointments@makokhamedical.com</a>
+                                <a href="mailto:info@orivanacare.top">info@orivanacare.top</a>
                             {% endif %}
                         </p>
                     </div>
