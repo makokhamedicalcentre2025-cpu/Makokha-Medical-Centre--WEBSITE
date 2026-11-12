@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{% block title %}OIrivana_Care Medical Centre - Professional Healthcare Services{% endblock %}</title>
+    <title>{% block title %}Orivana Care Medical Centre Ltd - Professional Healthcare Services{% endblock %}</title>
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="{% block description %}OIrivana_Care Medical Centre - Providing quality healthcare services with modern facilities and experienced doctors.{% endblock %}">
+    <meta name="description" content="{% block description %}Orivana Care Medical Centre Ltd - Providing quality healthcare services with modern facilities and experienced doctors.{% endblock %}">
     <meta name="keywords" content="{% block keywords %}medical centre, healthcare, doctors, hospital, emergency{% endblock %}">
-    <meta name="author" content="OIrivana_Care Medical Centre">
+    <meta name="author" content="Orivana Care Medical Centre Ltd">
     
     <!-- Open Graph Tags -->
-    <meta property="og:title" content="{% block og_title %}OIrivana_Care Medical Centre{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}Orivana Care Medical Centre Ltd{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Professional medical and healthcare services{% endblock %}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ config['PUBLIC_SITE_URL'] }}{{ request.path }}">
@@ -29,7 +29,8 @@
         {{ {
             "@context": "https://schema.org",
             "@type": "MedicalClinic",
-            "name": "OIrivana_Care Medical Centre",
+            "name": "Orivana Care Medical Centre Ltd",
+            "alternateName": "Makokha Medical Centre",
             "url": config["PUBLIC_SITE_URL"],
             "logo": config["PUBLIC_SITE_URL"] ~ url_for('static', filename='images/logo.png'),
             "image": config["PUBLIC_SITE_URL"] ~ url_for('static', filename='images/logo.png')
@@ -57,9 +58,9 @@
     <header class="header{% if request.endpoint == 'index' %} over-hero{% endif %}" id="header">
         <div class="container">
             <div class="header-content">
-                <a href="{{ url_for('index') }}" class="logo" aria-label="OIrivana_Care Medical Centre Home">
+                <a href="{{ url_for('index') }}" class="logo" aria-label="Orivana Care Medical Centre Ltd Home">
                     <span class="logo-mark">
-                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="OIrivana_Care Medical Centre" class="logo-image">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Orivana Care Medical Centre Ltd" class="logo-image">
                     </span>
                 </a>
                 
@@ -2309,7 +2310,7 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2026 OIrivana_Care Medical Centre. All rights reserved.</p>
+                <p>&copy; 2026 Orivana Care Medical Centre Ltd. All rights reserved.</p>
             </div>
         </div>
     </footer>

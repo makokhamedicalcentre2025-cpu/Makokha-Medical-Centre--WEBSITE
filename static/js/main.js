@@ -1,5 +1,5 @@
 /**
- * OIrivana_Care Medical Centre - Main JavaScript
+ * Orivana Care Medical Centre Ltd - Main JavaScript
  * Handle global functionality and interactions
  */
 

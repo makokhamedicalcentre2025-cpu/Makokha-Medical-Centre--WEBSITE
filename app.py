@@ -213,7 +213,7 @@ FACILITY_SERVICES = [
 
 UPCOMING_TELEMEDICINE = {
     'title': 'Upcoming Telemedicine',
-    'subtitle': 'Launching soon at OIrivana_Care Medical Centre',
+    'subtitle': 'Launching soon at Orivana Care Medical Centre Ltd',
     'description': (
         'Virtual doctor consultations, digital follow-up reviews, and remote triage support '
         'will be available through our telemedicine service.'
@@ -236,7 +236,7 @@ VALID_EVENT_TYPE_FILTERS = {
 DEFAULT_SITE_SETTINGS = {
     'about_heading': 'Your Trusted Healthcare Partner',
     'about_intro_primary': (
-        'OIrivana_Care Medical Centre is a leading healthcare facility committed to providing the highest '
+        'Orivana Care Medical Centre Ltd is a leading healthcare facility committed to providing the highest '
         'quality medical services to the community. With a team of experienced physicians, modern '
         'medical equipment, and patient-centric care, we strive to improve the health and well-being '
         'of every patient who walks through our doors.'
@@ -257,10 +257,10 @@ DEFAULT_SITE_SETTINGS = {
         'access to high-quality healthcare.'
     ),
     'footer_about_text': (
-        'OIrivana_Care Medical Centre is committed to providing quality healthcare services with modern '
+        'Orivana Care Medical Centre Ltd is committed to providing quality healthcare services with modern '
         'facilities and experienced medical professionals.'
     ),
-    'contact_address': 'OIrivana_Care Medical Centre\nMaliki, Kenya',
+    'contact_address': 'Orivana Care Medical Centre Ltd\nMaliki, Kenya',
     'contact_phones': '+254 (0) 123 456 789\n+254 (0) 987 654 321',
     'contact_emails': 'info@makokhamedical.com\nappointments@makokhamedical.com',
     'opening_hours': (
@@ -1415,9 +1415,10 @@ def get_site_content():
     raw_map = _load_site_setting_map()
     data = {}
     for key in DEFAULT_SITE_SETTINGS:
-        data[key] = _resolve_site_setting(raw_map, key).replace(
-            'Makokha Medical Centre',
-            'OIrivana_Care Medical Centre'
+        data[key] = (
+            _resolve_site_setting(raw_map, key)
+            .replace('OIrivana_Care Medical Centre', 'Orivana Care Medical Centre Ltd')
+            .replace('Makokha Medical Centre', 'Orivana Care Medical Centre Ltd')
         )
 
     services = _parse_services_json(data.get('services_json'))
@@ -2421,7 +2422,7 @@ def _send_appointment_confirmation_email(appointment, doctor_name='To be assigne
 
     appointment_ref = _appointment_reference(appointment.id)
     appointment_when = _format_appointment_datetime(appointment.appointment_date)
-    subject = f'Appointment Confirmation ({appointment_ref}) - OIrivana_Care Medical Centre'
+    subject = f'Appointment Confirmation ({appointment_ref}) - Orivana Care Medical Centre Ltd'
     body = (
         f'Dear {appointment.patient_name},\n\n'
         'Your appointment details are confirmed as below:\n'
@@ -2432,7 +2433,7 @@ def _send_appointment_confirmation_email(appointment, doctor_name='To be assigne
         f'Reason: {appointment.reason or "N/A"}\n\n'
         'If you need to reschedule, please reply to this email or contact reception.\n\n'
         'Regards,\n'
-        'OIrivana_Care Medical Centre'
+        'Orivana Care Medical Centre Ltd'
     )
     return _send_transactional_email(appointment.patient_email, subject, body)
 
@@ -2485,7 +2486,7 @@ def _send_telemedicine_link_email(appointment, created_by_user_type=None, create
         f'This link expires in {TELEMEDICINE_LINK_TTL_HOURS} hour(s).\n'
         'Please use a secure/private device when joining.\n\n'
         'Regards,\n'
-        'OIrivana_Care Medical Centre'
+        'Orivana Care Medical Centre Ltd'
     )
     sent, message = _send_transactional_email(appointment.patient_email, subject, body)
     if sent:
@@ -3167,7 +3168,7 @@ def password_forgot():
                 email_address=account.email
             )
             reset_url = _build_password_reset_url(raw_token)
-            subject = 'Password Reset Instructions - OIrivana_Care Medical Centre'
+            subject = 'Password Reset Instructions - Orivana Care Medical Centre Ltd'
             body = (
                 f'Dear {account.full_name},\n\n'
                 'We received a request to reset your portal password.\n'
@@ -3175,7 +3176,7 @@ def password_forgot():
                 f'This link expires in {PASSWORD_RESET_TOKEN_TTL_MINUTES} minute(s).\n'
                 'If you did not request this reset, you can ignore this email.\n\n'
                 'Regards,\n'
-                'OIrivana_Care Medical Centre'
+                'Orivana Care Medical Centre Ltd'
             )
             email_sent, email_message = _send_transactional_email(account.email, subject, body)
             if email_sent:
@@ -4533,14 +4534,14 @@ def reply_message():
         email_sent = False
         email_error = ''
         if send_email_requested and communication.patient_email:
-            email_subject = 'Response from OIrivana_Care Medical Centre'
+            email_subject = 'Response from Orivana Care Medical Centre Ltd'
             email_body = (
                 f'Dear {communication.patient_name},\n\n'
                 'Our customer care team has replied to your message:\n\n'
                 f'{reply}\n\n'
                 'You can continue the conversation from the customer care desk on the website.\n\n'
                 'Regards,\n'
-                'OIrivana_Care Medical Centre'
+                'Orivana Care Medical Centre Ltd'
             )
             email_sent, email_error = _send_transactional_email(
                 communication.patient_email,
@@ -4814,7 +4815,7 @@ def reception_update_appointment(appointment_id):
                 else:
                     warning_messages.append(f'Confirmation email not sent: {email_error}')
             else:
-                email_subject = f'Appointment {appointment.status.title()} - OIrivana_Care Medical Centre'
+                email_subject = f'Appointment {appointment.status.title()} - Orivana Care Medical Centre Ltd'
                 email_body = (
                     f'Dear {appointment.patient_name},\n\n'
                     f'Your appointment status is now: {appointment.status.title()}.\n'
@@ -4822,7 +4823,7 @@ def reception_update_appointment(appointment_id):
                     f'Assigned doctor: {doctor_name}.\n'
                     f'Notes: {appointment.notes or "N/A"}\n\n'
                     'Thank you,\n'
-                    'OIrivana_Care Medical Centre Reception'
+                    'Orivana Care Medical Centre Ltd Reception'
                 )
                 email_sent, email_error = _send_transactional_email(
                     appointment.patient_email,

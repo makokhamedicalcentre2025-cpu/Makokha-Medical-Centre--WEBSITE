@@ -1,5 +1,5 @@
 """
-Encryption and security utilities for the OIrivana_Care Medical Centre application.
+Encryption and security utilities for the Orivana Care Medical Centre Ltd application.
 Provides field-level encryption, file encryption, and secure hashing.
 """
 
