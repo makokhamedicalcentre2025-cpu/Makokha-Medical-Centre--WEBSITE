@@ -60,8 +60,8 @@
         inset: 0;
         z-index: 1;
         background:
-            linear-gradient(90deg, rgba(7, 47, 45, 0.28) 0%, rgba(7, 47, 45, 0.12) 46%, transparent 100%),
-            linear-gradient(0deg, rgba(7, 47, 45, 0.08), transparent 58%);
+            linear-gradient(90deg, rgba(7, 47, 45, 0.12) 0%, rgba(7, 47, 45, 0.05) 46%, transparent 100%),
+            linear-gradient(0deg, rgba(7, 47, 45, 0.06), transparent 58%);
     }
 
     .hero::after {
@@ -81,6 +81,13 @@
         position: relative;
         z-index: 2;
         max-width: 760px;
+        padding: clamp(1.25rem, 3vw, 2rem) clamp(1rem, 4vw, 3rem) clamp(1.25rem, 3vw, 2rem) 0;
+        background: linear-gradient(
+            90deg,
+            rgba(3, 69, 74, 0.72) 0%,
+            rgba(3, 69, 74, 0.48) 56%,
+            rgba(3, 69, 74, 0) 100%
+        );
     }
 
     .header.over-hero {
@@ -342,6 +349,8 @@
     }
 
     .services-banner {
+        position: relative;
+        isolation: isolate;
         width: 100%;
         border-radius: 14px;
         border: none;
@@ -352,6 +361,23 @@
         align-items: center;
         justify-content: center;
         min-height: 0;
+        overflow: hidden;
+    }
+
+    .services-banner::after {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        inset: 0 auto 0 0;
+        width: clamp(4rem, 11vw, 8rem);
+        background: linear-gradient(90deg, #f7faf8 0%, rgba(247, 250, 248, 0.72) 28%, transparent 100%);
+        pointer-events: none;
+        transition: width 0.35s ease, opacity 0.35s ease;
+    }
+
+    .services-banner:hover::after {
+        width: clamp(5rem, 14vw, 10rem);
+        opacity: 0.82;
     }
 
     .services-banner img {
@@ -828,6 +854,8 @@
     }
 
     .event-media {
+        position: relative;
+        isolation: isolate;
         min-height: 235px;
         background: linear-gradient(135deg, #e7f3f0 0%, #d1ebe2 100%);
         display: flex;
@@ -835,6 +863,27 @@
         justify-content: center;
         font-size: 3rem;
         color: #03595d;
+    }
+
+    .event-media::after {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .event-card-upcoming .event-media::after {
+        background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0.78) 15%, transparent 48%);
+    }
+
+    .event-card-past .event-media::after {
+        background: linear-gradient(270deg, #fff 0%, rgba(255, 255, 255, 0.78) 15%, transparent 48%);
+    }
+
+    .event-card:hover .event-media::after {
+        opacity: 0.72;
     }
 
     .event-media img {
@@ -1253,6 +1302,37 @@
         .header.over-hero.scrolled .nav-link {
             color: #ffffff;
             border-bottom-color: rgba(255, 255, 255, 0.15);
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .services-banner::after {
+            inset: 0 0 auto;
+            width: 100%;
+            height: clamp(3rem, 9vw, 6rem);
+            background: linear-gradient(180deg, #f7faf8 0%, rgba(247, 250, 248, 0.72) 28%, transparent 100%);
+        }
+
+        .services-banner:hover::after {
+            width: 100%;
+            height: clamp(4rem, 12vw, 7rem);
+        }
+
+        .event-card-upcoming .event-media::after {
+            background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.78) 18%, transparent 58%);
+        }
+
+        .event-card-past .event-media::after {
+            background: linear-gradient(0deg, #fff 0%, rgba(255, 255, 255, 0.78) 18%, transparent 58%);
+        }
+
+        .hero-content {
+            background: linear-gradient(
+                90deg,
+                rgba(3, 69, 74, 0.68) 0%,
+                rgba(3, 69, 74, 0.4) 72%,
+                rgba(3, 69, 74, 0) 100%
+            );
         }
     }
 </style>

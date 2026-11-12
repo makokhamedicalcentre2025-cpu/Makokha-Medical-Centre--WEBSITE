@@ -80,6 +80,8 @@
     }
 
     .event-media {
+        position: relative;
+        isolation: isolate;
         min-height: 240px;
         background: linear-gradient(135deg, #e7f3f0 0%, #d1ebe2 100%);
         display: flex;
@@ -87,6 +89,27 @@
         justify-content: center;
         font-size: 3rem;
         color: #03595d;
+    }
+
+    .event-media::after {
+        content: '';
+        position: absolute;
+        z-index: 1;
+        inset: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .event-card-upcoming .event-media::after {
+        background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0.78) 15%, transparent 48%);
+    }
+
+    .event-card-past .event-media::after {
+        background: linear-gradient(270deg, #fff 0%, rgba(255, 255, 255, 0.78) 15%, transparent 48%);
+    }
+
+    .event-card:hover .event-media::after {
+        opacity: 0.72;
     }
 
     .event-media img {
@@ -297,6 +320,16 @@
         .event-meta,
         .event-description {
             font-size: 0.88rem;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .event-card-upcoming .event-media::after {
+            background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.78) 18%, transparent 58%);
+        }
+
+        .event-card-past .event-media::after {
+            background: linear-gradient(0deg, #fff 0%, rgba(255, 255, 255, 0.78) 18%, transparent 58%);
         }
     }
 </style>
