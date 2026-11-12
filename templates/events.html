@@ -438,7 +438,7 @@
                         {% set status_label = 'Upcoming' %}
                     {% endif %}
                     <article class="event-card event-card-past fade-in">
-                        <div class="event-media" style="opacity: 0.88;">
+                        <div class="event-media">
                             {% set media_slides = event_slides_map.get(event.id, []) %}
                             {% if media_slides %}
                                 <img
@@ -548,7 +548,7 @@
 
         return `
             <article class="event-card event-card-past fade-in">
-                <div class="event-media" style="opacity: 0.88;">
+                <div class="event-media">
                     ${imageMarkup}
                 </div>
                 <div class="event-content">

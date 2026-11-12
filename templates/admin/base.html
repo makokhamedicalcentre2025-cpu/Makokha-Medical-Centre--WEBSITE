@@ -6,7 +6,9 @@
     <title>{% block title %}Admin Dashboard - Orivana Care Medical Centre Ltd{% endblock %}</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     
     <style>
@@ -112,7 +114,7 @@
         }
 
         .admin-header {
-            background: rgba(255, 255, 255, 0.96);
+            background: #ffffff;
             border-bottom: 1px solid var(--admin-border);
             position: fixed;
             width: calc(100% - var(--admin-sidebar-width));
@@ -123,13 +125,12 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.95rem 2rem;
-            backdrop-filter: blur(8px);
         }
 
         .admin-header-title {
             color: var(--admin-text);
             margin: 0;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Manrope', 'Inter', sans-serif;
             font-size: 1.35rem;
             line-height: 1.25;
         }
@@ -188,7 +189,7 @@
         .admin-page-intro h2 {
             margin: 0;
             color: var(--admin-text);
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Manrope', 'Inter', sans-serif;
             font-size: 1.9rem;
             font-weight: 700;
         }
@@ -313,7 +314,7 @@
             margin: 0 0 1.35rem;
             font-size: 1.32rem;
             color: var(--admin-text);
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Manrope', 'Inter', sans-serif;
         }
 
         .admin-grid-2 {
@@ -413,7 +414,7 @@
 
         .admin-list-title h1 {
             margin: 0;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Manrope', 'Inter', sans-serif;
             color: var(--admin-text);
             font-size: 1.85rem;
             font-weight: 700;

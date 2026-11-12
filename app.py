@@ -13,7 +13,6 @@ import os
 import io
 import re
 import json
-import importlib
 import threading
 import hashlib
 import smtplib
@@ -25,20 +24,6 @@ from sqlalchemy import desc, inspect, text, or_, func
 from urllib.parse import urlparse, urlencode
 from urllib import error as urllib_error
 from urllib import request as urllib_request
-
-
-def _load_optional_pillow_modules():
-    """Load Pillow modules lazily without hard import-time dependency."""
-    try:
-        pil_image = importlib.import_module('PIL.Image')
-        pil_filter = importlib.import_module('PIL.ImageFilter')
-        pil_ops = importlib.import_module('PIL.ImageOps')
-        return pil_image, pil_filter, pil_ops
-    except ImportError:
-        return None, None, None
-
-
-Image, ImageFilter, ImageOps = _load_optional_pillow_modules()
 
 # Load environment variables
 load_dotenv()
@@ -287,11 +272,6 @@ DEFAULT_SITE_SETTINGS = {
 
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 MAX_HERO_IMAGES_PER_UPLOAD = 10
-HERO_IMAGE_ASPECT_RATIO = (16, 9)
-UPLOAD_IMAGE_LONG_EDGE_TARGET = int(os.getenv('UPLOAD_IMAGE_LONG_EDGE_TARGET', '3840'))
-UPLOAD_IMAGE_SHARPEN_PERCENT = int(os.getenv('UPLOAD_IMAGE_SHARPEN_PERCENT', '65'))
-UPLOAD_MIN_LONG_EDGE = int(os.getenv('UPLOAD_MIN_LONG_EDGE', '1280'))
-UPLOAD_MIN_SHORT_EDGE = int(os.getenv('UPLOAD_MIN_SHORT_EDGE', '720'))
 
 ACTIVE_CALL_STATUSES = ['initiated', 'dialing', 'ringing', 'busy', 'connected', 'on_hold']
 MUTATING_HTTP_METHODS = {'POST', 'PUT', 'PATCH', 'DELETE'}
@@ -1174,15 +1154,11 @@ def _validate_uploaded_image_resolution(file_obj, image_label='Image'):
 def _save_uploaded_image(
     file_obj,
     filename,
-    target_aspect_ratio=None,
     image_label='Image',
     owner_type=None,
     owner_id=None
 ):
-    """
-    Save uploaded image into database-backed storage with high-quality processing.
-    Falls back to original bytes when Pillow is unavailable or processing fails.
-    """
+    """Store the uploaded image bytes unchanged in database-backed storage."""
     _validate_uploaded_image_resolution(file_obj, image_label=image_label)
 
     safe_filename = _safe_uploaded_filename(filename)
@@ -1193,112 +1169,9 @@ def _save_uploaded_image(
     if ext not in ALLOWED_IMAGE_EXTENSIONS:
         raise ValueError('Image must be PNG, JPG, JPEG, WEBP, or GIF.')
 
-    processed = False
     payload = _read_uploaded_file_bytes(file_obj)
     if not payload:
         raise ValueError('Uploaded file is empty.')
-
-    if Image is not None and ext != 'gif':
-        try:
-            with Image.open(io.BytesIO(payload)) as opened_image:
-                image = ImageOps.exif_transpose(opened_image) if ImageOps else opened_image.copy()
-                image.load()
-
-            if image.mode == 'P' and ext in {'jpg', 'jpeg', 'webp'}:
-                image = image.convert('RGB')
-
-            if ext in {'jpg', 'jpeg'} and image.mode != 'RGB':
-                image = image.convert('RGB')
-            elif ext == 'png' and image.mode not in {'RGB', 'RGBA'}:
-                image = image.convert('RGBA')
-            elif ext == 'webp' and image.mode not in {'RGB', 'RGBA'}:
-                image = image.convert('RGB')
-
-            width, height = image.size
-            if target_aspect_ratio and isinstance(target_aspect_ratio, (tuple, list)) and len(target_aspect_ratio) == 2:
-                try:
-                    ratio_w = float(target_aspect_ratio[0])
-                    ratio_h = float(target_aspect_ratio[1])
-                except (TypeError, ValueError):
-                    ratio_w = 0.0
-                    ratio_h = 0.0
-
-                if ratio_w > 0.0 and ratio_h > 0.0 and width > 0 and height > 0:
-                    desired_ratio = ratio_w / ratio_h
-                    current_ratio = float(width) / float(height)
-
-                    # Enforce a consistent frame by center-cropping to target ratio.
-                    if current_ratio > desired_ratio:
-                        crop_width = max(1, int(round(height * desired_ratio)))
-                        crop_left = max(0, int(round((width - crop_width) / 2.0)))
-                        crop_right = min(width, crop_left + crop_width)
-                        image = image.crop((crop_left, 0, crop_right, height))
-                    elif current_ratio < desired_ratio:
-                        crop_height = max(1, int(round(width / desired_ratio)))
-                        crop_top = max(0, int(round((height - crop_height) / 2.0)))
-                        crop_bottom = min(height, crop_top + crop_height)
-                        image = image.crop((0, crop_top, width, crop_bottom))
-
-                    width, height = image.size
-
-            long_edge = max(width, height)
-            target_long_edge = max(1, int(UPLOAD_IMAGE_LONG_EDGE_TARGET))
-            if long_edge > 0 and long_edge != target_long_edge:
-                # Normalize all uploaded images to a consistent 4K-class long edge.
-                scale = target_long_edge / float(long_edge)
-                target_size = (
-                    max(1, int(round(width * scale))),
-                    max(1, int(round(height * scale)))
-                )
-                if hasattr(Image, 'Resampling'):
-                    resample_method = Image.Resampling.BICUBIC if scale > 1.0 else Image.Resampling.LANCZOS
-                else:
-                    resample_method = Image.BICUBIC if scale > 1.0 else Image.LANCZOS
-                image = image.resize(target_size, resample=resample_method)
-                if ImageFilter and scale > 1.0:
-                    image = image.filter(
-                        ImageFilter.UnsharpMask(
-                            radius=0.9,
-                            percent=max(0, min(UPLOAD_IMAGE_SHARPEN_PERCENT, 120)),
-                            threshold=4
-                        )
-                    )
-
-            output_buffer = io.BytesIO()
-            if ext in {'jpg', 'jpeg'}:
-                if image.mode != 'RGB':
-                    image = image.convert('RGB')
-                image.save(
-                    output_buffer,
-                    format='JPEG',
-                    quality=98,
-                    subsampling=0,
-                    optimize=True
-                )
-            elif ext == 'png':
-                image.save(
-                    output_buffer,
-                    format='PNG',
-                    optimize=True,
-                    compress_level=1
-                )
-            elif ext == 'webp':
-                image.save(
-                    output_buffer,
-                    format='WEBP',
-                    quality=98,
-                    method=6
-                )
-            else:
-                output_buffer = None
-
-            if output_buffer is not None:
-                processed_payload = output_buffer.getvalue()
-                if processed_payload:
-                    payload = processed_payload
-                    processed = True
-        except Exception:
-            processed = False
 
     mime_by_extension = {
         'jpg': 'image/jpeg',
@@ -1317,7 +1190,7 @@ def _save_uploaded_image(
         owner_type=owner_type,
         owner_id=owner_id
     )
-    return processed
+    return True
 
 
 def _parse_uploaded_image_list(raw_value):
@@ -3385,7 +3258,6 @@ def admin_site_content():
                 _save_uploaded_image(
                     hero_file,
                     hero_filename,
-                    target_aspect_ratio=HERO_IMAGE_ASPECT_RATIO,
                     image_label='Hero background image',
                     owner_type='site_setting'
                 )

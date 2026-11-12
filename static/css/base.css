@@ -51,13 +51,22 @@ html {
 }
 
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--light-color);
     overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    font-optical-sizing: auto;
+    font-kerning: normal;
+    font-feature-settings: "kern" 1, "liga" 1;
+    text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
 }
 
 /* ================================
@@ -65,21 +74,22 @@ body {
    ================================ */
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
+    font-family: 'Manrope', 'Inter', 'Segoe UI', sans-serif;
+    font-weight: 700;
     line-height: 1.3;
     margin-bottom: 1rem;
     color: var(--dark-color);
+    letter-spacing: -0.02em;
+    text-rendering: optimizeLegibility;
 }
 
 h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
+    font-size: clamp(2.2rem, 4vw, 3.25rem);
+    letter-spacing: -0.035em;
 }
 
 h2 {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
 }
 
 h3 {
@@ -248,7 +258,7 @@ ul, ol {
 
 .logo-text {
     color: var(--dark-color);
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Manrope', 'Inter', 'Segoe UI', sans-serif;
 }
 
 .nav-menu {
