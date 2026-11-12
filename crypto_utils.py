@@ -1,5 +1,5 @@
 """
-Encryption and security utilities for the Makokha Medical Centre application.
+Encryption and security utilities for the OIrivana_Care Medical Centre application.
 Provides field-level encryption, file encryption, and secure hashing.
 """
 
@@ -60,6 +60,15 @@ class EncryptionManager:
         
         # Generate a new key if not provided
         import warnings
+        app_env = (
+            os.getenv('APP_ENV')
+            or os.getenv('FLASK_ENV')
+            or ('production' if os.getenv('RENDER') else 'development')
+        ).strip().lower()
+        if app_env == 'production':
+            raise RuntimeError(
+                'ENCRYPTION_KEY environment variable is required in production.'
+            )
         warnings.warn(
             'ENCRYPTION_KEY environment variable not set. Generating a temporary key. '
             'Set ENCRYPTION_KEY environment variable with a persistent key for production.',

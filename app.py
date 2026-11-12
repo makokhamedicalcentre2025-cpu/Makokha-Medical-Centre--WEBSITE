@@ -96,6 +96,14 @@ if IS_PRODUCTION and database_uri.startswith('sqlite'):
 app.config['SECRET_KEY'] = secret_key
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['PUBLIC_SITE_URL'] = (
+    (
+        os.getenv('PUBLIC_SITE_URL')
+        or os.getenv('SITE_URL')
+        or os.getenv('APP_BASE_URL')
+        or 'https://www.orivanacare.top'
+    ).strip().rstrip('/')
+)
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'static/uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 app.config['PREFERRED_URL_SCHEME'] = 'https' if IS_PRODUCTION else 'http'
@@ -205,7 +213,7 @@ FACILITY_SERVICES = [
 
 UPCOMING_TELEMEDICINE = {
     'title': 'Upcoming Telemedicine',
-    'subtitle': 'Launching soon at Makokha Medical Centre',
+    'subtitle': 'Launching soon at OIrivana_Care Medical Centre',
     'description': (
         'Virtual doctor consultations, digital follow-up reviews, and remote triage support '
         'will be available through our telemedicine service.'
@@ -228,7 +236,7 @@ VALID_EVENT_TYPE_FILTERS = {
 DEFAULT_SITE_SETTINGS = {
     'about_heading': 'Your Trusted Healthcare Partner',
     'about_intro_primary': (
-        'Makokha Medical Centre is a leading healthcare facility committed to providing the highest '
+        'OIrivana_Care Medical Centre is a leading healthcare facility committed to providing the highest '
         'quality medical services to the community. With a team of experienced physicians, modern '
         'medical equipment, and patient-centric care, we strive to improve the health and well-being '
         'of every patient who walks through our doors.'
@@ -249,10 +257,10 @@ DEFAULT_SITE_SETTINGS = {
         'access to high-quality healthcare.'
     ),
     'footer_about_text': (
-        'Makokha Medical Centre is committed to providing quality healthcare services with modern '
+        'OIrivana_Care Medical Centre is committed to providing quality healthcare services with modern '
         'facilities and experienced medical professionals.'
     ),
-    'contact_address': 'Makokha Medical Centre\nMaliki, Kenya',
+    'contact_address': 'OIrivana_Care Medical Centre\nMaliki, Kenya',
     'contact_phones': '+254 (0) 123 456 789\n+254 (0) 987 654 321',
     'contact_emails': 'info@makokhamedical.com\nappointments@makokhamedical.com',
     'opening_hours': (
@@ -1407,7 +1415,10 @@ def get_site_content():
     raw_map = _load_site_setting_map()
     data = {}
     for key in DEFAULT_SITE_SETTINGS:
-        data[key] = _resolve_site_setting(raw_map, key)
+        data[key] = _resolve_site_setting(raw_map, key).replace(
+            'Makokha Medical Centre',
+            'OIrivana_Care Medical Centre'
+        )
 
     services = _parse_services_json(data.get('services_json'))
     data['services'] = services
@@ -2299,7 +2310,7 @@ def _build_absolute_public_url(path):
     if configured_base_url:
         return f'{configured_base_url}{normalized_path}'
 
-    fallback_base = 'https://makokhamedicalcentre.top' if IS_PRODUCTION else 'http://localhost:5000'
+    fallback_base = 'https://www.orivanacare.top' if IS_PRODUCTION else 'http://localhost:5000'
     return f'{fallback_base}{normalized_path}'
 
 
@@ -2410,7 +2421,7 @@ def _send_appointment_confirmation_email(appointment, doctor_name='To be assigne
 
     appointment_ref = _appointment_reference(appointment.id)
     appointment_when = _format_appointment_datetime(appointment.appointment_date)
-    subject = f'Appointment Confirmation ({appointment_ref}) - Makokha Medical Centre'
+    subject = f'Appointment Confirmation ({appointment_ref}) - OIrivana_Care Medical Centre'
     body = (
         f'Dear {appointment.patient_name},\n\n'
         'Your appointment details are confirmed as below:\n'
@@ -2421,7 +2432,7 @@ def _send_appointment_confirmation_email(appointment, doctor_name='To be assigne
         f'Reason: {appointment.reason or "N/A"}\n\n'
         'If you need to reschedule, please reply to this email or contact reception.\n\n'
         'Regards,\n'
-        'Makokha Medical Centre'
+        'OIrivana_Care Medical Centre'
     )
     return _send_transactional_email(appointment.patient_email, subject, body)
 
@@ -2474,7 +2485,7 @@ def _send_telemedicine_link_email(appointment, created_by_user_type=None, create
         f'This link expires in {TELEMEDICINE_LINK_TTL_HOURS} hour(s).\n'
         'Please use a secure/private device when joining.\n\n'
         'Regards,\n'
-        'Makokha Medical Centre'
+        'OIrivana_Care Medical Centre'
     )
     sent, message = _send_transactional_email(appointment.patient_email, subject, body)
     if sent:
@@ -2636,7 +2647,7 @@ def _public_site_base_url():
         return request_base_url.rstrip('/')
 
     if IS_PRODUCTION:
-        return 'https://makokhamedicalcentre.top'
+        return 'https://www.orivanacare.top'
     return 'http://localhost:5000'
 
 
@@ -3156,7 +3167,7 @@ def password_forgot():
                 email_address=account.email
             )
             reset_url = _build_password_reset_url(raw_token)
-            subject = 'Password Reset Instructions - Makokha Medical Centre'
+            subject = 'Password Reset Instructions - OIrivana_Care Medical Centre'
             body = (
                 f'Dear {account.full_name},\n\n'
                 'We received a request to reset your portal password.\n'
@@ -3164,7 +3175,7 @@ def password_forgot():
                 f'This link expires in {PASSWORD_RESET_TOKEN_TTL_MINUTES} minute(s).\n'
                 'If you did not request this reset, you can ignore this email.\n\n'
                 'Regards,\n'
-                'Makokha Medical Centre'
+                'OIrivana_Care Medical Centre'
             )
             email_sent, email_message = _send_transactional_email(account.email, subject, body)
             if email_sent:
@@ -4522,14 +4533,14 @@ def reply_message():
         email_sent = False
         email_error = ''
         if send_email_requested and communication.patient_email:
-            email_subject = 'Response from Makokha Medical Centre'
+            email_subject = 'Response from OIrivana_Care Medical Centre'
             email_body = (
                 f'Dear {communication.patient_name},\n\n'
                 'Our customer care team has replied to your message:\n\n'
                 f'{reply}\n\n'
                 'You can continue the conversation from the customer care desk on the website.\n\n'
                 'Regards,\n'
-                'Makokha Medical Centre'
+                'OIrivana_Care Medical Centre'
             )
             email_sent, email_error = _send_transactional_email(
                 communication.patient_email,
@@ -4803,7 +4814,7 @@ def reception_update_appointment(appointment_id):
                 else:
                     warning_messages.append(f'Confirmation email not sent: {email_error}')
             else:
-                email_subject = f'Appointment {appointment.status.title()} - Makokha Medical Centre'
+                email_subject = f'Appointment {appointment.status.title()} - OIrivana_Care Medical Centre'
                 email_body = (
                     f'Dear {appointment.patient_name},\n\n'
                     f'Your appointment status is now: {appointment.status.title()}.\n'
@@ -4811,7 +4822,7 @@ def reception_update_appointment(appointment_id):
                     f'Assigned doctor: {doctor_name}.\n'
                     f'Notes: {appointment.notes or "N/A"}\n\n'
                     'Thank you,\n'
-                    'Makokha Medical Centre Reception'
+                    'OIrivana_Care Medical Centre Reception'
                 )
                 email_sent, email_error = _send_transactional_email(
                     appointment.patient_email,

@@ -1,5 +1,5 @@
 /**
- * Makokha Medical Centre - Main JavaScript
+ * OIrivana_Care Medical Centre - Main JavaScript
  * Handle global functionality and interactions
  */
 

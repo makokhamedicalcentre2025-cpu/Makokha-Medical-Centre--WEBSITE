@@ -4,22 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>{% block title %}Makokha Medical Centre - Professional Healthcare Services{% endblock %}</title>
+    <title>{% block title %}OIrivana_Care Medical Centre - Professional Healthcare Services{% endblock %}</title>
     
     <!-- SEO Meta Tags -->
-    <meta name="description" content="{% block description %}Makokha Medical Centre - Providing quality healthcare services with modern facilities and experienced doctors.{% endblock %}">
+    <meta name="description" content="{% block description %}OIrivana_Care Medical Centre - Providing quality healthcare services with modern facilities and experienced doctors.{% endblock %}">
     <meta name="keywords" content="{% block keywords %}medical centre, healthcare, doctors, hospital, emergency{% endblock %}">
-    <meta name="author" content="Makokha Medical Centre">
+    <meta name="author" content="OIrivana_Care Medical Centre">
     
     <!-- Open Graph Tags -->
-    <meta property="og:title" content="{% block og_title %}Makokha Medical Centre{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}OIrivana_Care Medical Centre{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Professional medical and healthcare services{% endblock %}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://makokhamedical.com">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80">
+    <meta property="og:url" content="{{ config['PUBLIC_SITE_URL'] }}{{ request.path }}">
+    <meta property="og:image" content="{{ config['PUBLIC_SITE_URL'] }}{{ url_for('static', filename='images/logo.png') }}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:image" content="{{ config['PUBLIC_SITE_URL'] }}{{ url_for('static', filename='images/logo.png') }}">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏥</text></svg>">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/logo.png') }}">
+    <link rel="canonical" href="{{ config['PUBLIC_SITE_URL'] }}{{ request.path }}">
+
+    <script type="application/ld+json">
+        {{ {
+            "@context": "https://schema.org",
+            "@type": "MedicalClinic",
+            "name": "OIrivana_Care Medical Centre",
+            "url": config["PUBLIC_SITE_URL"],
+            "logo": config["PUBLIC_SITE_URL"] ~ url_for('static', filename='images/logo.png'),
+            "image": config["PUBLIC_SITE_URL"] ~ url_for('static', filename='images/logo.png')
+        } | tojson }}
+    </script>
     
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -42,9 +57,9 @@
     <header class="header{% if request.endpoint == 'index' %} over-hero{% endif %}" id="header">
         <div class="container">
             <div class="header-content">
-                <a href="{{ url_for('index') }}" class="logo" aria-label="Makokha Medical Centre Home">
+                <a href="{{ url_for('index') }}" class="logo" aria-label="OIrivana_Care Medical Centre Home">
                     <span class="logo-mark">
-                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Makokha Medical Centre" class="logo-image">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="OIrivana_Care Medical Centre" class="logo-image">
                     </span>
                 </a>
                 
@@ -2294,7 +2309,7 @@
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2026 Makokha Medical Centre. All rights reserved.</p>
+                <p>&copy; 2026 OIrivana_Care Medical Centre. All rights reserved.</p>
             </div>
         </div>
     </footer>

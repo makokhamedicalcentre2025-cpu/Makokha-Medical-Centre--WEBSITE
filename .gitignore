@@ -9,9 +9,17 @@ __pycache__/
 venv/
 .venv/
 env/
-
+.env.example
 # Local secrets and runtime config
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
 
 # Local databases and runtime state
 instance/
@@ -30,6 +38,17 @@ instance/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+# Local-only diagnostic and destructive admin utilities
+/check_admins.py
+/delete_admins.py
+
+# Local-only tests
+tests/
+test_*.py
+*_test.py
+*.test.js
+*.spec.js
 
 # Local uploaded media cache (do not commit runtime uploads)
 static/uploads/
