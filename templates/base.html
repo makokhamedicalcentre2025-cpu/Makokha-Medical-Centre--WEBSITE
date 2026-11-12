@@ -147,7 +147,7 @@
             width: 60px;
             height: 60px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            background: linear-gradient(135deg, #03595d 0%, #03454a 100%);
             color: white;
             border: none;
             cursor: pointer;
@@ -181,7 +181,7 @@
         ">
             <!-- Panel Header -->
             <div style="
-                background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+                background: linear-gradient(135deg, #03595d 0%, #03454a 100%);
                 color: white;
                 padding: 1rem;
                 border-radius: 12px 12px 0 0;
@@ -246,22 +246,22 @@
                 <div id="commTabMessage" style="display: none;">
                     <form id="messageForm" onsubmit="sendMessage(event)">
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Your Name</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Your Name</label>
                             <input type="text" name="name" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="Enter your name">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Email</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Email</label>
                             <input type="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="your@email.com">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Phone (optional)</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Phone (optional)</label>
                             <input type="tel" name="phone" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="+254 XXX XXX XXX">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Message Type</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Message Type</label>
                             <select name="type" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
                                 <option value="message">General Message</option>
                                 <option value="email">Email Inquiry</option>
@@ -269,12 +269,12 @@
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Message</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Message</label>
                             <textarea name="message" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem; min-height: 100px; font-family: inherit;" placeholder="Type your message here..."></textarea>
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Priority</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Priority</label>
                             <select name="priority" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
                                 <option value="normal">Normal</option>
                                 <option value="high">High</option>
@@ -282,27 +282,27 @@
                             </select>
                         </div>
                         
-                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #0066cc; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s; margin-bottom: 0.5rem;">
+                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #03595d; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s; margin-bottom: 0.5rem;">
                             <i class="fas fa-paper-plane"></i> Send Message
                         </button>
                         
-                        <button type="button" onclick="initiateCall()" style="width: 100%; padding: 0.75rem; background: #27ae60; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#229954'" onmouseout="this.style.background='#27ae60'">
+                        <button type="button" onclick="initiateCall()" style="width: 100%; padding: 0.75rem; background: #20843e; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.background='#20843e'" onmouseout="this.style.background='#20843e'">
                             <i class="fas fa-phone"></i> Call Customer Care Now
                         </button>
                     </form>
 
-                    <div id="messageConversationPanel" style="display: none; margin-top: 1rem; border: 1px solid #d7e7fb; border-radius: 8px; background: #f8fbff;">
-                        <div style="padding: 0.75rem 0.85rem; border-bottom: 1px solid #e2ecfb;">
-                            <div style="font-weight: 700; color: #0f5db6; font-size: 0.88rem;">
+                    <div id="messageConversationPanel" style="display: none; margin-top: 1rem; border: 1px solid #d6e8df; border-radius: 8px; background: #f7faf8;">
+                        <div style="padding: 0.75rem 0.85rem; border-bottom: 1px solid #d6e8df;">
+                            <div style="font-weight: 700; color: #03595d; font-size: 0.88rem;">
                                 <i class="fas fa-comments"></i> Private Conversation
                             </div>
                             <div id="messageConversationMeta" style="font-size: 0.76rem; color: #5b6e88; margin-top: 0.2rem;"></div>
                         </div>
                         <div id="messageConversationThread" style="max-height: 220px; overflow-y: auto; padding: 0.75rem;"></div>
-                        <form id="messageReplyForm" onsubmit="sendMessageReply(event)" style="padding: 0.75rem; border-top: 1px solid #e2ecfb; background: #fff;">
+                        <form id="messageReplyForm" onsubmit="sendMessageReply(event)" style="padding: 0.75rem; border-top: 1px solid #d6e8df; background: #fff;">
                             <textarea id="messageReplyInput" style="width: 100%; padding: 0.55rem; border: 1px solid #d7dfeb; border-radius: 6px; font-size: 0.88rem; min-height: 74px; font-family: inherit;" placeholder="Type your reply to customer care..." required></textarea>
                             <div style="display: flex; gap: 0.55rem; margin-top: 0.55rem;">
-                                <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 600; cursor: pointer;">
+                                <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #03595d; color: #fff; font-weight: 600; cursor: pointer;">
                                     <i class="fas fa-paper-plane"></i> Send Reply
                                 </button>
                                 <button type="button" onclick="clearMessageConversation(true)" style="padding: 0.62rem 0.75rem; border: 1px solid #cfddee; border-radius: 6px; background: #f6f9ff; color: #435971; font-weight: 600; cursor: pointer;">
@@ -316,29 +316,29 @@
                 <!-- Legacy Call Tab (kept for fallback) -->
                 <div id="commTabCallLegacy" style="display: none;">
                     <form id="callForm" onsubmit="initiateCall(event)">
-                        <div style="background: #e3f2fd; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; text-align: center;">
-                            <i class="fas fa-phone" style="font-size: 2rem; color: #0066cc; margin-bottom: 0.5rem;"></i>
-                            <p style="color: #0066cc; font-weight: 600; margin: 0.5rem 0;">Request a Call</p>
+                        <div style="background: #e7f3f0; padding: 1rem; border-radius: 6px; margin-bottom: 1rem; text-align: center;">
+                            <i class="fas fa-phone" style="font-size: 2rem; color: #03595d; margin-bottom: 0.5rem;"></i>
+                            <p style="color: #03595d; font-weight: 600; margin: 0.5rem 0;">Request a Call</p>
                             <p style="color: #666; font-size: 0.9rem; margin: 0;">Our customer care team will call you back shortly</p>
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Your Name</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Your Name</label>
                             <input type="text" name="name" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="Enter your name">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Phone Number *</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Phone Number *</label>
                             <input type="tel" name="phone" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="+254 XXX XXX XXX">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Email</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Email</label>
                             <input type="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="your@email.com">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Best Time to Call</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Best Time to Call</label>
                             <select name="time" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
                                 <option value="anytime">Anytime</option>
                                 <option value="morning">Morning (9AM - 12PM)</option>
@@ -348,11 +348,11 @@
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Reason for Call (optional)</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Reason for Call (optional)</label>
                             <textarea name="reason" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem; min-height: 80px; font-family: inherit;" placeholder="Tell us why you're calling..."></textarea>
                         </div>
                         
-                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #0066cc; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #03595d; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
                             <i class="fas fa-phone"></i> Request Call
                         </button>
                     </form>
@@ -362,31 +362,31 @@
                 <div id="commTabAppointment" style="display: none;">
                     <form id="appointmentForm" onsubmit="bookAppointment(event)">
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Your Name</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Your Name</label>
                             <input type="text" name="name" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="Enter your name">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Email</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Email</label>
                             <input type="email" name="email" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="your@email.com">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Phone</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Phone</label>
                             <input type="tel" name="phone" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="+254 XXX XXX XXX">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Preferred Date & Time</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Preferred Date & Time</label>
                             <input type="datetime-local" name="appointment_date" required style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;">
                         </div>
                         
                         <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Reason for Visit</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Reason for Visit</label>
                             <textarea name="reason" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem; min-height: 80px; font-family: inherit;" placeholder="Describe your health concern..."></textarea>
                         </div>
                         
-                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #0066cc; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
+                        <button type="submit" style="width: 100%; padding: 0.75rem; background: #03595d; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s;">
                             <i class="fas fa-calendar-check"></i> Book Appointment
                         </button>
                     </form>
@@ -395,32 +395,32 @@
                 <!-- Call Tab -->
                 <div id="commTabCall" style="display: none;">
                     <div style="text-align: center; padding: 1rem 0;">
-                        <div style="background: #f8f9fa; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                            <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: #2c3e50;">
-                                <i class="fas fa-phone-alt" style="color: #0066cc; font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                        <div style="background: #f7faf8; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="font-size: 1.2rem; font-weight: 600; margin-bottom: 0.5rem; color: #173c3b;">
+                                <i class="fas fa-phone-alt" style="color: #03595d; font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
                                 Direct Call to Customer Care
                             </div>
                             <p style="color: #7f8c8d; font-size: 0.9rem; margin: 0;">Connect directly with our customer care team</p>
                         </div>
 
-                        <div style="text-align: left; background: #f8fbff; border: 1px solid #d6e6ff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="text-align: left; background: #f7faf8; border: 1px solid #d6e6ff; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                             <div style="margin-bottom: 0.75rem;">
-                                <label for="callCustomerName" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Your Name</label>
+                                <label for="callCustomerName" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Your Name</label>
                                 <input id="callCustomerName" type="text" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="Enter your name">
                             </div>
                             <div style="margin-bottom: 0.75rem;">
-                                <label for="callCustomerPhone" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Phone Number (optional for callback)</label>
+                                <label for="callCustomerPhone" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Phone Number (optional for callback)</label>
                                 <input id="callCustomerPhone" type="tel" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="+254 XXX XXX XXX">
                             </div>
                             <div>
-                                <label for="callCustomerEmail" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #2c3e50; font-size: 0.9rem;">Email (for callback/message)</label>
+                                <label for="callCustomerEmail" style="display: block; margin-bottom: 0.35rem; font-weight: 500; color: #173c3b; font-size: 0.9rem;">Email (for callback/message)</label>
                                 <input id="callCustomerEmail" type="email" style="width: 100%; padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.9rem;" placeholder="your@email.com">
                             </div>
 
                             <div style="margin-top: 0.85rem; border-top: 1px solid #dce8fb; padding-top: 0.75rem;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
-                                    <label for="preferredReceptionSelect" style="font-weight: 600; color: #2c3e50; font-size: 0.88rem;">Choose Receptionist (Optional)</label>
-                                    <button type="button" onclick="refreshReceptionAvailability(true)" style="border: 1px solid #c4d8f3; background: #edf4ff; color: #0f5db6; border-radius: 6px; padding: 0.3rem 0.45rem; font-size: 0.76rem; cursor: pointer;">
+                                    <label for="preferredReceptionSelect" style="font-weight: 600; color: #173c3b; font-size: 0.88rem;">Choose Receptionist (Optional)</label>
+                                    <button type="button" onclick="refreshReceptionAvailability(true)" style="border: 1px solid #c4d8f3; background: #e8f3ee; color: #03595d; border-radius: 6px; padding: 0.3rem 0.45rem; font-size: 0.76rem; cursor: pointer;">
                                         <i class="fas fa-rotate"></i> Refresh
                                     </button>
                                 </div>
@@ -437,9 +437,9 @@
                         </div>
                         
                         <!-- Call Status -->
-                        <div style="background: #f0f4ff; border: 2px solid #0066cc; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
+                        <div style="background: #f0f4ff; border: 2px solid #03595d; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
                             <span id="callStatusBadge" style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #95a5a6; margin-right: 0.5rem; vertical-align: middle;"></span>
-                            <span style="font-weight: 600; color: #2c3e50; vertical-align: middle;">Status: </span>
+                            <span style="font-weight: 600; color: #173c3b; vertical-align: middle;">Status: </span>
                             <span id="callStatus" style="color: #7f8c8d; vertical-align: middle;">Ready to call</span>
                         </div>
                         <audio id="callRemoteAudio" autoplay playsinline style="display: none;"></audio>
@@ -447,7 +447,7 @@
                         <!-- Call Duration -->
                         <div style="margin-bottom: 1.5rem; display: none;" id="callDurationDiv">
                             <p style="margin: 0 0 0.5rem 0; color: #7f8c8d; font-size: 0.9rem;">Call Duration</p>
-                            <div style="font-size: 1.8rem; font-weight: bold; color: #0066cc;">
+                            <div style="font-size: 1.8rem; font-weight: bold; color: #03595d;">
                                 <span id="callDuration">0:00</span>
                             </div>
                         </div>
@@ -457,7 +457,7 @@
                             <button id="startCallBtn" onclick="initiateCall()" style="
                                 flex: 1;
                                 padding: 0.75rem;
-                                background: #27ae60;
+                                background: #20843e;
                                 color: white;
                                 border: none;
                                 border-radius: 6px;
@@ -465,7 +465,7 @@
                                 cursor: pointer;
                                 transition: all 0.3s;
                                 font-size: 0.95rem;
-                            " onmouseover="this.style.background='#229954'" onmouseout="this.style.background='#27ae60'">
+                            " onmouseover="this.style.background='#20843e'" onmouseout="this.style.background='#20843e'">
                                 <i class="fas fa-phone"></i> Call Customer Care
                             </button>
                             <button id="endCallBtn" onclick="endCall()" style="
@@ -504,14 +504,14 @@
                         </p>
 
                         <div id="callBusyActions" style="display: none; margin-top: 1rem; text-align: left; padding: 1rem; border-radius: 8px; background: #fff8e8; border: 1px solid #f5deb0;">
-                            <p id="callBusyNotice" style="margin: 0 0 0.75rem 0; color: #856404; font-size: 0.9rem;">
+                            <p id="callBusyNotice" style="margin: 0 0 0.75rem 0; color: #705b08; font-size: 0.9rem;">
                                 <i class="fas fa-exclamation-circle"></i> Customer care is currently on another call.
                             </p>
                             <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
-                                <button type="button" id="holdCallBtn" onclick="holdCurrentCall()" style="flex: 1; padding: 0.6rem; background: #f39c12; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                <button type="button" id="holdCallBtn" onclick="holdCurrentCall()" style="flex: 1; padding: 0.6rem; background: #d9ad10; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
                                     <i class="fas fa-pause-circle"></i> Hold
                                 </button>
-                                <button type="button" onclick="toggleCallMessageBox()" style="flex: 1; padding: 0.6rem; background: #3498db; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                <button type="button" onclick="toggleCallMessageBox()" style="flex: 1; padding: 0.6rem; background: #03595d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
                                     <i class="fas fa-envelope"></i> Send Message
                                 </button>
                             </div>
@@ -520,14 +520,14 @@
                             </button>
                             <div id="callMessageBox" style="display: none;">
                                 <textarea id="callMessageInput" style="width: 100%; padding: 0.6rem; border: 1px solid #dee2e6; border-radius: 6px; min-height: 80px; font-family: inherit; font-size: 0.9rem;" placeholder="Type your message to customer care..."></textarea>
-                                <button type="button" onclick="sendCallMessage()" style="margin-top: 0.5rem; width: 100%; padding: 0.6rem; background: #0066cc; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
+                                <button type="button" onclick="sendCallMessage()" style="margin-top: 0.5rem; width: 100%; padding: 0.6rem; background: #03595d; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
                                     <i class="fas fa-paper-plane"></i> Send Message
                                 </button>
                             </div>
                         </div>
                         
                         <!-- Customer Care Availability -->
-                        <div style="margin-top: 1.5rem; padding: 0.75rem; background: #e8f5e9; border-radius: 6px; color: #2e7d32;">
+                        <div style="margin-top: 1.5rem; padding: 0.75rem; background: #e8f3ee; border-radius: 6px; color: #20843e;">
                             <p style="margin: 0; font-size: 0.9rem;">
                                 <i class="fas fa-check-circle"></i>
                                 {% if site_content.opening_hours_lines %}
@@ -557,8 +557,8 @@
         }
         
         .commTab[data-active="true"] {
-            color: #0066cc !important;
-            border-bottom-color: #0066cc !important;
+            color: #03595d !important;
+            border-bottom-color: #03595d !important;
         }
 
         #commWidgetBackdrop {
@@ -740,7 +740,7 @@
                 top: 80px;
                 right: 20px;
                 padding: 1rem 1.5rem;
-                background: ${type === 'success' ? '#27ae60' : '#e74c3c'};
+                background: ${type === 'success' ? '#20843e' : '#e74c3c'};
                 color: white;
                 border-radius: 6px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -996,7 +996,7 @@
 
                 return `
                     <div style="display: flex; ${isPatient ? 'justify-content: flex-end;' : 'justify-content: flex-start;'} margin-bottom: 0.55rem;">
-                        <div style="max-width: 88%; border-radius: 10px; padding: 0.55rem 0.68rem; ${isPatient ? 'background: #0f5db6; color: #ffffff;' : 'background: #edf4ff; color: #1f2a37;'}">
+                        <div style="max-width: 88%; border-radius: 10px; padding: 0.55rem 0.68rem; ${isPatient ? 'background: #03595d; color: #ffffff;' : 'background: #e8f3ee; color: #263b39;'}">
                             <div style="font-size: 0.72rem; font-weight: 700; opacity: 0.9; margin-bottom: 0.22rem;">${senderName}</div>
                             <div style="font-size: 0.84rem; line-height: 1.35; white-space: pre-wrap; word-break: break-word;">${messageText}</div>
                             <div style="font-size: 0.68rem; margin-top: 0.3rem; opacity: 0.82;">${messageTime}</div>
@@ -1351,7 +1351,7 @@
         }
 
         function getReceptionStatusColor(status) {
-            if (status === 'available') return '#1f9d63';
+            if (status === 'available') return '#20843e';
             if (status === 'busy') return '#c05621';
             if (status === 'offline') return '#64748b';
             return '#6b7280';
@@ -1408,17 +1408,17 @@
                 return `
                     <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.55rem 0.65rem; border-bottom: 1px solid #edf3ff;">
                         <div>
-                            <div style="font-size: 0.84rem; font-weight: 600; color: #2c3e50;">${safeName}</div>
+                            <div style="font-size: 0.84rem; font-weight: 600; color: #173c3b;">${safeName}</div>
                             <div style="font-size: 0.74rem; color: #667a93;">${department} | ${shift}</div>
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.45rem;">
                             <span style="display: inline-flex; align-items: center; padding: 0.18rem 0.45rem; border-radius: 999px; border: 1px solid ${statusColor}; color: ${statusColor}; font-size: 0.7rem; font-weight: 700;">
                                 ${formatReceptionStatus(receptionist.availability)}
                             </span>
-                            <button type="button" onclick="selectPreferredReception(${receptionist.id})" style="border: 1px solid #c4d8f3; background: #edf4ff; color: #0f5db6; border-radius: 6px; padding: 0.24rem 0.42rem; font-size: 0.72rem; cursor: pointer;">
+                            <button type="button" onclick="selectPreferredReception(${receptionist.id})" style="border: 1px solid #c4d8f3; background: #e8f3ee; color: #03595d; border-radius: 6px; padding: 0.24rem 0.42rem; font-size: 0.72rem; cursor: pointer;">
                                 Select
                             </button>
-                            <button type="button" onclick="callSelectedReception(${receptionist.id})" ${canCallDirectly ? '' : 'disabled'} style="border: 1px solid ${canCallDirectly ? '#bde2c8' : '#d7dce2'}; background: ${canCallDirectly ? '#edf9f1' : '#f3f4f6'}; color: ${canCallDirectly ? '#1f9d63' : '#97a1ad'}; border-radius: 6px; padding: 0.24rem 0.42rem; font-size: 0.72rem; cursor: ${canCallDirectly ? 'pointer' : 'not-allowed'};">
+                            <button type="button" onclick="callSelectedReception(${receptionist.id})" ${canCallDirectly ? '' : 'disabled'} style="border: 1px solid ${canCallDirectly ? '#bde2c8' : '#d7dce2'}; background: ${canCallDirectly ? '#edf9f1' : '#f3f4f6'}; color: ${canCallDirectly ? '#20843e' : '#97a1ad'}; border-radius: 6px; padding: 0.24rem 0.42rem; font-size: 0.72rem; cursor: ${canCallDirectly ? 'pointer' : 'not-allowed'};">
                                 Call
                             </button>
                         </div>
@@ -2167,10 +2167,10 @@
                 // Update status badge color
                 if (statusBadge) {
                     statusBadge.style.backgroundColor = 
-                        state === 'waiting' ? '#f39c12' :
-                        state === 'hold' ? '#f39c12' :
-                        state === 'busy' ? '#d35400' :
-                        state === 'connected' ? '#27ae60' :
+                        state === 'waiting' ? '#d9ad10' :
+                        state === 'hold' ? '#d9ad10' :
+                        state === 'busy' ? '#8a6e06' :
+                        state === 'connected' ? '#20843e' :
                         state === 'ended' ? '#e74c3c' : '#95a5a6';
                 }
             }
@@ -2224,7 +2224,7 @@
 
                 historyDiv.innerHTML = data.calls.slice(0, 5).map(call => (
                     `<div style="padding: 0.5rem 0; border-bottom: 1px solid #f1f3f5;">
-                        <div style="font-size: 0.88rem; color: #2c3e50; font-weight: 600;">${call.patient_name || 'Patient'} • ${call.call_type || 'customer_care'} • ${call.status}</div>
+                        <div style="font-size: 0.88rem; color: #173c3b; font-weight: 600;">${call.patient_name || 'Patient'} • ${call.call_type || 'customer_care'} • ${call.status}</div>
                         <div style="font-size: 0.8rem; color: #7f8c8d;">Duration: ${call.duration || '0:00'}</div>
                     </div>`
                 )).join('');

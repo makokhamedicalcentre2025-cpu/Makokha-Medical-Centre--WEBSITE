@@ -2,14 +2,14 @@
 
 {% block reception_content %}
 <div style="padding: 2rem;">
-    <h1 style="font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">
+    <h1 style="font-size: 2rem; font-weight: 700; color: #173c3b; margin-bottom: 1rem;">
         <i class="fas fa-calendar-check"></i> Manage Appointments
     </h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div style="margin-bottom: 0.8rem; padding: 0.8rem 1rem; border-radius: 6px; background: {% if category == 'success' %}#edf9f1{% elif category == 'warning' %}#fff8e6{% elif category == 'error' %}#fff1f1{% else %}#eef5ff{% endif %}; border-left: 4px solid {% if category == 'success' %}#27ae60{% elif category == 'warning' %}#d89410{% elif category == 'error' %}#e74c3c{% else %}#0f5db6{% endif %}; color: #2c3e50;">
+                <div style="margin-bottom: 0.8rem; padding: 0.8rem 1rem; border-radius: 6px; background: {% if category == 'success' %}#edf9f1{% elif category == 'warning' %}#fff8e6{% elif category == 'error' %}#fff1f1{% else %}#edf6f1{% endif %}; border-left: 4px solid {% if category == 'success' %}#20843e{% elif category == 'warning' %}#d89410{% elif category == 'error' %}#e74c3c{% else %}#03595d{% endif %}; color: #173c3b;">
                     {{ message }}
                 </div>
             {% endfor %}
@@ -27,10 +27,10 @@
             </select>
         </div>
         <div style="display: flex; align-items: end; gap: 0.55rem;">
-            <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 600; cursor: pointer;">
+            <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #03595d; color: #fff; font-weight: 600; cursor: pointer;">
                 Apply
             </button>
-            <a href="{{ url_for('reception_appointments') }}" style="padding: 0.62rem 0.9rem; border-radius: 6px; background: #eef4ff; color: #0f5db6; text-decoration: none; font-weight: 600;">
+            <a href="{{ url_for('reception_appointments') }}" style="padding: 0.62rem 0.9rem; border-radius: 6px; background: #edf6f1; color: #03595d; text-decoration: none; font-weight: 600;">
                 Reset
             </a>
         </div>
@@ -41,9 +41,9 @@
             {% for appt in appointments.items %}
                 <form method="POST" action="{{ url_for('reception_update_appointment', appointment_id=appt.id, status=status_filter) }}" style="background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                    <div style="padding: 1rem; border-bottom: 1px solid #edf2f8; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <div style="padding: 1rem; border-bottom: 1px solid #f1f6f2; display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
                         <div>
-                            <div style="font-size: 1.03rem; font-weight: 700; color: #243247;">{{ appt.patient_name }}</div>
+                            <div style="font-size: 1.03rem; font-weight: 700; color: #263b39;">{{ appt.patient_name }}</div>
                             <div style="font-size: 0.84rem; color: #5f6f83; margin-top: 0.2rem;">
                                 <i class="fas fa-envelope"></i> {{ appt.patient_email }}
                             </div>
@@ -53,7 +53,7 @@
                         </div>
                         <div style="text-align: right;">
                             <div style="font-size: 0.82rem; color: #6b7788;">Current Status</div>
-                            <span style="display: inline-flex; margin-top: 0.2rem; padding: 0.2rem 0.6rem; border-radius: 999px; background: #eef4ff; color: #0f5db6; font-weight: 600; font-size: 0.78rem;">
+                            <span style="display: inline-flex; margin-top: 0.2rem; padding: 0.2rem 0.6rem; border-radius: 999px; background: #edf6f1; color: #03595d; font-weight: 600; font-size: 0.78rem;">
                                 {{ appt.status|title }}
                             </span>
                             <div style="font-size: 0.82rem; color: #6b7788; margin-top: 0.4rem;">
@@ -109,7 +109,7 @@
                                     Send telemedicine link (Resend)
                                 </label>
                             </div>
-                            <button type="submit" style="padding: 0.62rem 1rem; border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 700; cursor: pointer;">
+                            <button type="submit" style="padding: 0.62rem 1rem; border: none; border-radius: 6px; background: #03595d; color: #fff; font-weight: 700; cursor: pointer;">
                                 <i class="fas fa-save"></i> Save Appointment
                             </button>
                         </div>
@@ -121,13 +121,13 @@
         {% if appointments.has_prev or appointments.has_next %}
         <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem; align-items: center;">
             {% if appointments.has_prev %}
-                <a href="{{ url_for('reception_appointments', page=appointments.prev_num, status=status_filter) }}" style="padding: 0.5rem 0.8rem; background: #0f5db6; color: #fff; border-radius: 6px; text-decoration: none;">
+                <a href="{{ url_for('reception_appointments', page=appointments.prev_num, status=status_filter) }}" style="padding: 0.5rem 0.8rem; background: #03595d; color: #fff; border-radius: 6px; text-decoration: none;">
                     Previous
                 </a>
             {% endif %}
             <span style="color: #5b6878;">Page {{ appointments.page }} of {{ appointments.pages }}</span>
             {% if appointments.has_next %}
-                <a href="{{ url_for('reception_appointments', page=appointments.next_num, status=status_filter) }}" style="padding: 0.5rem 0.8rem; background: #0f5db6; color: #fff; border-radius: 6px; text-decoration: none;">
+                <a href="{{ url_for('reception_appointments', page=appointments.next_num, status=status_filter) }}" style="padding: 0.5rem 0.8rem; background: #03595d; color: #fff; border-radius: 6px; text-decoration: none;">
                     Next
                 </a>
             {% endif %}

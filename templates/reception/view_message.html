@@ -2,12 +2,12 @@
 
 {% block reception_content %}
 <div style="padding: 2rem; max-width: 980px; margin: 0 auto;">
-    <a href="{{ url_for('reception_messages') }}" style="color: #0f5db6; text-decoration: none; font-weight: 600; margin-bottom: 1.25rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+    <a href="{{ url_for('reception_messages') }}" style="color: #03595d; text-decoration: none; font-weight: 600; margin-bottom: 1.25rem; display: inline-flex; align-items: center; gap: 0.4rem;">
         <i class="fas fa-arrow-left"></i> Back to Messages
     </a>
 
     <div style="background: #fff; border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden;">
-        <div style="background: linear-gradient(135deg, #0f5db6 0%, #0b4b91 100%); padding: 1.6rem; color: #fff;">
+        <div style="background: linear-gradient(135deg, #03595d 0%, #03454a 100%); padding: 1.6rem; color: #fff;">
             <h1 style="font-size: 1.55rem; margin: 0 0 0.45rem; color: #fff;">{{ communication.patient_name }}</h1>
             <p style="margin: 0; opacity: 0.93;">
                 <i class="fas fa-envelope"></i> {{ communication.patient_email }}
@@ -20,7 +20,7 @@
 
         <div style="padding: 1.35rem;">
             <div id="messageStatusBadges" style="display: flex; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 1rem;">
-                <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: #edf4ff; color: #0f5db6;">
+                <span style="display: inline-block; padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; background: #e8f3ee; color: #03595d;">
                     <i class="fas fa-tag"></i> {{ communication.message_type|replace('_', ' ')|title }}
                 </span>
                 {% if communication.priority == 'urgent' %}
@@ -33,12 +33,12 @@
                 </span>
             </div>
 
-            <div style="background: #f8fbff; border: 1px solid #d7e7fb; border-radius: 8px; overflow: hidden;">
-                <div style="padding: 0.75rem 0.9rem; border-bottom: 1px solid #dce9fb; display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 0.86rem; font-weight: 700; color: #0f5db6;">
+            <div style="background: #f7faf8; border: 1px solid #d6e8df; border-radius: 8px; overflow: hidden;">
+                <div style="padding: 0.75rem 0.9rem; border-bottom: 1px solid #d6e8df; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.86rem; font-weight: 700; color: #03595d;">
                         <i class="fas fa-comments"></i> Private Conversation
                     </div>
-                    <button type="button" id="refreshThreadBtn" style="border: 1px solid #c7daf6; border-radius: 6px; background: #fff; color: #0f5db6; font-size: 0.78rem; font-weight: 600; padding: 0.32rem 0.6rem; cursor: pointer;">
+                    <button type="button" id="refreshThreadBtn" style="border: 1px solid #c7daf6; border-radius: 6px; background: #fff; color: #03595d; font-size: 0.78rem; font-weight: 600; padding: 0.32rem 0.6rem; cursor: pointer;">
                         Refresh
                     </button>
                 </div>
@@ -47,7 +47,7 @@
                     <p style="margin: 0; font-size: 0.9rem; color: #6b7280;">Loading conversation...</p>
                 </div>
 
-                <form id="threadReplyForm" style="padding: 0.85rem; border-top: 1px solid #dce9fb; background: #fff;">
+                <form id="threadReplyForm" style="padding: 0.85rem; border-top: 1px solid #d6e8df; background: #fff;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                     <input type="hidden" id="communicationId" value="{{ communication.id }}">
                     <textarea id="replyContent" placeholder="Write your reply to the patient..." style="width: 100%; min-height: 110px; resize: vertical; border: 1px solid #d7dfeb; border-radius: 6px; padding: 0.7rem; font-family: inherit;" required></textarea>
@@ -64,7 +64,7 @@
                             </label>
                         </div>
 
-                        <button type="submit" id="sendReplyBtn" style="border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 700; padding: 0.62rem 1rem; cursor: pointer;">
+                        <button type="submit" id="sendReplyBtn" style="border: none; border-radius: 6px; background: #03595d; color: #fff; font-weight: 700; padding: 0.62rem 1rem; cursor: pointer;">
                             <i class="fas fa-paper-plane"></i> Send Reply
                         </button>
                     </div>
@@ -127,7 +127,7 @@ function renderConversationThread(messages) {
 
         return `
             <div style="display: flex; ${isPatient ? 'justify-content: flex-start;' : 'justify-content: flex-end;'} margin-bottom: 0.55rem;">
-                <div style="max-width: 88%; border-radius: 10px; padding: 0.55rem 0.7rem; ${isPatient ? 'background: #ecf4ff; color: #1f2a37;' : 'background: #0f5db6; color: #ffffff;'}">
+                <div style="max-width: 88%; border-radius: 10px; padding: 0.55rem 0.7rem; ${isPatient ? 'background: #e8f3ee; color: #263b39;' : 'background: #03595d; color: #ffffff;'}">
                     <div style="font-size: 0.72rem; font-weight: 700; opacity: 0.9; margin-bottom: 0.22rem;">${sender}</div>
                     <div style="font-size: 0.86rem; white-space: pre-wrap; word-break: break-word; line-height: 1.35;">${message}</div>
                     <div style="font-size: 0.68rem; margin-top: 0.3rem; opacity: 0.84;">${created}</div>

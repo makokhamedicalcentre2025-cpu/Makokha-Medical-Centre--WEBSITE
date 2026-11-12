@@ -10,14 +10,14 @@
     
     .hero {
         color: white;
-        min-height: clamp(600px, 84vh, 860px);
-        padding: 9.5rem 0 6.75rem;
+        min-height: clamp(560px, 76vh, 780px);
+        padding: 8.5rem 0 5.5rem;
         position: relative;
         display: flex;
         align-items: center;
         overflow: hidden;
         margin-top: -70px;
-        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        background: linear-gradient(135deg, #03595d 0%, #03454a 100%);
     }
 
     .hero-bg-slider {
@@ -43,7 +43,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #0f2f4e;
+        background: #123b39;
     }
 
     .hero-bg-slide img {
@@ -55,11 +55,26 @@
     }
     
     .hero::before {
-        content: none;
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+            linear-gradient(90deg, rgba(7, 47, 45, 0.9) 0%, rgba(7, 47, 45, 0.68) 46%, rgba(7, 47, 45, 0.16) 100%),
+            linear-gradient(0deg, rgba(7, 47, 45, 0.26), transparent 58%);
     }
 
     .hero::after {
-        content: none;
+        content: '';
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        right: 7%;
+        bottom: -155px;
+        border: 1px solid rgba(242, 197, 29, 0.5);
+        border-radius: 50%;
+        box-shadow: 0 0 0 28px rgba(242, 197, 29, 0.08), 0 0 0 58px rgba(242, 197, 29, 0.05);
+        pointer-events: none;
     }
     
     .hero-content {
@@ -69,7 +84,7 @@
     }
 
     .header.over-hero {
-        background: transparent;
+        background: linear-gradient(180deg, rgba(7, 47, 45, 0.72), rgba(7, 47, 45, 0));
         box-shadow: none;
         border-bottom: none;
         backdrop-filter: none;
@@ -101,8 +116,8 @@
     }
 
     .header.over-hero.scrolled {
-        background: transparent;
-        box-shadow: none;
+        background: rgba(18, 59, 57, 0.96);
+        box-shadow: 0 8px 26px rgba(13, 69, 64, 0.18);
         border-bottom: none;
         backdrop-filter: none;
     }
@@ -136,7 +151,7 @@
     
     .btn-hero-primary {
         background: white;
-        color: #0066cc;
+        color: #03595d;
         font-weight: 600;
     }
     
@@ -161,39 +176,40 @@
     
     .features {
         background: white;
-        padding: 4rem 0;
+        padding: 5rem 0;
     }
     
     .features-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
+        gap: 1.25rem;
+        margin-top: 2.25rem;
     }
     
     .feature-card {
         text-align: center;
-        padding: 2rem;
-        background: #f8f9fa;
-        border-radius: 12px;
+        padding: 1.75rem;
+        background: #f7faf8;
+        border: 1px solid #e0ebe5;
+        border-radius: 16px;
         transition: all 0.3s ease;
     }
     
     .feature-card:hover {
         background: white;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        transform: translateY(-8px);
+        transform: translateY(-5px);
     }
     
     .feature-icon {
         font-size: 3rem;
-        color: #0066cc;
+        color: #03595d;
         margin-bottom: 1rem;
     }
     
     .feature-card h3 {
         margin-bottom: 0.5rem;
-        color: #2c3e50;
+        color: #173c3b;
     }
     
     .feature-card p {
@@ -227,7 +243,7 @@
 
     .home-gallery-card {
         background: #ffffff;
-        border: 1px solid #d8e5f6;
+        border: 1px solid #d6e8df;
         border-radius: 14px;
         overflow: hidden;
         box-shadow: 0 10px 24px rgba(15, 34, 60, 0.08);
@@ -243,7 +259,7 @@
         position: relative;
         width: 100%;
         aspect-ratio: 4 / 3;
-        background: #edf4ff;
+        background: #e8f3ee;
         overflow: hidden;
     }
 
@@ -274,7 +290,7 @@
 
     .home-gallery-body h3 {
         margin: 0;
-        color: #1f2a37;
+        color: #263b39;
         font-size: 0.96rem;
     }
 
@@ -288,13 +304,13 @@
     /* DOCTORS SECTION */
 
     .services-section {
-        background: #f4f8ff;
+        background: #f7faf8;
         padding: 4rem 0;
     }
 
     .services-heading {
         margin: 0;
-        color: #1f2a37;
+        color: #263b39;
         text-align: left;
     }
 
@@ -313,8 +329,8 @@
     }
 
     .services-layout.has-banner {
-        grid-template-columns: minmax(0, 0.82fr) minmax(calc(440px + 8cm), 2.2fr);
-        gap: 2.3rem;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        gap: 2rem;
     }
 
     .services-details {
@@ -343,7 +359,7 @@
         max-width: 100%;
         width: 100%;
         height: auto;
-        max-height: min(95vh, calc(860px + 8cm));
+        max-height: min(78vh, 760px);
         object-fit: contain;
         border-radius: 14px;
     }
@@ -360,7 +376,7 @@
         border-radius: 0;
         padding: 0.15rem 0 0.55rem;
         margin: 0;
-        border-bottom: 1px solid #dbe5f5;
+        border-bottom: 1px solid #d6e8df;
         box-shadow: none;
     }
 
@@ -368,8 +384,8 @@
         width: 38px;
         height: 38px;
         border-radius: 10px;
-        background: #eaf2ff;
-        color: #0f5db6;
+        background: #e8f3ee;
+        color: #03595d;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -378,7 +394,7 @@
 
     .service-card h3 {
         margin: 0 0 0.35rem;
-        color: #1f2a37;
+        color: #263b39;
         font-size: 1.02rem;
         font-weight: 700;
     }
@@ -391,11 +407,11 @@
     }
 
     .telemedicine-card {
-        background: linear-gradient(160deg, #0f5db6 0%, #0b4b92 100%);
+        background: linear-gradient(160deg, #03595d 0%, #03454a 100%);
         color: #fff;
         border-radius: 14px;
         padding: 1.35rem;
-        box-shadow: 0 16px 34px rgba(15, 61, 124, 0.26);
+        box-shadow: 0 16px 34px rgba(8, 83, 78, 0.2);
         min-height: 100%;
     }
 
@@ -449,7 +465,7 @@
 
     .services-hours h3 {
         margin: 0 0 0.5rem;
-        color: #1f2a37;
+        color: #263b39;
         font-size: 1.02rem;
     }
 
@@ -462,8 +478,8 @@
     }
     
     .doctors-section {
-        background: #f8f9fa;
-        padding: 4rem 0;
+        background: #f7faf8;
+        padding: 5rem 0;
     }
     
     .doctors-grid {
@@ -489,12 +505,12 @@
     .doctor-image {
         width: 100%;
         height: 250px;
-        background: linear-gradient(135deg, #e6f0ff 0%, #cce5ff 100%);
+        background: linear-gradient(135deg, #e7f3f0 0%, #d1ebe2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 4rem;
-        color: #0066cc;
+        color: #03595d;
     }
     
     .doctor-info {
@@ -504,12 +520,12 @@
     .doctor-name {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #2c3e50;
+        color: #173c3b;
         margin-bottom: 0.25rem;
     }
     
     .doctor-specialty {
-        color: #0066cc;
+        color: #03595d;
         font-weight: 500;
         margin-bottom: 0.5rem;
     }
@@ -529,7 +545,7 @@
     }
 
     .partners-section {
-        background: #f7fbff;
+        background: #f7faf8;
     }
 
     .people-slider {
@@ -578,7 +594,7 @@
 
     .founder-card {
         background: #ffffff;
-        border: 1px solid #d8e5f6;
+        border: 1px solid #d6e8df;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 10px 26px rgba(15, 34, 60, 0.1);
@@ -589,7 +605,7 @@
 
     .partner-card {
         background: #ffffff;
-        border: 1px solid #d8e5f6;
+        border: 1px solid #d6e8df;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 10px 26px rgba(15, 34, 60, 0.1);
@@ -611,23 +627,23 @@
     .founder-image {
         width: 100%;
         height: clamp(210px, 30vw, 260px);
-        background: linear-gradient(135deg, #eef4ff 0%, #dceaff 100%);
+        background: linear-gradient(135deg, #edf6f1 0%, #d1ebe2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 3rem;
-        color: #2c5fa8;
+        color: #03595d;
     }
 
     .partner-image {
         width: 100%;
         height: clamp(210px, 30vw, 260px);
-        background: linear-gradient(135deg, #eef4ff 0%, #dceaff 100%);
+        background: linear-gradient(135deg, #edf6f1 0%, #d1ebe2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 3rem;
-        color: #2c5fa8;
+        color: #03595d;
     }
 
     .founder-details {
@@ -641,28 +657,28 @@
     .founder-name {
         margin: 0 0 0.24rem;
         font-size: 1.2rem;
-        color: #1f2a37;
+        color: #263b39;
         font-weight: 700;
     }
 
     .partner-name {
         margin: 0 0 0.24rem;
         font-size: 1.2rem;
-        color: #1f2a37;
+        color: #263b39;
         font-weight: 700;
     }
 
     .founder-title {
         margin: 0 0 0.62rem;
         font-size: 0.95rem;
-        color: #0f5db6;
+        color: #03595d;
         font-weight: 600;
     }
 
     .partner-title {
         margin: 0 0 0.62rem;
         font-size: 0.95rem;
-        color: #0f5db6;
+        color: #03595d;
         font-weight: 600;
     }
 
@@ -727,7 +743,7 @@
     }
 
     .people-slider-dot.active {
-        background: #0f5db6;
+        background: #03595d;
     }
     
     /* EVENTS SECTION */
@@ -747,7 +763,7 @@
 
     .events-home-toolbar h2 {
         margin: 0;
-        color: #1f2a37;
+        color: #263b39;
     }
 
     .events-home-toolbar p {
@@ -770,10 +786,10 @@
     .events-home-filter select {
         width: 100%;
         height: 42px;
-        border: 1px solid #c8d7eb;
+        border: 1px solid #c6dfd5;
         border-radius: 9px;
         padding: 0 0.78rem;
-        color: #1f2a37;
+        color: #263b39;
         background: #fff;
     }
 
@@ -783,7 +799,7 @@
 
     .events-home-group h3 {
         margin: 0 0 0.7rem;
-        color: #1f2a37;
+        color: #263b39;
         font-size: 1.32rem;
     }
 
@@ -813,12 +829,12 @@
 
     .event-media {
         min-height: 235px;
-        background: linear-gradient(135deg, #e6f0ff 0%, #cce5ff 100%);
+        background: linear-gradient(135deg, #e7f3f0 0%, #d1ebe2 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 3rem;
-        color: #0f5db6;
+        color: #03595d;
     }
 
     .event-media img {
@@ -829,12 +845,12 @@
     }
 
     .event-media-telemedicine {
-        background: linear-gradient(135deg, #e9f3ff 0%, #d8eaff 100%);
+        background: linear-gradient(135deg, #e7f3f0 0%, #d1ebe2 100%);
     }
 
     .event-media-telemedicine i {
         font-size: 3.2rem;
-        color: #0f5db6;
+        color: #03595d;
     }
 
     .event-content {
@@ -858,19 +874,19 @@
     }
 
     .event-badge-type {
-        background: #e6f0ff;
-        color: #0f5db6;
+        background: #e7f3f0;
+        color: #03595d;
     }
 
     .event-badge-status {
         background: #eef8f1;
-        color: #1c7d4f;
+        color: #20843e;
     }
 
     .event-title {
         margin: 0 0 0.66rem;
         font-size: 1.12rem;
-        color: #1f2a37;
+        color: #263b39;
         font-weight: 700;
     }
 
@@ -889,7 +905,7 @@
     }
 
     .event-meta-row i {
-        color: #0f5db6;
+        color: #03595d;
         width: 14px;
         margin-top: 0.12rem;
     }
@@ -904,7 +920,7 @@
     /* CTA SECTION */
     
     .cta-section {
-        background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+        background: linear-gradient(135deg, #03595d 0%, #03454a 100%);
         color: white;
         padding: 4rem 0;
         text-align: center;
@@ -943,7 +959,7 @@
     .stat-number {
         font-size: 2.5rem;
         font-weight: 700;
-        color: #0066cc;
+        color: #03595d;
         margin-bottom: 0.5rem;
     }
     
@@ -954,7 +970,7 @@
     
     @media (min-width: 1025px) and (max-width: 1280px) {
         .services-layout.has-banner {
-            grid-template-columns: minmax(0, 0.95fr) minmax(calc(320px + 3.5cm), 1.65fr);
+            grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
             gap: 2rem;
         }
     }
@@ -1020,7 +1036,7 @@
         }
 
         .header.over-hero .nav-menu {
-            background: rgba(6, 22, 43, 0.95);
+            background: rgba(18, 59, 57, 0.97);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -1030,7 +1046,7 @@
         }
 
         .header.over-hero.scrolled .nav-menu {
-            background: rgba(6, 22, 43, 0.95);
+            background: rgba(18, 59, 57, 0.97);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -1118,7 +1134,7 @@
         }
 
         .header.over-hero .nav-menu {
-            background: rgba(6, 22, 43, 0.95);
+            background: rgba(18, 59, 57, 0.97);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -1128,7 +1144,7 @@
         }
 
         .header.over-hero.scrolled .nav-menu {
-            background: rgba(6, 22, 43, 0.95);
+            background: rgba(18, 59, 57, 0.97);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -1220,7 +1236,7 @@
         }
 
         .header.over-hero .nav-menu {
-            background: rgba(6, 22, 43, 0.95);
+            background: rgba(18, 59, 57, 0.97);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -1230,7 +1246,7 @@
         }
 
         .header.over-hero.scrolled .nav-menu {
-            background: rgba(6, 22, 43, 0.95);
+            background: rgba(18, 59, 57, 0.97);
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
 
@@ -1424,7 +1440,7 @@
         </div>
         <div class="stat-item">
             <div class="stat-number">
-                <i class="fas fa-star" style="color: #ffc107;"></i>
+                <i class="fas fa-star" style="color: #e6a71b;"></i>
                 <span data-live-stat="avg_rating" data-live-format="decimal1">{{ initial_live_stats.get('avg_rating', avg_rating or 0) }}</span>
             </div>
             <div class="stat-label">Hospital Rating</div>
@@ -1738,7 +1754,7 @@
         
         <div style="text-align: center;">
             <div class="stat-number" style="margin-bottom: 0.5rem;">
-                <i class="fas fa-star" style="color: #ffc107;"></i> {{ avg_rating or 0 }}/5
+                <i class="fas fa-star" style="color: #e6a71b;"></i> {{ avg_rating or 0 }}/5
             </div>
             <p style="color: #666; margin-bottom: 2rem;">Based on {{ total_reviews or 0 }} patient reviews</p>
             <a href="{{ url_for('reviews_page') }}" class="btn btn-primary">Read All Reviews</a>

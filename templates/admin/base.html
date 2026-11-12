@@ -13,14 +13,14 @@
         :root {
             --admin-sidebar-width: 270px;
             --admin-surface: #ffffff;
-            --admin-bg: #f3f6fb;
-            --admin-border: #dfe7f3;
-            --admin-text: #1f2a37;
+            --admin-bg: #f5f8f6;
+            --admin-border: #d6e8df;
+            --admin-text: #263b39;
             --admin-muted: #5f6b7a;
-            --admin-primary: #005bb8;
-            --admin-primary-soft: #eaf2ff;
+            --admin-primary: #03595d;
+            --admin-primary-soft: #e8f3ee;
             --admin-danger: #c0392b;
-            --admin-success: #1f9d63;
+            --admin-success: #20843e;
             --admin-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
             --admin-shadow-soft: 0 6px 18px rgba(15, 23, 42, 0.06);
             --admin-radius: 14px;
@@ -32,11 +32,11 @@
 
         .admin-layout {
             min-height: 100vh;
-            background: radial-gradient(circle at 20% 0%, #eef5ff 0%, #f3f6fb 45%);
+            background: radial-gradient(circle at 20% 0%, #edf6f1 0%, #f5f8f6 45%);
         }
 
         .admin-sidebar {
-            background: linear-gradient(180deg, #0f243f 0%, #163257 100%);
+            background: linear-gradient(180deg, #123b39 0%, #03454a 100%);
             color: white;
             padding: 1.5rem 0;
             position: fixed;
@@ -97,7 +97,7 @@
         .admin-sidebar-link.active {
             color: white;
             background: rgba(255, 255, 255, 0.12);
-            border-left-color: #66b0ff;
+            border-left-color: #e6a71b;
             text-decoration: none;
         }
 
@@ -156,8 +156,8 @@
         }
 
         .btn-logout {
-            background: #f26a5a;
-            color: white;
+            background: #e6a71b;
+            color: #173c3b;
             padding: 0.55rem 0.95rem;
             border: none;
             border-radius: 10px;
@@ -170,7 +170,7 @@
         }
 
         .btn-logout:hover {
-            background: #de5243;
+            background: #d9ad10;
             text-decoration: none;
             color: white;
         }
@@ -220,8 +220,8 @@
         }
 
         .admin-content .alert-info {
-            border-color: #c6dbf8;
-            background: #f0f7ff;
+            border-color: #c6dfd5;
+            background: #edf6f1;
             color: #174e8c;
         }
 
@@ -249,8 +249,8 @@
         .admin-content .form-control:focus,
         .admin-content .form-textarea:focus,
         .admin-content .form-select:focus {
-            border-color: #7eb3ef;
-            box-shadow: 0 0 0 4px rgba(0, 91, 184, 0.12);
+            border-color: #82b8a7;
+            box-shadow: 0 0 0 4px rgba(8, 122, 118, 0.12);
             background: #fff;
         }
 
@@ -261,12 +261,12 @@
         }
 
         .admin-content .btn-primary {
-            background: linear-gradient(135deg, #1568c5 0%, #0b4f9a 100%);
-            box-shadow: 0 7px 14px rgba(11, 79, 154, 0.2);
+            background: linear-gradient(135deg, #03595d 0%, #03454a 100%);
+            box-shadow: 0 7px 14px rgba(8, 122, 118, 0.2);
         }
 
         .admin-content .btn-primary:hover {
-            background: linear-gradient(135deg, #0f5db6 0%, #084587 100%);
+            background: linear-gradient(135deg, #03595d 0%, #03454a 100%);
         }
 
         .admin-content .btn-outline {
@@ -276,9 +276,9 @@
         }
 
         .admin-content .btn-outline:hover {
-            background: #f3f8ff;
-            border-color: #8fb0d5;
-            color: #1f3956;
+            background: #edf6f1;
+            border-color: #a9cbbd;
+            color: #03454a;
         }
 
         .admin-card {
@@ -342,7 +342,7 @@
             padding: 0.78rem 0.9rem;
             border-radius: 10px;
             border: 1px solid #d8e1ed;
-            background: #f9fbff;
+            background: #f7faf8;
         }
 
         .admin-field-note {
@@ -392,8 +392,8 @@
         }
 
         .password-toggle:hover {
-            background: #e9f2ff;
-            color: #0f5db6;
+            background: #e8f3ee;
+            color: #03595d;
         }
 
         .admin-sidebar-divider {
@@ -452,7 +452,7 @@
         }
 
         .admin-table thead {
-            background: #f3f7fc;
+            background: #f1f6f2;
         }
 
         .admin-table th {
@@ -462,21 +462,21 @@
             text-transform: uppercase;
             color: #4e6074;
             font-weight: 700;
-            border-bottom: 1px solid #dce5f1;
+            border-bottom: 1px solid #d6e8df;
             text-align: left;
             white-space: nowrap;
         }
 
         .admin-table td {
             padding: 0.95rem 1rem;
-            color: #2a3a4d;
+            color: #263b39;
             border-bottom: 1px solid #ebf0f7;
             vertical-align: middle;
             font-size: 0.94rem;
         }
 
         .admin-table tbody tr:hover {
-            background: #f8fbff;
+            background: #f7faf8;
         }
 
         .admin-table tbody tr:last-child td {
@@ -495,7 +495,7 @@
             height: 42px;
             border-radius: 10px;
             object-fit: cover;
-            border: 1px solid #d4deea;
+            border: 1px solid #d4e4dc;
             flex-shrink: 0;
         }
 
@@ -503,8 +503,8 @@
             width: 42px;
             height: 42px;
             border-radius: 10px;
-            border: 1px solid #d4deea;
-            background: #f3f7fc;
+            border: 1px solid #d4e4dc;
+            background: #f1f6f2;
             color: #6c7e94;
             display: inline-flex;
             align-items: center;
@@ -514,7 +514,7 @@
         }
 
         .admin-primary-text {
-            color: #1f2a37;
+            color: #263b39;
             font-weight: 600;
             line-height: 1.25;
         }
@@ -540,12 +540,12 @@
         .admin-chip-neutral {
             background: #f2f6fc;
             color: #47617c;
-            border-color: #d4deea;
+            border-color: #d4e4dc;
         }
 
         .admin-chip-success {
             background: #ebf8f2;
-            color: #1f8c5d;
+            color: #20843e;
             border-color: #bce5cf;
         }
 
@@ -562,8 +562,8 @@
         }
 
         .admin-chip-info {
-            background: #ecf4ff;
-            color: #1f5f9e;
+            background: #e8f3ee;
+            color: #03595d;
             border-color: #c8dcf6;
         }
 
@@ -584,14 +584,14 @@
         }
 
         .admin-btn-inline.admin-btn-edit {
-            background: #edf4ff;
-            color: #0d5aad;
-            border-color: #c8dbf3;
+            background: #e8f3ee;
+            color: #03595d;
+            border-color: #c6dfd5;
         }
 
         .admin-btn-inline.admin-btn-edit:hover {
-            background: #dcecff;
-            color: #094684;
+            background: #d8eee5;
+            color: #03454a;
             text-decoration: none;
         }
 
@@ -633,7 +633,7 @@
         }
 
         .admin-empty-state a {
-            color: #005bb8;
+            color: #03595d;
             font-weight: 600;
             text-decoration: none;
         }
@@ -658,9 +658,9 @@
             min-height: 34px;
             padding: 0.4rem 0.8rem;
             border-radius: 8px;
-            border: 1px solid #c8dbf3;
-            background: #edf4ff;
-            color: #0d5aad;
+            border: 1px solid #c6dfd5;
+            background: #e8f3ee;
+            color: #03595d;
             font-size: 0.84rem;
             font-weight: 600;
             text-decoration: none;
@@ -668,8 +668,8 @@
         }
 
         .admin-page-btn:hover {
-            background: #dcecff;
-            color: #094684;
+            background: #d8eee5;
+            color: #03454a;
             text-decoration: none;
         }
 
@@ -702,7 +702,7 @@
         }
 
         .admin-review-author {
-            color: #1f2a37;
+            color: #263b39;
             font-weight: 700;
             margin-bottom: 0.18rem;
         }
@@ -713,7 +713,7 @@
         }
 
         .admin-review-rating {
-            color: #d99118;
+            color: #8a6e06;
             font-size: 0.9rem;
             white-space: nowrap;
         }
@@ -757,7 +757,7 @@
         .admin-photo-image-wrap {
             height: 170px;
             overflow: hidden;
-            background: #e7effa;
+            background: #edf6f1;
         }
 
         .admin-photo-image {
@@ -775,7 +775,7 @@
         }
 
         .admin-photo-title {
-            color: #1f2a37;
+            color: #263b39;
             font-weight: 700;
             font-size: 0.94rem;
             line-height: 1.35;

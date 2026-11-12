@@ -3,26 +3,30 @@
    ================================ */
 
 :root {
-    --primary-color: #0066cc;
-    --primary-dark: #0052a3;
-    --primary-light: #e6f0ff;
-    --secondary-color: #34a853;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --warning-color: #ffc107;
-    --info-color: #17a2b8;
-    --dark-color: #2c3e50;
-    --light-color: #f8f9fa;
-    --gray-100: #f8f9fa;
+    --brand-teal: #03595d;
+    --brand-teal-dark: #03454a;
+    --brand-green: #20843e;
+    --brand-gold: #e6a71b;
+    --primary-color: var(--brand-teal);
+    --primary-dark: var(--brand-teal-dark);
+    --primary-light: #e7f3f0;
+    --secondary-color: var(--brand-green);
+    --success-color: var(--brand-green);
+    --danger-color: #b93832;
+    --warning-color: var(--brand-gold);
+    --info-color: var(--brand-teal);
+    --dark-color: #173c3b;
+    --light-color: #f7f9f7;
+    --gray-100: #f7f9f7;
     --gray-200: #e9ecef;
     --gray-300: #dee2e6;
     --gray-400: #ced4da;
     --gray-500: #adb5bd;
     --gray-600: #6c757d;
     --gray-700: #495057;
-    --text-color: #333333;
-    --text-light: #666666;
-    --text-lighter: #999999;
+    --text-color: #263b39;
+    --text-light: #5b6d69;
+    --text-lighter: #778681;
     --white: #ffffff;
     --black: #000000;
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -30,9 +34,9 @@
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
     --shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.2);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --border-radius: 8px;
-    --border-radius-lg: 12px;
-    --border-radius-xl: 16px;
+    --border-radius: 10px;
+    --border-radius-lg: 16px;
+    --border-radius-xl: 22px;
 }
 
 * {
@@ -124,7 +128,7 @@ ul, ol {
 
 .container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1240px;
     margin: 0 auto;
     padding: 0 20px;
 }
@@ -180,7 +184,7 @@ ul, ol {
 .header {
     --nav-height: 70px;
     background: var(--white);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 8px 26px rgba(13, 69, 64, 0.08);
     position: fixed;
     width: 100%;
     top: 0;
@@ -189,7 +193,7 @@ ul, ol {
 }
 
 .header.scrolled {
-    box-shadow: var(--shadow-lg);
+    box-shadow: 0 8px 26px rgba(13, 69, 64, 0.12);
     padding: 0;
 }
 
@@ -249,13 +253,13 @@ ul, ol {
 
 .nav-menu {
     display: flex;
-    gap: 2rem;
+    gap: 1.5rem;
     align-items: center;
 }
 
 .nav-link {
     color: var(--text-color);
-    font-weight: 500;
+    font-weight: 600;
     transition: var(--transition);
     position: relative;
 }
@@ -349,7 +353,7 @@ ul, ol {
     background: var(--primary-color);
     color: var(--white);
     padding: 0.5rem 1rem;
-    border-radius: var(--border-radius);
+    border-radius: 999px;
     transition: var(--transition);
 }
 
@@ -404,9 +408,9 @@ ul, ol {
 }
 
 .alert-warning {
-    background-color: #fff3cd;
+    background-color: #fff9db;
     border-color: var(--warning-color);
-    color: #856404;
+    color: #705b08;
 }
 
 .alert-info {
@@ -478,7 +482,7 @@ ul, ol {
 }
 
 .btn-secondary:hover {
-    background: #2d8e47;
+    background: #176f3b;
     text-decoration: none;
 }
 
@@ -488,7 +492,7 @@ ul, ol {
 }
 
 .btn-success:hover {
-    background: #218838;
+    background: #176f3b;
     text-decoration: none;
 }
 
@@ -560,7 +564,7 @@ ul, ol {
 .form-select:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    box-shadow: 0 0 0 3px rgba(8, 122, 118, 0.14);
 }
 
 .form-textarea {
@@ -590,7 +594,7 @@ ul, ol {
 .card {
     background: var(--white);
     border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 10px 28px rgba(24, 67, 59, 0.08);
     overflow: hidden;
     transition: var(--transition);
 }
@@ -643,7 +647,7 @@ ul, ol {
    ================================ */
 
 .footer {
-    background: var(--dark-color);
+    background: #123b39;
     color: var(--white);
     padding: 3rem 0 1rem;
     margin-top: 5rem;
@@ -734,11 +738,12 @@ ul, ol {
 }
 
 .footer-contact-btn-emergency {
-    background: linear-gradient(135deg, #cf2f2f 0%, #b11f1f 100%);
+    background: linear-gradient(135deg, var(--brand-gold) 0%, #d9ad10 100%);
+    color: #173c3b;
 }
 
 .footer-contact-btn-care {
-    background: linear-gradient(135deg, #0f66c2 0%, #0b4f97 100%);
+    background: linear-gradient(135deg, var(--brand-teal) 0%, var(--brand-teal-dark) 100%);
 }
 
 .social-links {
@@ -852,7 +857,7 @@ ul, ol {
         transform: none;
         pointer-events: auto;
         display: none;
-        background: #f8fbff;
+        background: #f7faf8;
     }
 
     .nav-dropdown.open .nav-dropdown-menu {

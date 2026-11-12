@@ -7,7 +7,7 @@
     <div class="container" style="max-width: 900px;">
         <div style="background: #fff; border-radius: 12px; box-shadow: 0 10px 24px rgba(0,0,0,0.08); padding: 1.3rem 1.3rem 1.5rem;">
             {% if token_valid %}
-                <h1 style="margin: 0 0 0.55rem; color: #1f2a37; font-size: 1.7rem;">
+                <h1 style="margin: 0 0 0.55rem; color: #263b39; font-size: 1.7rem;">
                     <i class="fas fa-video"></i> Telemedicine Session Access
                 </h1>
                 <p style="margin: 0 0 1rem; color: #4f5f73;">
@@ -15,29 +15,29 @@
                 </p>
 
                 <div style="display: grid; gap: 0.7rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1rem;">
-                    <div style="background: #f5f9ff; border: 1px solid #dbe8ff; border-radius: 10px; padding: 0.8rem;">
-                        <strong style="display: block; color: #243247; margin-bottom: 0.2rem;">Patient</strong>
+                    <div style="background: #f7faf8; border: 1px solid #e7f3f0; border-radius: 10px; padding: 0.8rem;">
+                        <strong style="display: block; color: #263b39; margin-bottom: 0.2rem;">Patient</strong>
                         <span style="color: #4f5f73;">{{ appointment.patient_name }}</span>
                     </div>
-                    <div style="background: #f5f9ff; border: 1px solid #dbe8ff; border-radius: 10px; padding: 0.8rem;">
-                        <strong style="display: block; color: #243247; margin-bottom: 0.2rem;">Appointment</strong>
+                    <div style="background: #f7faf8; border: 1px solid #e7f3f0; border-radius: 10px; padding: 0.8rem;">
+                        <strong style="display: block; color: #263b39; margin-bottom: 0.2rem;">Appointment</strong>
                         <span style="color: #4f5f73;">{{ appointment.appointment_date.strftime('%B %d, %Y at %I:%M %p') if appointment.appointment_date else 'TBD' }}</span>
                     </div>
-                    <div style="background: #f5f9ff; border: 1px solid #dbe8ff; border-radius: 10px; padding: 0.8rem;">
-                        <strong style="display: block; color: #243247; margin-bottom: 0.2rem;">Assigned Doctor</strong>
+                    <div style="background: #f7faf8; border: 1px solid #e7f3f0; border-radius: 10px; padding: 0.8rem;">
+                        <strong style="display: block; color: #263b39; margin-bottom: 0.2rem;">Assigned Doctor</strong>
                         <span style="color: #4f5f73;">{{ doctor_name }}</span>
                     </div>
-                    <div style="background: #f5f9ff; border: 1px solid #dbe8ff; border-radius: 10px; padding: 0.8rem;">
-                        <strong style="display: block; color: #243247; margin-bottom: 0.2rem;">Link Expires</strong>
+                    <div style="background: #f7faf8; border: 1px solid #e7f3f0; border-radius: 10px; padding: 0.8rem;">
+                        <strong style="display: block; color: #263b39; margin-bottom: 0.2rem;">Link Expires</strong>
                         <span style="color: #4f5f73;">{{ expires_at.strftime('%B %d, %Y at %I:%M %p UTC') if expires_at else 'N/A' }}</span>
                     </div>
                 </div>
 
                 <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center;">
-                    <button id="telemedicineOpenDesk" type="button" style="border: none; border-radius: 8px; background: #0f5db6; color: #fff; padding: 0.75rem 1.05rem; font-weight: 700; cursor: pointer;">
+                    <button id="telemedicineOpenDesk" type="button" style="border: none; border-radius: 8px; background: #03595d; color: #fff; padding: 0.75rem 1.05rem; font-weight: 700; cursor: pointer;">
                         <i class="fas fa-headset"></i> Open Patient Desk
                     </button>
-                    <a href="{{ url_for('index') }}?{{ prefill_params }}" style="border-radius: 8px; background: #edf2fb; color: #1f2a37; text-decoration: none; padding: 0.72rem 1rem; font-weight: 600;">
+                    <a href="{{ url_for('index') }}?{{ prefill_params }}" style="border-radius: 8px; background: #edf2fb; color: #263b39; text-decoration: none; padding: 0.72rem 1rem; font-weight: 600;">
                         <i class="fas fa-house"></i> Open Home Page
                     </a>
                 </div>
@@ -64,7 +64,7 @@
                     {% endif %}
                 </p>
                 <div style="margin-top: 1rem;">
-                    <a href="{{ url_for('contact') }}" style="display: inline-block; border-radius: 8px; background: #0f5db6; color: #fff; text-decoration: none; padding: 0.72rem 1rem; font-weight: 700;">
+                    <a href="{{ url_for('contact') }}" style="display: inline-block; border-radius: 8px; background: #03595d; color: #fff; text-decoration: none; padding: 0.72rem 1rem; font-weight: 700;">
                         Contact Reception
                     </a>
                 </div>

@@ -2,7 +2,7 @@
 
 {% block reception_content %}
 <div style="padding: 2rem;">
-    <h1 style="font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">
+    <h1 style="font-size: 2rem; font-weight: 700; color: #173c3b; margin-bottom: 1rem;">
         <i class="fas fa-envelope"></i> Messages
     </h1>
     
@@ -28,15 +28,15 @@
     {% if communications.items %}
         <div style="display: grid; gap: 1rem;">
             {% for comm in communications.items %}
-                <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid {% if comm.is_resolved %}#27ae60{% elif comm.reply_content %}#3498db{% else %}#e74c3c{% endif %}; transition: all 0.3s; cursor: pointer;" data-message-id="{{ comm.id }}" class="message-item">                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <div style="background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid {% if comm.is_resolved %}#20843e{% elif comm.reply_content %}#03595d{% else %}#e74c3c{% endif %}; transition: all 0.3s; cursor: pointer;" data-message-id="{{ comm.id }}" class="message-item">                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
                         <div style="flex: 1;">
-                            <h3 style="font-size: 1.1rem; font-weight: 600; color: #2c3e50; margin-bottom: 0.25rem;">
+                            <h3 style="font-size: 1.1rem; font-weight: 600; color: #173c3b; margin-bottom: 0.25rem;">
                                 {{ comm.patient_name }}
                                 {% if not comm.is_read %}<span style="display: inline-block; width: 8px; height: 8px; background: #e74c3c; border-radius: 50%; margin-left: 0.5rem;"></span>{% endif %}
                             </h3>
                             <p style="color: #666; font-size: 0.9rem;">{{ comm.patient_email }}</p>
                         </div>
-                        <div style="text-align: right;">                            <!-- stylelint-disable-next-line -->                            <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; background: {% if comm.message_type == 'call' %}#e3f2fd{% elif comm.message_type == 'email' %}#f3e5f5{% elif comm.message_type == 'appointment' %}#fff3cd{% else %}#e8f5e9{% endif %}; color: {% if comm.message_type == 'call' %}#1976d2{% elif comm.message_type == 'email' %}#7b1fa2{% elif comm.message_type == 'appointment' %}#856404{% else %}#388e3c{% endif %};\">
+                        <div style="text-align: right;">                            <!-- stylelint-disable-next-line -->                            <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; background: {% if comm.message_type == 'call' %}#e7f3f0{% elif comm.message_type == 'email' %}#e7f3f0{% elif comm.message_type == 'appointment' %}#fff9db{% else %}#e8f3ee{% endif %}; color: {% if comm.message_type == 'call' %}#03595d{% elif comm.message_type == 'email' %}#03595d{% elif comm.message_type == 'appointment' %}#705b08{% else %}#20843e{% endif %};\">
                                 {{ comm.message_type }}
                             </span>
                             {% if comm.priority == 'urgent' %}
@@ -55,9 +55,9 @@
                         </small>
                         <div>
                             {% if comm.is_resolved %}
-                                <span style="color: #27ae60; font-weight: 500; font-size: 0.9rem;">✓ Resolved</span>
+                                <span style="color: #20843e; font-weight: 500; font-size: 0.9rem;">✓ Resolved</span>
                             {% elif comm.reply_content %}
-                                <span style="color: #3498db; font-weight: 500; font-size: 0.9rem;">✓ Replied</span>
+                                <span style="color: #03595d; font-weight: 500; font-size: 0.9rem;">✓ Replied</span>
                             {% else %}
                                 <span style="color: #e74c3c; font-weight: 500; font-size: 0.9rem;">● Pending</span>
                             {% endif %}
@@ -71,13 +71,13 @@
         {% if communications.has_prev or communications.has_next %}
             <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 2rem;">
                 {% if communications.has_prev %}
-                    <a href="{{ url_for('reception_messages', page=communications.prev_num) }}" style="padding: 0.5rem 1rem; background: #0066cc; color: white; border-radius: 6px; text-decoration: none;">← Previous</a>
+                    <a href="{{ url_for('reception_messages', page=communications.prev_num) }}" style="padding: 0.5rem 1rem; background: #03595d; color: white; border-radius: 6px; text-decoration: none;">← Previous</a>
                 {% endif %}
                 
                 <span style="color: #666;">Page {{ communications.page }} of {{ communications.pages }}</span>
                 
                 {% if communications.has_next %}
-                    <a href="{{ url_for('reception_messages', page=communications.next_num) }}" style="padding: 0.5rem 1rem; background: #0066cc; color: white; border-radius: 6px; text-decoration: none;">Next →</a>
+                    <a href="{{ url_for('reception_messages', page=communications.next_num) }}" style="padding: 0.5rem 1rem; background: #03595d; color: white; border-radius: 6px; text-decoration: none;">Next →</a>
                 {% endif %}
             </div>
         {% endif %}

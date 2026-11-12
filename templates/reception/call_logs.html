@@ -2,7 +2,7 @@
 
 {% block reception_content %}
 <div style="padding: 2rem;">
-    <h1 style="font-size: 2rem; font-weight: 700; color: #2c3e50; margin-bottom: 1rem;">
+    <h1 style="font-size: 2rem; font-weight: 700; color: #173c3b; margin-bottom: 1rem;">
         <i class="fas fa-phone-volume"></i> Call Logs
     </h1>
 
@@ -25,10 +25,10 @@
             </select>
         </div>
         <div style="display: flex; gap: 0.55rem; align-items: end;">
-            <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #0f5db6; color: #fff; font-weight: 600; cursor: pointer;">
+            <button type="submit" style="flex: 1; padding: 0.62rem; border: none; border-radius: 6px; background: #03595d; color: #fff; font-weight: 600; cursor: pointer;">
                 Apply
             </button>
-            <a href="{{ url_for('reception_call_logs') }}" style="padding: 0.62rem 0.9rem; border-radius: 6px; background: #eef4ff; color: #0f5db6; text-decoration: none; font-weight: 600;">
+            <a href="{{ url_for('reception_call_logs') }}" style="padding: 0.62rem 0.9rem; border-radius: 6px; background: #edf6f1; color: #03595d; text-decoration: none; font-weight: 600;">
                 Reset
             </a>
         </div>
@@ -39,7 +39,7 @@
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; min-width: 980px;">
                 <thead>
-                    <tr style="background: #f7f9fc; border-bottom: 1px solid #e6edf7;">
+                    <tr style="background: #f7f9fc; border-bottom: 1px solid #f1f6f2;">
                         <th style="text-align: left; padding: 0.85rem; color: #526173;">Call ID</th>
                         <th style="text-align: left; padding: 0.85rem; color: #526173;">Patient</th>
                         <th style="text-align: left; padding: 0.85rem; color: #526173;">Type</th>
@@ -52,19 +52,19 @@
                 </thead>
                 <tbody>
                     {% for call in calls.items %}
-                    <tr style="border-bottom: 1px solid #edf2f8;">
-                        <td style="padding: 0.8rem; color: #243247; font-weight: 600;">{{ call.call_id }}</td>
-                        <td style="padding: 0.8rem; color: #2f3f54;">
+                    <tr style="border-bottom: 1px solid #f1f6f2;">
+                        <td style="padding: 0.8rem; color: #263b39; font-weight: 600;">{{ call.call_id }}</td>
+                        <td style="padding: 0.8rem; color: #263b39;">
                             <div style="font-weight: 600;">{{ call.patient_name }}</div>
                             <div style="font-size: 0.82rem; color: #6a7789;">{{ call.patient_phone or 'No phone provided' }}</div>
                         </td>
-                        <td style="padding: 0.8rem; color: #2f3f54;">{{ call.call_type|replace('_', ' ')|title }}</td>
+                        <td style="padding: 0.8rem; color: #263b39;">{{ call.call_type|replace('_', ' ')|title }}</td>
                         <td style="padding: 0.8rem;">
-                            <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; background: #eef4ff; color: #0f5db6; font-size: 0.78rem; font-weight: 600;">
+                            <span style="display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; background: #edf6f1; color: #03595d; font-size: 0.78rem; font-weight: 600;">
                                 {{ call.status|replace('_', ' ')|title }}
                             </span>
                         </td>
-                        <td style="padding: 0.8rem; color: #2f3f54;">{{ call.get_duration_formatted() }}</td>
+                        <td style="padding: 0.8rem; color: #263b39;">{{ call.get_duration_formatted() }}</td>
                         <td style="padding: 0.8rem; color: #44556b;">{{ call.created_at.strftime('%b %d, %Y %I:%M %p') if call.created_at else '-' }}</td>
                         <td style="padding: 0.8rem; color: #44556b;">{{ call.answered_at.strftime('%b %d, %Y %I:%M %p') if call.answered_at else '-' }}</td>
                         <td style="padding: 0.8rem; color: #44556b;">{{ call.ended_at.strftime('%b %d, %Y %I:%M %p') if call.ended_at else '-' }}</td>
@@ -78,13 +78,13 @@
     {% if calls.has_prev or calls.has_next %}
     <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 0.75rem; align-items: center;">
         {% if calls.has_prev %}
-            <a href="{{ url_for('reception_call_logs', page=calls.prev_num, status=status_filter, call_type=call_type_filter) }}" style="padding: 0.5rem 0.8rem; background: #0f5db6; color: #fff; border-radius: 6px; text-decoration: none;">
+            <a href="{{ url_for('reception_call_logs', page=calls.prev_num, status=status_filter, call_type=call_type_filter) }}" style="padding: 0.5rem 0.8rem; background: #03595d; color: #fff; border-radius: 6px; text-decoration: none;">
                 Previous
             </a>
         {% endif %}
         <span style="color: #5b6878;">Page {{ calls.page }} of {{ calls.pages }}</span>
         {% if calls.has_next %}
-            <a href="{{ url_for('reception_call_logs', page=calls.next_num, status=status_filter, call_type=call_type_filter) }}" style="padding: 0.5rem 0.8rem; background: #0f5db6; color: #fff; border-radius: 6px; text-decoration: none;">
+            <a href="{{ url_for('reception_call_logs', page=calls.next_num, status=status_filter, call_type=call_type_filter) }}" style="padding: 0.5rem 0.8rem; background: #03595d; color: #fff; border-radius: 6px; text-decoration: none;">
                 Next
             </a>
         {% endif %}
