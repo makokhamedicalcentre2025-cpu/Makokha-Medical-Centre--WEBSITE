@@ -94,11 +94,7 @@ body {
 }
 
 .hero-bg-slide img,
-.admin-content .doctor-adjust-image,
-.admin-content .founder-adjust-image,
-.admin-content .event-adjust-image,
-.admin-content .hero-adjust-image,
-.admin-content .services-banner-adjust-image {
+.admin-content .hero-adjust-image {
     -webkit-mask-image: none;
     mask-image: none;
 }
