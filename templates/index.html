@@ -351,20 +351,55 @@
     }
 
     .services-media-grid.has-video-and-banner {
-        grid-template-columns: minmax(0, 0.65fr) minmax(0, 1.35fr);
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     }
 
     .services-video-reel {
         min-width: 0;
+        max-width: 640px;
     }
 
-    .services-video-reel video {
+    .services-video-player {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .services-video-player video {
         display: block;
         width: 100%;
-        aspect-ratio: 3 / 2;
+        min-width: 0;
+        aspect-ratio: 16 / 9;
         border-radius: 12px;
         background: #123b39;
         object-fit: cover;
+    }
+
+    .services-video-nav {
+        display: inline-flex;
+        width: 42px;
+        height: 42px;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 50%;
+        background: #03595d;
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 1.1rem;
+        box-shadow: 0 5px 14px rgba(18, 59, 57, 0.18);
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .services-video-nav:hover {
+        background: #123b39;
+        transform: translateY(-1px);
+    }
+
+    .services-video-nav:focus-visible {
+        outline: 3px solid #d7ad45;
+        outline-offset: 3px;
     }
 
     .services-video-caption {
@@ -2067,9 +2102,21 @@
                     {% endif %}
                     {% if homepage_videos %}
                     <div class="services-video-reel fade-in" data-services-video-reel>
-                        <video controls muted playsinline preload="none" aria-label="Short video about Orivana Care">
-                            <source src="{{ homepage_videos[0].url }}" type="{{ homepage_videos[0].content_type }}">
-                        </video>
+                        <div class="services-video-player">
+                            {% if homepage_videos|length > 1 %}
+                            <button type="button" class="services-video-nav" data-video-previous aria-label="Play previous service video">
+                                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                            </button>
+                            {% endif %}
+                            <video controls muted playsinline preload="none" aria-label="Short video about Orivana Care">
+                                <source src="{{ homepage_videos[0].url }}" type="{{ homepage_videos[0].content_type }}">
+                            </video>
+                            {% if homepage_videos|length > 1 %}
+                            <button type="button" class="services-video-nav" data-video-next aria-label="Play next service video">
+                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                            </button>
+                            {% endif %}
+                        </div>
                         <div class="services-video-sources" hidden>
                             {% for video in homepage_videos %}
                             <span data-video-url="{{ video.url }}" data-video-type="{{ video.content_type }}" data-video-title="{{ video.title }}"></span>
@@ -2554,8 +2601,6 @@
         if (!video || !sources.length) return;
 
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reducedMotion) return;
-
         let currentIndex = -1;
         let hasStarted = false;
         const requestPlayback = (failureMessage) => {
@@ -2568,29 +2613,48 @@
             }
         };
 
-        const playRandomVideo = () => {
-            if (sources.length === 1) {
-                currentIndex = 0;
-            } else {
-                let nextIndex = Math.floor(Math.random() * sources.length);
-                if (nextIndex === currentIndex) {
-                    nextIndex = (nextIndex + 1 + Math.floor(Math.random() * (sources.length - 1))) % sources.length;
-                }
-                currentIndex = nextIndex;
-            }
-
+        const selectVideo = (index, shouldPlay = true) => {
+            currentIndex = (index + sources.length) % sources.length;
             const currentVideo = sources[currentIndex];
             video.src = currentVideo.url;
             video.load();
             if (titleLabel) titleLabel.textContent = currentVideo.title;
-            requestPlayback('Press play to watch this video.');
+            if (statusLabel) statusLabel.textContent = 'Illustrative service animations';
+            if (shouldPlay) requestPlayback('Press play to watch this video.');
         };
 
-        video.addEventListener('ended', playRandomVideo);
+        const playRandomVideo = () => {
+            if (sources.length === 1) {
+                selectVideo(0);
+                return;
+            }
+
+            let nextIndex = Math.floor(Math.random() * sources.length);
+            if (nextIndex === currentIndex) {
+                nextIndex = (nextIndex + 1 + Math.floor(Math.random() * (sources.length - 1))) % sources.length;
+            }
+            selectVideo(nextIndex);
+        };
+
+        const playAdjacentVideo = (direction) => {
+            if (sources.length < 2) return;
+            hasStarted = true;
+            video.pause();
+            selectVideo((currentIndex < 0 ? 0 : currentIndex) + direction);
+        };
+
+        const previousButton = reel.querySelector('[data-video-previous]');
+        const nextButton = reel.querySelector('[data-video-next]');
+        if (previousButton) previousButton.addEventListener('click', () => playAdjacentVideo(-1));
+        if (nextButton) nextButton.addEventListener('click', () => playAdjacentVideo(1));
+
+        if (!reducedMotion) video.addEventListener('ended', playRandomVideo);
         video.addEventListener('error', () => {
             console.error('A homepage video could not be loaded.', video.currentSrc);
             if (statusLabel) statusLabel.textContent = 'This video could not be played. Please contact the site administrator.';
         });
+
+        if (reducedMotion) return;
 
         const startWhenVisible = () => {
             if (typeof IntersectionObserver !== 'function') {
