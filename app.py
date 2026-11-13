@@ -866,7 +866,7 @@ def _split_non_empty_lines(value):
 
 
 def _parse_services_json(raw_value):
-    """Decode JSON service list with safe fallback to defaults."""
+    """Decode JSON services, defaulting only when the setting is absent or invalid."""
     if not raw_value:
         return _copy_default_services()
 
@@ -891,7 +891,7 @@ def _parse_services_json(raw_value):
             'description': description
         })
 
-    return services if services else _copy_default_services()
+    return services
 
 
 def _services_to_editor_text(services):
@@ -909,7 +909,11 @@ def _services_to_editor_text(services):
 
 def _parse_services_editor_text(editor_text):
     """Parse admin services text area lines into structured service records."""
+    if not (editor_text or '').strip():
+        return []
+
     services = []
+    has_valid_entry = False
     for raw_line in (editor_text or '').splitlines():
         line = raw_line.strip()
         if not line:
@@ -921,15 +925,20 @@ def _parse_services_editor_text(editor_text):
         name = parts[0]
         description = parts[1]
 
-        if not name or not description or _is_placeholder_service(name, description):
+        if not name or not description:
             continue
 
+        has_valid_entry = True
+        if _is_placeholder_service(name, description):
+            continue
         services.append({
             'name': name,
             'description': description
         })
 
-    return services if services else _copy_default_services()
+    if services or has_valid_entry:
+        return services
+    return _copy_default_services()
 
 
 def _load_site_setting_map():
