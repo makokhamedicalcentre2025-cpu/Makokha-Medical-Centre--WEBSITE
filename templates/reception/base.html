@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="display: flex; height: 100vh; margin-top: 60px;">
+<div class="reception-layout">
     <!-- Sidebar -->
-    <aside style="width: 250px; background: #123b39; color: white; overflow-y: auto; box-shadow: 2px 0 5px rgba(0,0,0,0.1);">
+    <aside class="reception-sidebar">
         <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
             <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">
                 <i class="fas fa-headset"></i> Reception
@@ -11,7 +11,7 @@
             <p style="font-size: 0.9rem; opacity: 0.8;">{{ session.full_name }}</p>
         </div>
         
-        <nav style="padding: 1rem 0;">
+        <nav>
             <a href="{{ url_for('reception_dashboard') }}" style="display: flex; align-items: center; padding: 1rem 1.5rem; color: white; text-decoration: none; transition: all 0.3s; border-left: 3px solid transparent;">
                 <i class="fas fa-chart-line" style="width: 20px;"></i>
                 <span style="margin-left: 0.75rem;">Dashboard</span>
@@ -48,7 +48,7 @@
     </aside>
     
     <!-- Main Content -->
-    <main style="flex: 1; overflow-y: auto; background: #f7faf8;">
+    <main class="reception-main">
         {% block reception_content %}
         <!-- Reception content goes here -->
         {% endblock %}
@@ -70,6 +70,39 @@
 </div>
 
 <style>
+    .reception-layout {
+        display: flex;
+        width: 100%;
+        min-height: calc(100vh - var(--site-header-height, 70px));
+        min-height: calc(100dvh - var(--site-header-height, 70px));
+    }
+
+    .reception-sidebar {
+        width: 250px;
+        flex: 0 0 250px;
+        align-self: flex-start;
+        position: sticky;
+        top: var(--site-header-height, 70px);
+        max-height: calc(100vh - var(--site-header-height, 70px));
+        max-height: calc(100dvh - var(--site-header-height, 70px));
+        background: #123b39;
+        color: white;
+        padding: 1.5rem 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .reception-sidebar nav {
+        padding: 1rem 0;
+    }
+
+    .reception-main {
+        flex: 1;
+        min-width: 0;
+        background: #f7faf8;
+    }
+
     aside a {
         border-left-color: transparent;
     }
@@ -77,6 +110,51 @@
     aside a:hover {
         background: rgba(255,255,255,0.1);
         border-left-color: #03595d;
+    }
+
+    @media (max-width: 760px) {
+        .reception-layout {
+            flex-direction: column;
+        }
+
+        .reception-sidebar {
+            position: static;
+            width: 100%;
+            flex-basis: auto;
+            max-height: none;
+        }
+
+        .reception-sidebar nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+            gap: 0.25rem;
+            padding: 0.75rem;
+        }
+
+        .reception-sidebar nav a {
+            min-width: 0;
+            padding: 0.75rem 0.8rem !important;
+        }
+
+        .reception-sidebar nav a span {
+            overflow-wrap: anywhere;
+        }
+
+        .reception-sidebar > div:last-child {
+            margin-top: 0.5rem !important;
+        }
+
+        .reception-main {
+            width: 100%;
+        }
+
+        #incomingCallPrompt {
+            left: 0.5rem !important;
+            right: 0.5rem !important;
+            width: auto !important;
+            max-width: 320px;
+            margin-inline: auto;
+        }
     }
 </style>
 
