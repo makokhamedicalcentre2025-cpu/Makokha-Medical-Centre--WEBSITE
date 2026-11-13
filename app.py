@@ -2408,6 +2408,10 @@ def _ensure_runtime_schema_once():
 @app.before_request
 def ensure_message_runtime_schema():
     """Ensure runtime schema exists before request handlers query tables."""
+    if request.path in {'/health', '/healthz'}:
+        return None
+
+    _init_db_if_enabled_once()
     _ensure_runtime_schema_once()
 
 
@@ -6124,17 +6128,9 @@ def _init_db_if_enabled_once():
         _DB_BOOTSTRAPPED = True
 
 
-# Ensure schemas are created under WSGI servers (e.g., Gunicorn), where
-# the __main__ block is not executed.
-_init_db_if_enabled_once()
-
-
 # ==================== MAIN ====================
 
 if __name__ == '__main__':
-    # Initialize database and create tables
-    _init_db_if_enabled_once()
-
     # Run the application
     debug_mode = _env_flag('FLASK_DEBUG', default=not IS_PRODUCTION) and not IS_PRODUCTION
     runtime_host = (os.getenv('FLASK_RUN_HOST') or '0.0.0.0').strip()
