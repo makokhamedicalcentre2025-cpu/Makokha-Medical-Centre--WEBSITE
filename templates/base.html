@@ -22,9 +22,7 @@
     <meta name="twitter:image" content="{{ config['PUBLIC_SITE_URL'] }}{{ url_for('static', filename='images/logo.png') }}">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="256x256" href="{{ url_for('static', filename='images/favicon.png') }}">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('favicon') }}">
-    <link rel="apple-touch-icon" sizes="256x256" href="{{ url_for('static', filename='images/favicon.png') }}">
+    {% include "_favicon.html" %}
     <link rel="canonical" href="{{ config['PUBLIC_SITE_URL'] }}{{ request.path }}">
 
     <script type="application/ld+json">
