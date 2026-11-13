@@ -343,7 +343,7 @@
     }
 
     .services-media-grid.has-video-and-banner {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     }
 
     .services-video-reel {
@@ -1550,13 +1550,17 @@
     .services-next-step {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: 1.5rem;
         margin-top: 1rem;
         padding: 1.4rem 1.6rem;
         border-left: 4px solid #d7ad45;
         border-radius: 0 14px 14px 0;
         background: #f3f8f6;
+    }
+
+    .services-layout > .services-next-step {
+        grid-column: 1 / -1;
     }
 
     .services-next-step h3 {
@@ -1911,9 +1915,8 @@
 {% set hero_phone_number = hero_phone_line.rsplit(':', 1)[-1]|trim %}
 {% set homepage_doctor_count = initial_live_stats.get('total_doctors', total_doctors or 0)|int %}
 {% set homepage_interaction_count = initial_live_stats.get('total_interactions', 0)|int %}
-{% set homepage_rating = initial_live_stats.get('avg_rating', avg_rating or 0)|float %}
 {% set homepage_emergency_count = initial_live_stats.get('emergency_today_calls', 0)|int %}
-{% set has_homepage_live_stats = homepage_doctor_count > 0 or homepage_interaction_count > 0 or homepage_rating > 0 or homepage_emergency_count > 0 %}
+{% set has_homepage_live_stats = homepage_doctor_count > 0 or homepage_interaction_count > 0 or homepage_emergency_count > 0 %}
 <!-- HERO SECTION -->
 <section class="hero" aria-labelledby="home-hero-title">
     {% if hero_slider_images %}
@@ -2069,15 +2072,18 @@
                     </div>
                     {% endif %}
                 </div>
-                <div class="services-next-step">
-                    <div>
-                        <h3>Need help choosing a service?</h3>
-                        <p>Our team can answer questions and help you plan your visit.</p>
-                    </div>
-                    <a href="{{ url_for('contact') }}" class="btn btn-primary">
-                        Contact our team <i class="fas fa-arrow-right" aria-hidden="true"></i>
-                    </a>
+            </div>
+            {% endif %}
+
+            {% if site_content.services_banner_image_url or homepage_videos %}
+            <div class="services-next-step">
+                <div>
+                    <h3>Need help choosing a service?</h3>
+                    <p>Our team can answer questions and help you plan your visit.</p>
                 </div>
+                <a href="{{ url_for('contact') }}" class="btn btn-primary">
+                    Contact our team <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
             </div>
             {% endif %}
         </div>
@@ -2144,13 +2150,6 @@
         <div class="stat-item" data-live-stat-item{% if homepage_interaction_count <= 0 %} hidden{% endif %}>
             <div class="stat-number" data-live-stat="total_interactions">{{ initial_live_stats.get('total_interactions', 0) }}</div>
             <div class="stat-label">Patient Interactions</div>
-        </div>
-        <div class="stat-item" data-live-stat-item{% if homepage_rating <= 0 %} hidden{% endif %}>
-            <div class="stat-number">
-                <i class="fas fa-star" style="color: #f1cb6c;"></i>
-                <span data-live-stat="avg_rating" data-live-format="decimal1">{{ initial_live_stats.get('avg_rating', avg_rating or 0) }}</span>
-            </div>
-            <div class="stat-label">Patient rating</div>
         </div>
         <div class="stat-item" data-live-stat-item{% if homepage_emergency_count <= 0 %} hidden{% endif %}>
             <div class="stat-number" data-live-stat="emergency_today_calls">{{ initial_live_stats.get('emergency_today_calls', 0) }}</div>
