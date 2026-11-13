@@ -1012,6 +1012,17 @@
                 buttonEl.setAttribute('title', shouldShow ? 'Hide password' : 'Show password');
             }
         }
+
+        document.querySelectorAll('input[type="file"]:not(#homepageVideoFile)').forEach((input) => {
+            input.addEventListener('change', () => {
+                const oversizedFile = Array.from(input.files || [])
+                    .find((file) => file.size > 5 * 1024 * 1024);
+                input.setCustomValidity(
+                    oversizedFile ? 'Each uploaded file must be 5 MB or smaller.' : ''
+                );
+                if (oversizedFile) input.reportValidity();
+            });
+        });
     </script>
     
     {% block extra_js %}{% endblock %}

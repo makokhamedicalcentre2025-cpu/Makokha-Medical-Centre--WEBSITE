@@ -17,6 +17,7 @@ import threading
 import hashlib
 import math
 import mimetypes
+import struct
 from uuid import uuid4
 from sqlalchemy import desc, inspect, text, or_, func
 from sqlalchemy.exc import SQLAlchemyError
@@ -61,6 +62,11 @@ def _normalize_database_uri(raw_database_uri):
 app = Flask(__name__)
 APP_ENV = (os.getenv('APP_ENV') or os.getenv('FLASK_ENV') or ('production' if os.getenv('RENDER') else 'development')).strip().lower()
 IS_PRODUCTION = APP_ENV == 'production'
+MAX_UPLOAD_FILE_BYTES = 5 * 1024 * 1024
+MAX_HERO_MEDIA_PER_UPLOAD = 10
+MAX_UPLOAD_REQUEST_BYTES = (
+    MAX_UPLOAD_FILE_BYTES * MAX_HERO_MEDIA_PER_UPLOAD
+) + (2 * 1024 * 1024)
 
 secret_key = (os.getenv('SECRET_KEY') or '').strip()
 if not secret_key:
@@ -88,7 +94,7 @@ app.config['PUBLIC_SITE_URL'] = (
     ).strip().rstrip('/')
 )
 app.config['UPLOAD_FOLDER'] = os.getenv('UPLOAD_FOLDER', 'static/uploads')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_REQUEST_BYTES
 app.config['PREFERRED_URL_SCHEME'] = 'https' if IS_PRODUCTION else 'http'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -96,8 +102,8 @@ app.config['SESSION_COOKIE_SECURE'] = IS_PRODUCTION
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=_env_int('SESSION_LIFETIME_HOURS', 12))
 
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm'}
-MAX_VIDEO_FILE_BYTES = 15 * 1024 * 1024
-MAX_VIDEO_DURATION_SECONDS = 30
+MAX_VIDEO_FILE_BYTES = MAX_UPLOAD_FILE_BYTES
+MAX_VIDEO_DURATION_SECONDS = 40
 BUILTIN_HOMEPAGE_VIDEOS = (
     ('service-outpatient.mp4', 'Outpatient Consultation'),
     ('service-emergency.mp4', 'Emergency Care'),
@@ -106,6 +112,7 @@ BUILTIN_HOMEPAGE_VIDEOS = (
     ('service-pharmacy.mp4', 'Pharmacy Services')
 )
 BUILTIN_HOMEPAGE_VIDEOS_SEED_KEY = 'homepage_builtin_videos_seeded'
+EMERGENCY_VIDEO_CONTENT_MIGRATION_KEY = 'homepage_emergency_video_content_v2'
 
 engine_options = {'pool_pre_ping': True}
 if database_uri.startswith('postgresql://'):
@@ -170,7 +177,7 @@ FACILITY_SERVICES = [
     },
     {
         'name': 'Emergency Care',
-        'description': '24/7 emergency response and urgent stabilization services.'
+        'description': 'Emergency response and urgent stabilization services.'
     },
     {
         'name': 'Maternal and Child Health',
@@ -250,7 +257,6 @@ DEFAULT_SITE_SETTINGS = {
     'contact_address': 'Orivana Care Medical Centre Ltd\nMaliki Market, Bungoma-Kenya',
     'contact_phones': 'Customer Care: +254184289494\nAdmin: +254184279716',
     'contact_emails': 'info@orivanacare.top',
-    'opening_hours': 'Open 24/7',
     'services_json': json.dumps(FACILITY_SERVICES),
     'services_banner_image': '',
     'services_banner_position_json': '{"x": 50.0, "y": 50.0}',
@@ -269,7 +275,6 @@ DEFAULT_SITE_SETTINGS = {
     )
 }
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
-MAX_HERO_IMAGES_PER_UPLOAD = 10
 
 ACTIVE_CALL_STATUSES = ['initiated', 'dialing', 'ringing', 'busy', 'connected', 'on_hold']
 MUTATING_HTTP_METHODS = {'POST', 'PUT', 'PATCH', 'DELETE'}
@@ -937,6 +942,17 @@ def _is_allowed_image_filename(filename):
     return ext in ALLOWED_IMAGE_EXTENSIONS
 
 
+def _is_allowed_video_filename(filename):
+    if not filename or '.' not in filename:
+        return False
+    ext = filename.rsplit('.', 1)[1].lower()
+    return ext in ALLOWED_VIDEO_EXTENSIONS
+
+
+def _is_allowed_hero_media_filename(filename):
+    return _is_allowed_image_filename(filename) or _is_allowed_video_filename(filename)
+
+
 def _safe_uploaded_filename(filename):
     return secure_filename(str(filename or '').strip())
 
@@ -971,10 +987,12 @@ def _rewind_upload_stream(file_obj):
 
 def _read_uploaded_file_bytes(file_obj):
     _rewind_upload_stream(file_obj)
-    payload = file_obj.read()
+    payload = file_obj.read(MAX_UPLOAD_FILE_BYTES + 1)
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
     _rewind_upload_stream(file_obj)
+    if len(payload) > MAX_UPLOAD_FILE_BYTES:
+        raise ValueError('Each uploaded file must be 5 MB or smaller.')
     return payload or b''
 
 
@@ -1215,16 +1233,17 @@ def _save_uploaded_video(file_obj, filename, owner_type='homepage_video'):
     if not payload:
         raise ValueError('Uploaded video is empty.')
     if len(payload) > MAX_VIDEO_FILE_BYTES:
-        raise ValueError('Each video must be 15 MB or smaller.')
+        raise ValueError('Each video must be 5 MB or smaller.')
 
     content_type_by_extension = {
         'mp4': 'video/mp4',
         'webm': 'video/webm'
     }
-    if extension == 'mp4' and b'ftyp' not in payload[:32]:
-        raise ValueError('The uploaded file is not a valid MP4 video.')
-    if extension == 'webm' and not payload.startswith(b'\x1a\x45\xdf\xa3'):
-        raise ValueError('The uploaded file is not a valid WebM video.')
+    duration = _get_uploaded_video_duration(payload, extension)
+    if duration > MAX_VIDEO_DURATION_SECONDS:
+        raise ValueError(
+            f'Video duration is {duration:.1f} seconds. Videos must be {MAX_VIDEO_DURATION_SECONDS} seconds or shorter.'
+        )
 
     original_filename = _safe_uploaded_filename(getattr(file_obj, 'filename', '')) or safe_filename
     _store_uploaded_asset(
@@ -1235,6 +1254,140 @@ def _save_uploaded_video(file_obj, filename, owner_type='homepage_video'):
         owner_type=owner_type
     )
     return len(payload)
+
+
+def _iter_mp4_boxes(payload, start, end):
+    """Yield ISO BMFF box type and payload bounds without decoding video frames."""
+    offset = start
+    while offset + 8 <= end:
+        box_size = int.from_bytes(payload[offset:offset + 4], 'big')
+        box_type = payload[offset + 4:offset + 8]
+        header_size = 8
+        if box_size == 1:
+            if offset + 16 > end:
+                return
+            box_size = int.from_bytes(payload[offset + 8:offset + 16], 'big')
+            header_size = 16
+        elif box_size == 0:
+            box_size = end - offset
+
+        if box_size < header_size or offset + box_size > end:
+            return
+        payload_start = offset + header_size
+        payload_end = offset + box_size
+        yield box_type, payload_start, payload_end
+        offset = payload_end
+
+
+def _mp4_duration_seconds(payload):
+    found_file_type = False
+    duration_seconds = None
+    for box_type, box_start, box_end in _iter_mp4_boxes(payload, 0, len(payload)):
+        if box_type == b'ftyp':
+            found_file_type = True
+        elif box_type == b'moov':
+            for child_type, child_start, child_end in _iter_mp4_boxes(payload, box_start, box_end):
+                if child_type != b'mvhd' or child_end - child_start < 20:
+                    continue
+                version = payload[child_start]
+                if version == 0:
+                    timescale = int.from_bytes(payload[child_start + 12:child_start + 16], 'big')
+                    duration = int.from_bytes(payload[child_start + 16:child_start + 20], 'big')
+                elif version == 1 and child_end - child_start >= 32:
+                    timescale = int.from_bytes(payload[child_start + 20:child_start + 24], 'big')
+                    duration = int.from_bytes(payload[child_start + 24:child_start + 32], 'big')
+                else:
+                    continue
+
+                if timescale and duration and duration != (1 << (32 if version == 0 else 64)) - 1:
+                    duration_seconds = duration / timescale
+                    break
+
+    if not found_file_type or not duration_seconds:
+        raise ValueError('The MP4 file is invalid or its duration could not be read.')
+    return duration_seconds
+
+
+def _read_ebml_vint(payload, offset, include_marker):
+    if offset >= len(payload):
+        return None
+
+    first_byte = payload[offset]
+    marker = 0x80
+    length = 1
+    while length <= 8 and not (first_byte & marker):
+        marker >>= 1
+        length += 1
+    if length > 8 or offset + length > len(payload):
+        return None
+
+    value = first_byte if include_marker else first_byte & (marker - 1)
+    for index in range(1, length):
+        value = (value << 8) | payload[offset + index]
+    return value, length
+
+
+def _iter_ebml_elements(payload, start, end):
+    offset = start
+    while offset < end:
+        element_id = _read_ebml_vint(payload, offset, include_marker=True)
+        if not element_id:
+            return
+        element_size = _read_ebml_vint(
+            payload,
+            offset + element_id[1],
+            include_marker=False
+        )
+        if not element_size:
+            return
+
+        size_marker_bits = 7 * element_size[1]
+        unknown_size = element_size[0] == (1 << size_marker_bits) - 1
+        element_start = offset + element_id[1] + element_size[1]
+        element_end = end if unknown_size else element_start + element_size[0]
+        if element_end > end:
+            return
+        yield element_id[0], element_start, element_end
+        if unknown_size:
+            return
+        offset = element_end
+
+
+def _webm_duration_seconds(payload):
+    if not payload.startswith(b'\x1a\x45\xdf\xa3'):
+        raise ValueError('The uploaded file is not a valid WebM video.')
+
+    timecode_scale = 1_000_000
+    duration_units = None
+    for element_id, element_start, element_end in _iter_ebml_elements(payload, 0, len(payload)):
+        if element_id != 0x18538067:
+            continue
+        for child_id, child_start, child_end in _iter_ebml_elements(payload, element_start, element_end):
+            if child_id != 0x1549A966:
+                continue
+            for info_id, info_start, info_end in _iter_ebml_elements(payload, child_start, child_end):
+                info_data = payload[info_start:info_end]
+                if info_id == 0x2AD7B1 and info_data:
+                    timecode_scale = int.from_bytes(info_data, 'big')
+                elif info_id == 0x4489 and len(info_data) in {4, 8}:
+                    duration_units = struct.unpack('>f' if len(info_data) == 4 else '>d', info_data)[0]
+            break
+        break
+
+    if not duration_units or not math.isfinite(duration_units) or timecode_scale <= 0:
+        raise ValueError('The WebM file is invalid or its duration could not be read.')
+    duration_seconds = duration_units * timecode_scale / 1_000_000_000
+    if not math.isfinite(duration_seconds):
+        raise ValueError('The WebM file is invalid or its duration could not be read.')
+    return duration_seconds
+
+
+def _get_uploaded_video_duration(payload, extension):
+    if extension == 'mp4':
+        return _mp4_duration_seconds(payload)
+    if extension == 'webm':
+        return _webm_duration_seconds(payload)
+    raise ValueError('Video must be MP4 or WebM.')
 
 
 def _seed_builtin_homepage_videos():
@@ -1289,8 +1442,8 @@ def _seed_builtin_homepage_videos():
     app.logger.info('Seeded %s built-in homepage service videos.', seeded_count)
 
 
-def _parse_uploaded_image_list(raw_value):
-    """Decode stored JSON filename list for uploaded images."""
+def _parse_hero_media_list(raw_value):
+    """Decode stored JSON filename list for hero images and videos."""
     if not raw_value:
         return []
     try:
@@ -1306,7 +1459,7 @@ def _parse_uploaded_image_list(raw_value):
         safe_name = secure_filename(str(item or '').strip())
         if not safe_name or safe_name in seen:
             continue
-        if not _is_allowed_image_filename(safe_name):
+        if not _is_allowed_hero_media_filename(safe_name):
             continue
         seen.add(safe_name)
         filenames.append(safe_name)
@@ -1370,10 +1523,10 @@ def _parse_hero_background_positions(raw_value):
 
 
 def _resolve_hero_background_filenames(raw_map):
-    """Return hero image filename list with legacy single-image fallback."""
-    hero_filenames = _parse_uploaded_image_list(raw_map.get('hero_background_images_json'))
+    """Return hero media filenames with a legacy single-file fallback."""
+    hero_filenames = _parse_hero_media_list(raw_map.get('hero_background_images_json'))
     legacy_name = secure_filename(str(raw_map.get('hero_background_image') or '').strip())
-    if legacy_name and legacy_name not in hero_filenames and _is_allowed_image_filename(legacy_name):
+    if legacy_name and legacy_name not in hero_filenames and _is_allowed_hero_media_filename(legacy_name):
         hero_filenames.insert(0, legacy_name)
     return hero_filenames
 
@@ -1410,6 +1563,7 @@ def get_site_content():
         image_url = _uploaded_image_url(image_name)
         if not image_url:
             continue
+        is_video = _is_allowed_video_filename(image_name)
         position = hero_positions.get(image_name, {'x': 50.0, 'y': 50.0})
         pos_x = _clamp_percent(position.get('x'), 50.0)
         pos_y = _clamp_percent(position.get('y'), 50.0)
@@ -1419,6 +1573,8 @@ def get_site_content():
         hero_slides.append({
             'filename': image_name,
             'url': image_url,
+            'is_video': is_video,
+            'content_type': _guess_mime_type(image_name, 'video/mp4' if is_video else 'image/jpeg'),
             'position_x': pos_x,
             'position_y': pos_y
         })
@@ -1436,7 +1592,6 @@ def get_site_content():
     data['contact_address_lines'] = _split_non_empty_lines(data.get('contact_address'))
     data['contact_phone_lines'] = _split_non_empty_lines(data.get('contact_phones'))
     data['contact_email_lines'] = _split_non_empty_lines(data.get('contact_emails'))
-    data['opening_hours_lines'] = _split_non_empty_lines(data.get('opening_hours'))
     return data
 
 
@@ -1456,8 +1611,13 @@ def _upsert_site_settings(updates):
 
 
 def _remove_retired_service_content():
-    """Remove retired service-icon metadata from saved settings."""
+    """Remove retired hours and service-icon data from saved settings."""
     changed = False
+    opening_hours_setting = SiteSetting.query.filter_by(setting_key='opening_hours').first()
+    if opening_hours_setting:
+        db.session.delete(opening_hours_setting)
+        changed = True
+
     services_setting = SiteSetting.query.filter_by(setting_key='services_json').first()
     if services_setting:
         try:
@@ -1472,6 +1632,8 @@ def _remove_retired_service_content():
                     continue
                 name = str(service.get('name') or '').strip()
                 description = str(service.get('description') or '').strip()
+                if name.casefold() == 'emergency care' and '24/7' in description:
+                    description = 'Emergency response and urgent stabilization services.'
                 if name and description:
                     cleaned_services.append({'name': name, 'description': description})
 
@@ -1482,6 +1644,42 @@ def _remove_retired_service_content():
 
     if changed:
         db.session.commit()
+
+
+def _update_emergency_video_content_once():
+    """Replace the bundled emergency video so retired hours wording is not shown."""
+    migration = SiteSetting.query.filter_by(
+        setting_key=EMERGENCY_VIDEO_CONTENT_MIGRATION_KEY
+    ).first()
+    if migration:
+        return
+
+    video = HomepageVideo.query.filter_by(filename='service-emergency.mp4').first()
+    if video:
+        video_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            'assets',
+            'homepage-videos',
+            'service-emergency.mp4'
+        )
+        with open(video_path, 'rb') as video_file:
+            payload = video_file.read(MAX_VIDEO_FILE_BYTES + 1)
+        if not payload or len(payload) > MAX_VIDEO_FILE_BYTES or b'ftyp' not in payload[:32]:
+            raise ValueError('Bundled emergency video is empty, too large, or invalid.')
+
+        _store_uploaded_asset(
+            filename=video.filename,
+            payload_bytes=payload,
+            content_type='video/mp4',
+            original_filename=video.filename,
+            owner_type='homepage_video'
+        )
+
+    db.session.add(SiteSetting(
+        setting_key=EMERGENCY_VIDEO_CONTENT_MIGRATION_KEY,
+        setting_value='1'
+    ))
+    db.session.commit()
 
 
 def _normalize_rating_value(raw_rating):
@@ -1570,7 +1768,6 @@ def inject_site_content():
         fallback['contact_address_lines'] = _split_non_empty_lines(fallback.get('contact_address'))
         fallback['contact_phone_lines'] = _split_non_empty_lines(fallback.get('contact_phones'))
         fallback['contact_email_lines'] = _split_non_empty_lines(fallback.get('contact_emails'))
-        fallback['opening_hours_lines'] = _split_non_empty_lines(fallback.get('opening_hours'))
         return {
             'site_content': fallback,
             'event_type_nav_options': nav_event_categories,
@@ -2535,6 +2732,7 @@ def _ensure_runtime_schema_once():
         _remove_retired_service_content()
         _migrate_referenced_uploads_to_database()
         _seed_builtin_homepage_videos()
+        _update_emergency_video_content_once()
         RUNTIME_SCHEMA_READY = True
 
 
@@ -3404,22 +3602,25 @@ def admin_site_content():
             if legacy_single_file and legacy_single_file.filename:
                 hero_files.append(legacy_single_file)
 
-            if len(hero_files) > MAX_HERO_IMAGES_PER_UPLOAD:
-                raise ValueError(f'Please upload at most {MAX_HERO_IMAGES_PER_UPLOAD} hero images at a time.')
+            if len(hero_files) > MAX_HERO_MEDIA_PER_UPLOAD:
+                raise ValueError(f'Please upload at most {MAX_HERO_MEDIA_PER_UPLOAD} hero media files at a time.')
 
             for hero_file in hero_files:
                 original_name = secure_filename(hero_file.filename)
-                if not _is_allowed_image_filename(original_name):
-                    raise ValueError('Hero background image must be PNG, JPG, JPEG, WEBP, or GIF.')
+                if not _is_allowed_hero_media_filename(original_name):
+                    raise ValueError('Hero media must be PNG, JPG, JPEG, WEBP, GIF, MP4, or WebM.')
 
                 timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
                 hero_filename = f"hero_bg_{timestamp}_{original_name}"
-                _save_uploaded_image(
-                    hero_file,
-                    hero_filename,
-                    image_label='Hero background image',
-                    owner_type='site_setting'
-                )
+                if _is_allowed_video_filename(original_name):
+                    _save_uploaded_video(hero_file, hero_filename, owner_type='site_setting')
+                else:
+                    _save_uploaded_image(
+                        hero_file,
+                        hero_filename,
+                        image_label='Hero background image',
+                        owner_type='site_setting'
+                    )
                 hero_filenames.append(hero_filename)
                 hero_positions[hero_filename] = {'x': 50.0, 'y': 50.0}
 
@@ -3473,7 +3674,9 @@ def admin_site_content():
     return render_template(
         'admin/site_content.html',
         site_content=site_content,
-        services_editor_text=site_content.get('services_editor_text', '')
+        services_editor_text=site_content.get('services_editor_text', ''),
+        max_upload_file_bytes=MAX_UPLOAD_FILE_BYTES,
+        max_video_duration_seconds=MAX_VIDEO_DURATION_SECONDS
     )
 
 

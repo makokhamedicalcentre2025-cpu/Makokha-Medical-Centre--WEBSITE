@@ -77,13 +77,13 @@
 <div class="admin-form-layout">
     <div class="admin-page-intro">
         <h1><i class="fas fa-film"></i> Homepage Videos</h1>
-        <p>Upload short clips to the homepage services section. Active videos play one at a time in a random order.</p>
+        <p>Upload high-resolution clips to the homepage services section. Active videos play one at a time in a random order.</p>
         <p>The five starter clips are original animations, not footage from the facility. You can upload approved facility videos here at any time.</p>
     </div>
 
     <section class="video-upload-card">
         <h2 class="admin-form-title">Add a Video</h2>
-        <p class="admin-field-note">Use MP4 or WebM, keep clips at or under {{ max_video_duration_seconds }} seconds, and keep each file under {{ (max_video_file_bytes / 1024 / 1024)|round|int }} MB. Upload one video at a time. Only publish footage approved for public viewing; obtain consent before uploading identifiable patients.</p>
+        <p class="admin-field-note">Use MP4 or WebM, keep clips at or under {{ max_video_duration_seconds }} seconds, and keep each file at or under {{ (max_video_file_bytes / 1024 / 1024)|round|int }} MB. 4K and 8K resolution is accepted; browser preview depends on codec support. Upload one video at a time. Only publish footage approved for public viewing; obtain consent before uploading identifiable patients.</p>
         <form method="POST" enctype="multipart/form-data" id="homepageVideoForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
@@ -94,7 +94,7 @@
                 <label class="form-label" for="homepageVideoFile">MP4 or WebM video</label>
                 <input type="file" id="homepageVideoFile" name="video" class="form-control" accept="video/mp4,video/webm,.mp4,.webm" required>
                 <video id="homepageVideoPreview" class="video-upload-preview" controls muted playsinline preload="metadata" hidden></video>
-                <span id="homepageVideoStatus" class="video-upload-status" role="status">Choose a clip up to {{ max_video_duration_seconds }} seconds long.</span>
+                <span id="homepageVideoStatus" class="video-upload-status" role="status">Choose a clip up to {{ max_video_duration_seconds }} seconds and 5 MB.</span>
             </div>
             <div class="form-group">
                 <label class="form-label">
@@ -173,7 +173,7 @@
 
             if (!file) {
                 validationState = 'missing';
-                showStatus(`Choose a clip up to ${maxDurationSeconds} seconds long.`, false);
+                showStatus(`Choose a clip up to ${maxDurationSeconds} seconds and ${maxFileMegabytes} MB.`, false);
                 return;
             }
 
@@ -211,7 +211,9 @@
             preview.addEventListener('error', () => {
                 if (previewUrl !== selectedPreviewUrl) return;
                 validationState = 'invalid';
-                showStatus('The video preview could not be loaded. Choose an MP4 or WebM file.', true);
+                validationState = 'valid';
+                submitButton.disabled = false;
+                showStatus('This browser cannot preview the video codec. The server will still validate its MP4/WebM format and duration.', false);
             }, { once: true });
             preview.src = previewUrl;
             preview.load();

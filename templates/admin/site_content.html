@@ -98,13 +98,27 @@
         cursor: grabbing;
     }
 
-    .hero-adjust-image {
+    .hero-adjust-media {
         display: block;
         width: 100%;
         height: 100%;
         object-fit: cover;
         pointer-events: none;
         user-select: none;
+    }
+
+    .hero-upload-preview-grid .hero-adjust-media {
+        pointer-events: auto;
+    }
+
+    .hero-upload-preview-grid .hero-preview-stage {
+        cursor: default;
+        touch-action: auto;
+    }
+
+    .form-help.is-error {
+        color: #b42318;
+        font-weight: 600;
     }
 
     .hero-preview-toolbar {
@@ -218,7 +232,7 @@
 
             <section class="site-content-card">
                 <h3><i class="fas fa-image"></i> Services Banner Image</h3>
-                <p>Upload a large banner image shown under the Services Offered section on the public home page.</p>
+                <p>Upload a banner image shown under the Services Offered section on the public home page. Each uploaded file must be 5 MB or smaller.</p>
                 <input type="hidden" id="servicesBannerPositionJson" name="services_banner_position_json" value='{{ site_content.services_banner_position|tojson }}'>
                 {% if site_content.services_banner_image_url %}
                 <div class="services-banner-editor" id="servicesBannerEditor">
@@ -246,7 +260,7 @@
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label" for="services_banner_image">Upload Banner Image</label>
                     <input id="services_banner_image" type="file" name="services_banner_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif">
-                    <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF.</p>
+                    <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF. Maximum file size: 5 MB.</p>
                 </div>
             </section>
 
@@ -336,7 +350,7 @@
                 <div class="form-group">
                     <label class="form-label" for="telemedicine_image">Upload Telemedicine Image</label>
                     <input id="telemedicine_image" type="file" name="telemedicine_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif">
-                    <p class="form-help">This image appears on the right side of the Upcoming Telemedicine card.</p>
+                    <p class="form-help">This image appears on the right side of the Upcoming Telemedicine card. Maximum file size: 5 MB.</p>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label" for="telemedicine_launch_window">Launch Window</label>
@@ -355,7 +369,7 @@
 
             <section class="site-content-card">
                 <h3><i class="fas fa-image"></i> Homepage Hero Background</h3>
-                <p>Upload up to 10 images at once for the hero slider. Drag inside each preview to set the visible focus area (for faces/details), drag handles to reorder slides, and tick remove for images you want deleted.</p>
+                <p>Upload up to 10 images or videos for the hero slider. Each file must be 5 MB or smaller; videos must be 40 seconds or shorter. Drag inside each preview to set the visible focus area, drag handles to reorder slides, and tick remove for media you want deleted.</p>
                 <input type="hidden" id="heroPositionsJson" name="hero_positions_json" value='{{ site_content.hero_background_positions|tojson }}'>
                 <input type="hidden" id="heroOrderJson" name="hero_order_json" value='{{ site_content.hero_background_images|tojson }}'>
                 {% if site_content.hero_background_slides %}
@@ -367,31 +381,45 @@
                             Drag to reorder
                         </div>
                         <div class="hero-preview-stage">
+                            {% if hero_slide.is_video %}
+                            <video
+                                src="{{ hero_slide.url }}"
+                                class="hero-adjust-media"
+                                muted
+                                loop
+                                autoplay
+                                playsinline
+                                preload="metadata"
+                                style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
+                            ></video>
+                            {% else %}
                             <img
                                 src="{{ hero_slide.url }}"
                                 alt="Current hero background image {{ loop.index }}"
-                                class="hero-adjust-image"
+                                class="hero-adjust-media"
                                 style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
                             >
+                            {% endif %}
                         </div>
                         <div class="hero-preview-toolbar">
                             <label class="hero-remove">
                                 <input type="checkbox" name="remove_hero_images" value="{{ hero_slide.filename }}">
-                                Remove photo
+                                Remove media
                             </label>
                             <span class="hero-position-label" data-position-label>{{ '%.0f'|format(hero_slide.position_x) }}% x / {{ '%.0f'|format(hero_slide.position_y) }}% y</span>
                         </div>
-                        <p class="form-help">Drag image inside frame to adjust placement.</p>
+                        <p class="form-help">Drag media inside frame to adjust placement.</p>
                     </div>
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="form-help">No hero photos uploaded yet.</p>
+                <p class="form-help">No hero media uploaded yet.</p>
                 {% endif %}
                 <div class="form-group">
-                    <label class="form-label" for="hero_background_images">Hero Background Images</label>
-                    <input id="hero_background_images" type="file" name="hero_background_images" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" multiple>
-                    <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF. Upload limit: 10 files per save. New uploads are auto-normalized to a fixed 16:9 hero ratio.</p>
+                    <label class="form-label" for="hero_background_images">Hero Background Images or Videos</label>
+                    <input id="hero_background_images" type="file" name="hero_background_images" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,video/mp4,video/webm" multiple>
+                    <div class="hero-preview-grid hero-upload-preview-grid" id="heroUploadPreviewGrid" aria-live="polite"></div>
+                    <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF, MP4, and WebM. Upload limit: 10 files per save; each file must be 5 MB or smaller. Videos must be 40 seconds or shorter.</p>
                 </div>
             </section>
         </div>
@@ -412,14 +440,90 @@
 <script>
     (function initHeroEditor() {
         const maxUpload = 10;
+        const maxUploadFileBytes = {{ max_upload_file_bytes|int }};
+        const maxVideoDurationSeconds = {{ max_video_duration_seconds|int }};
         const fileInput = document.getElementById('hero_background_images');
+        const uploadPreviewGrid = document.getElementById('heroUploadPreviewGrid');
         if (fileInput) {
+            let uploadPreviewUrls = [];
+            let overlongVideoFiles = new Set();
             fileInput.addEventListener('change', () => {
+                uploadPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+                uploadPreviewUrls = [];
+                overlongVideoFiles = new Set();
+                if (uploadPreviewGrid) uploadPreviewGrid.replaceChildren();
+
                 if (fileInput.files && fileInput.files.length > maxUpload) {
-                    alert(`Please select at most ${maxUpload} images per upload.`);
+                    alert(`Please select at most ${maxUpload} files per upload.`);
                     fileInput.value = '';
+                    fileInput.setCustomValidity('');
+                    return;
                 }
+
+                Array.from(fileInput.files || []).forEach((file) => {
+                    if (!uploadPreviewGrid) return;
+                    const previewUrl = URL.createObjectURL(file);
+                    uploadPreviewUrls.push(previewUrl);
+                    const card = document.createElement('div');
+                    card.className = 'hero-preview-editor';
+                    const stage = document.createElement('div');
+                    stage.className = 'hero-preview-stage';
+                    const isVideo = /\.(mp4|webm)$/i.test(file.name);
+                    const media = document.createElement(isVideo ? 'video' : 'img');
+                    media.className = 'hero-adjust-media';
+                    if (isVideo) {
+                        media.controls = true;
+                        media.muted = true;
+                        media.playsInline = true;
+                        media.preload = 'metadata';
+                    } else {
+                        media.alt = file.name;
+                    }
+                    media.src = previewUrl;
+                    stage.appendChild(media);
+                    card.appendChild(stage);
+                    const label = document.createElement('p');
+                    label.className = 'form-help';
+                    label.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+                    if (file.size > maxUploadFileBytes) {
+                        label.classList.add('is-error');
+                        label.textContent += ' - exceeds the 5 MB file limit.';
+                    }
+                    card.appendChild(label);
+                    if (isVideo) {
+                        const durationLabel = document.createElement('p');
+                        durationLabel.className = 'form-help';
+                        durationLabel.setAttribute('aria-live', 'polite');
+                        durationLabel.textContent = 'Checking video duration...';
+                        card.appendChild(durationLabel);
+                        media.addEventListener('loadedmetadata', () => {
+                            if (!Number.isFinite(media.duration)) {
+                                durationLabel.textContent = 'Duration unavailable; server validation is required.';
+                            } else if (media.duration > maxVideoDurationSeconds) {
+                                overlongVideoFiles.add(file);
+                                durationLabel.textContent = `Too long: ${media.duration.toFixed(1)} seconds. Maximum is ${maxVideoDurationSeconds} seconds.`;
+                                durationLabel.classList.add('is-error');
+                            } else {
+                                overlongVideoFiles.delete(file);
+                                durationLabel.textContent = `${media.duration.toFixed(1)} seconds`;
+                            }
+                        }, { once: true });
+                        media.addEventListener('error', () => {
+                            durationLabel.textContent = 'Preview unavailable in this browser; server will validate the video.';
+                        }, { once: true });
+                    }
+                    uploadPreviewGrid.appendChild(card);
+                });
             });
+
+            const form = fileInput.closest('form');
+            if (form) {
+                form.addEventListener('submit', (event) => {
+                    if (!overlongVideoFiles.size) return;
+                    event.preventDefault();
+                    alert(`Hero videos must be ${maxVideoDurationSeconds} seconds or shorter.`);
+                });
+            }
         }
 
         const hiddenPositionInput = document.getElementById('heroPositionsJson');
@@ -509,7 +613,7 @@
             if (!hiddenPositionInput || !hiddenOrderInput || !editors.length) return;
             const imageName = editor.dataset.imageName;
             const stage = editor.querySelector('.hero-preview-stage');
-            const image = editor.querySelector('.hero-adjust-image');
+            const image = editor.querySelector('.hero-adjust-media');
             const removeBox = editor.querySelector('input[name=\"remove_hero_images\"]');
             const label = editor.querySelector('[data-position-label]');
 
