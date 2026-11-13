@@ -897,9 +897,12 @@ def _parse_services_json(raw_value):
 def _services_to_editor_text(services):
     lines = []
     for service in services:
+        name = service.get('name', '').strip()
+        description = service.get('description', '').strip()
+        if _is_placeholder_service(name, description):
+            continue
         lines.append(
-            f"{service.get('name', '').strip()} | "
-            f"{service.get('description', '').strip()}"
+            f"{name} | {description}"
         )
     return '\n'.join(lines)
 
@@ -918,7 +921,7 @@ def _parse_services_editor_text(editor_text):
         name = parts[0]
         description = parts[1]
 
-        if not name or not description:
+        if not name or not description or _is_placeholder_service(name, description):
             continue
 
         services.append({
