@@ -1064,30 +1064,6 @@
         white-space: pre-line;
     }
     
-    /* CTA SECTION */
-    
-    .cta-section {
-        background: linear-gradient(135deg, #03595d 0%, #03454a 100%);
-        color: white;
-        padding: 4rem 0;
-        text-align: center;
-        margin: 3rem 0;
-        border-radius: 12px;
-    }
-    
-    .cta-section h2 {
-        color: white;
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .cta-section p {
-        color: rgba(255, 255, 255, 0.9);
-        font-size: 1.1rem;
-        max-width: 600px;
-        margin: 0 auto 2rem;
-    }
-    
     /* STATS SECTION */
     
     .stats-section {
@@ -1151,10 +1127,6 @@
         
         .hero p {
             font-size: 1.05rem;
-        }
-
-        .cta-section h2 {
-            font-size: 1.95rem;
         }
 
         .services-layout,
@@ -1249,10 +1221,6 @@
             flex-direction: column;
         }
         
-        .cta-section h2 {
-            font-size: 1.78rem;
-        }
-
         .services-layout,
         .services-layout.has-banner {
             grid-template-columns: 1fr;
@@ -1342,10 +1310,6 @@
             padding: 0.85rem 1rem;
         }
         
-        .cta-section h2 {
-            font-size: 1.55rem;
-        }
-
         .services-layout,
         .services-layout.has-banner {
             grid-template-columns: 1fr;
@@ -1735,28 +1699,6 @@
 
     .homepage-live-stats [data-live-stat-item][hidden] {
         display: none;
-    }
-
-    .cta-section {
-        position: relative;
-        overflow: hidden;
-        padding: clamp(2.4rem, 6vw, 4.4rem) 1.5rem;
-        border-radius: 24px;
-        background: linear-gradient(120deg, #123b39 0%, #03595d 100%);
-        box-shadow: 0 18px 44px rgba(18, 59, 57, 0.16);
-    }
-
-    .cta-section h2 {
-        max-width: 760px;
-        margin: 0 auto 0.8rem;
-        font-size: clamp(2rem, 4.5vw, 3rem);
-        letter-spacing: -0.04em;
-        line-height: 1.12;
-    }
-
-    .cta-section p {
-        max-width: 660px;
-        margin-bottom: 1.6rem;
     }
 
     .home-reviews {
@@ -2528,17 +2470,6 @@
     </div>
 </section>
 {% endif %}
-
-<!-- CTA SECTION -->
-<div class="container">
-    <section class="cta-section">
-        <h2>Your next step starts with a conversation.</h2>
-        <p>Whether you are planning a visit or have a question, our team is ready to help you get started.</p>
-        <a href="{{ url_for('contact') }}" class="btn btn-hero btn-hero-primary">
-            Talk to our team <i class="fas fa-arrow-right" aria-hidden="true"></i>
-        </a>
-    </section>
-</div>
 
 <!-- FOUNDERS SECTION -->
 {% if founders %}
