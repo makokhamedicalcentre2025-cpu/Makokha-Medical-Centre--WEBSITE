@@ -98,6 +98,14 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=_env_int('SESSION_LIF
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm'}
 MAX_VIDEO_FILE_BYTES = 15 * 1024 * 1024
 MAX_VIDEO_DURATION_SECONDS = 30
+BUILTIN_HOMEPAGE_VIDEOS = (
+    ('service-outpatient.mp4', 'Outpatient Consultation'),
+    ('service-emergency.mp4', 'Emergency Care'),
+    ('service-maternal-child.mp4', 'Maternal and Child Health'),
+    ('service-laboratory.mp4', 'Laboratory Services'),
+    ('service-pharmacy.mp4', 'Pharmacy Services')
+)
+BUILTIN_HOMEPAGE_VIDEOS_SEED_KEY = 'homepage_builtin_videos_seeded'
 
 engine_options = {'pool_pre_ping': True}
 if database_uri.startswith('postgresql://'):
@@ -249,11 +257,7 @@ DEFAULT_SITE_SETTINGS = {
     'contact_address': 'Orivana Care Medical Centre Ltd\nMaliki Market, Bungoma-Kenya',
     'contact_phones': 'Customer Care: +254184289494\nAdmin: +254184279716',
     'contact_emails': 'info@orivanacare.top',
-    'opening_hours': (
-        'Monday - Friday: 9:00 AM - 5:00 PM\n'
-        'Saturday: 9:00 AM - 1:00 PM\n'
-        'Sunday: Emergency Only'
-    ),
+    'opening_hours': 'Open 24/7',
     'services_json': json.dumps(FACILITY_SERVICES),
     'services_banner_image': '',
     'services_banner_position_json': '{"x": 50.0, "y": 50.0}',
@@ -271,6 +275,11 @@ DEFAULT_SITE_SETTINGS = {
         'Press the button below to alert customer care immediately.'
     )
 }
+LEGACY_DEFAULT_OPENING_HOURS = (
+    'Monday - Friday: 9:00 AM - 5:00 PM\n'
+    'Saturday: 9:00 AM - 1:00 PM\n'
+    'Sunday: Emergency Only'
+)
 
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 MAX_HERO_IMAGES_PER_UPLOAD = 10
@@ -1250,6 +1259,58 @@ def _save_uploaded_video(file_obj, filename, owner_type='homepage_video'):
     return len(payload)
 
 
+def _seed_builtin_homepage_videos():
+    """Make the bundled illustrative service videos available to the homepage and admin."""
+    seeded_flag = SiteSetting.query.filter_by(
+        setting_key=BUILTIN_HOMEPAGE_VIDEOS_SEED_KEY
+    ).first()
+    if seeded_flag:
+        return
+
+    video_directory = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        'assets',
+        'homepage-videos'
+    )
+    missing_files = [
+        filename for filename, _title in BUILTIN_HOMEPAGE_VIDEOS
+        if not os.path.isfile(os.path.join(video_directory, filename))
+    ]
+    if missing_files:
+        raise FileNotFoundError(
+            'Bundled homepage videos are missing: ' + ', '.join(missing_files)
+        )
+
+    seeded_count = 0
+    for filename, title in BUILTIN_HOMEPAGE_VIDEOS:
+        if HomepageVideo.query.filter_by(filename=filename).first():
+            continue
+
+        with open(os.path.join(video_directory, filename), 'rb') as video_file:
+            payload = video_file.read(MAX_VIDEO_FILE_BYTES + 1)
+        if not payload or len(payload) > MAX_VIDEO_FILE_BYTES:
+            raise ValueError(f'Bundled homepage video {filename} is empty or too large.')
+        if b'ftyp' not in payload[:32]:
+            raise ValueError(f'Bundled homepage video {filename} is not a valid MP4 file.')
+
+        _store_uploaded_asset(
+            filename=filename,
+            payload_bytes=payload,
+            content_type='video/mp4',
+            original_filename=filename,
+            owner_type='homepage_video'
+        )
+        db.session.add(HomepageVideo(filename=filename, title=title, is_active=True))
+        seeded_count += 1
+
+    db.session.add(SiteSetting(
+        setting_key=BUILTIN_HOMEPAGE_VIDEOS_SEED_KEY,
+        setting_value='1'
+    ))
+    db.session.commit()
+    app.logger.info('Seeded %s built-in homepage service videos.', seeded_count)
+
+
 def _parse_uploaded_image_list(raw_value):
     """Decode stored JSON filename list for uploaded images."""
     if not raw_value:
@@ -1358,6 +1419,8 @@ def get_site_content():
     for key, legacy_value in legacy_contact_settings.items():
         if data.get(key, '').strip() == legacy_value:
             data[key] = DEFAULT_SITE_SETTINGS[key]
+    if data.get('opening_hours', '').strip() == LEGACY_DEFAULT_OPENING_HOURS:
+        data['opening_hours'] = DEFAULT_SITE_SETTINGS['opening_hours']
 
     services = _parse_services_json(data.get('services_json'))
     data['services'] = services
@@ -2467,6 +2530,7 @@ def _ensure_runtime_schema_once():
         ensure_event_schema()
         ensure_site_settings()
         _migrate_referenced_uploads_to_database()
+        _seed_builtin_homepage_videos()
         RUNTIME_SCHEMA_READY = True
 
 

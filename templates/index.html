@@ -328,11 +328,25 @@
     }
 
     .services-banner-wrap {
+        display: grid;
+        gap: 1rem;
         min-width: 0;
     }
 
+    .services-media-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        gap: 1rem;
+        min-width: 0;
+    }
+
+    .services-media-grid.has-video-and-banner {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .services-video-reel {
-        margin-top: 1rem;
+        min-width: 0;
     }
 
     .services-video-reel video {
@@ -346,6 +360,7 @@
 
     .services-video-caption {
         display: flex;
+        flex-wrap: wrap;
         align-items: baseline;
         justify-content: space-between;
         gap: 0.75rem;
@@ -355,6 +370,8 @@
     }
 
     .services-video-caption strong {
+        min-width: 0;
+        overflow-wrap: anywhere;
         color: #173c3b;
     }
 
@@ -1145,6 +1162,10 @@
             grid-template-columns: 1fr;
         }
 
+        .services-media-grid.has-video-and-banner {
+            grid-template-columns: 1fr;
+        }
+
         .people-slider-arrow {
             width: 34px;
             height: 34px;
@@ -1231,6 +1252,10 @@
 
         .services-layout,
         .services-layout.has-banner {
+            grid-template-columns: 1fr;
+        }
+
+        .services-media-grid.has-video-and-banner {
             grid-template-columns: 1fr;
         }
 
@@ -2042,9 +2067,7 @@
                         {% for opening_line in site_content.opening_hours_lines %}
                             <li>{{ opening_line }}</li>
                         {% else %}
-                            <li>Monday - Friday: 9:00 AM - 5:00 PM</li>
-                            <li>Saturday: 9:00 AM - 1:00 PM</li>
-                            <li>Sunday: Emergency Only</li>
+                            <li>Open 24/7</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -2052,27 +2075,29 @@
 
             {% if site_content.services_banner_image_url or homepage_videos %}
             <div class="services-banner-wrap">
-                {% if site_content.services_banner_image_url %}
-                <div class="services-banner fade-in">
-                    <img src="{{ site_content.services_banner_image_url }}" alt="Orivana Care Medical Services Banner" loading="lazy" decoding="async" style="object-position: {{ '%.2f'|format(site_content.services_banner_position.x) }}% {{ '%.2f'|format(site_content.services_banner_position.y) }}%;">
-                </div>
-                {% endif %}
-                {% if homepage_videos %}
-                <div class="services-video-reel fade-in" data-services-video-reel>
-                    <video controls muted playsinline preload="none" aria-label="Short video about Orivana Care">
-                        <source src="{{ homepage_videos[0].url }}" type="{{ homepage_videos[0].content_type }}">
-                    </video>
-                    <div class="services-video-sources" hidden>
-                        {% for video in homepage_videos %}
-                        <span data-video-url="{{ video.url }}" data-video-type="{{ video.content_type }}" data-video-title="{{ video.title }}"></span>
-                        {% endfor %}
+                <div class="services-media-grid{% if site_content.services_banner_image_url and homepage_videos %} has-video-and-banner{% endif %}">
+                    {% if site_content.services_banner_image_url %}
+                    <div class="services-banner fade-in">
+                        <img src="{{ site_content.services_banner_image_url }}" alt="Orivana Care Medical Services Banner" loading="lazy" decoding="async" style="object-position: {{ '%.2f'|format(site_content.services_banner_position.x) }}% {{ '%.2f'|format(site_content.services_banner_position.y) }}%;">
                     </div>
-                    <div class="services-video-caption">
-                        <strong data-video-title-label>{{ homepage_videos[0].title }}</strong>
-                        <span data-video-status aria-live="polite">Short videos from our care team</span>
+                    {% endif %}
+                    {% if homepage_videos %}
+                    <div class="services-video-reel fade-in" data-services-video-reel>
+                        <video controls muted playsinline preload="none" aria-label="Short video about Orivana Care">
+                            <source src="{{ homepage_videos[0].url }}" type="{{ homepage_videos[0].content_type }}">
+                        </video>
+                        <div class="services-video-sources" hidden>
+                            {% for video in homepage_videos %}
+                            <span data-video-url="{{ video.url }}" data-video-type="{{ video.content_type }}" data-video-title="{{ video.title }}"></span>
+                            {% endfor %}
+                        </div>
+                        <div class="services-video-caption">
+                            <strong data-video-title-label>{{ homepage_videos[0].title }}</strong>
+                            <span data-video-status aria-live="polite">Illustrative service animations</span>
+                        </div>
                     </div>
+                    {% endif %}
                 </div>
-                {% endif %}
                 <div class="services-next-step">
                     <div>
                         <h3>Need help choosing a service?</h3>
@@ -2515,7 +2540,8 @@
 
     (function initServicesVideoReel() {
         const reel = document.querySelector('[data-services-video-reel]');
-        if (!reel) return;
+        const servicesSection = document.getElementById('services-offered');
+        if (!reel || !servicesSection) return;
 
         const video = reel.querySelector('video');
         const titleLabel = reel.querySelector('[data-video-title-label]');
@@ -2533,6 +2559,16 @@
 
         let currentIndex = -1;
         let hasStarted = false;
+        const requestPlayback = (failureMessage) => {
+            const playRequest = video.play();
+            if (playRequest && typeof playRequest.catch === 'function') {
+                playRequest.catch((error) => {
+                    console.warn('Homepage video playback could not start or resume.', error);
+                    if (statusLabel) statusLabel.textContent = failureMessage;
+                });
+            }
+        };
+
         const playRandomVideo = () => {
             if (sources.length === 1) {
                 currentIndex = 0;
@@ -2548,14 +2584,7 @@
             video.src = currentVideo.url;
             video.load();
             if (titleLabel) titleLabel.textContent = currentVideo.title;
-
-            const playRequest = video.play();
-            if (playRequest && typeof playRequest.catch === 'function') {
-                playRequest.catch((error) => {
-                    console.warn('Homepage video autoplay could not start.', error);
-                    if (statusLabel) statusLabel.textContent = 'Press play to watch this video.';
-                });
-            }
+            requestPlayback('Press play to watch this video.');
         };
 
         video.addEventListener('ended', playRandomVideo);
@@ -2566,8 +2595,23 @@
 
         const startWhenVisible = () => {
             if (typeof IntersectionObserver !== 'function') {
-                hasStarted = true;
-                playRandomVideo();
+                const updatePlayback = () => {
+                    const bounds = servicesSection.getBoundingClientRect();
+                    const isVisible = bounds.bottom > 0 && bounds.top < window.innerHeight;
+                    if (isVisible) {
+                        if (!hasStarted) {
+                            hasStarted = true;
+                            playRandomVideo();
+                        } else if (video.paused) {
+                            requestPlayback('Press play to resume this video.');
+                        }
+                    } else {
+                        video.pause();
+                    }
+                };
+                window.addEventListener('scroll', updatePlayback, { passive: true });
+                window.addEventListener('resize', updatePlayback);
+                updatePlayback();
                 return;
             }
 
@@ -2578,19 +2622,13 @@
                         hasStarted = true;
                         playRandomVideo();
                     } else if (video.paused) {
-                        const playRequest = video.play();
-                        if (playRequest && typeof playRequest.catch === 'function') {
-                            playRequest.catch((error) => {
-                                console.warn('Homepage video playback could not resume.', error);
-                                if (statusLabel) statusLabel.textContent = 'Press play to resume this video.';
-                            });
-                        }
+                        requestPlayback('Press play to resume this video.');
                     }
                 } else {
                     video.pause();
                 }
-            }, { rootMargin: '100px' });
-            observer.observe(reel);
+            });
+            observer.observe(servicesSection);
         };
 
         startWhenVisible();
