@@ -2045,7 +2045,8 @@ def _send_plain_email(recipient_email, subject, plain_text):
         method='POST',
         headers={
             'Authorization': f'Bearer {resend_api_key}',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'User-Agent': 'Makokha-Medical-Centre-Website/1.0'
         }
     )
 
@@ -2079,6 +2080,11 @@ def _send_plain_email(recipient_email, subject, plain_text):
         error_message = error_payload.get('message')
         if isinstance(error_message, str) and error_message.strip():
             return False, f'Resend rejected the email: {error_message.strip()}'
+        if getattr(exc, 'code', None) == 403 and '1010' in error_body:
+            return False, (
+                'Resend blocked the request with error 1010. The request now includes a User-Agent; '
+                'if this continues, verify the Render deployment and contact Resend support.'
+            )
         return False, f'Resend HTTP error: {getattr(exc, "code", "unknown")}'
     except Exception as exc:
         app.logger.error('Resend send failed: %s', str(exc))
