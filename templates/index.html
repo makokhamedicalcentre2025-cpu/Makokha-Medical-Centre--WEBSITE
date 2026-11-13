@@ -870,7 +870,85 @@
 
     .events-home-list {
         display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .events-carousel.has-controls {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .events-carousel-viewport {
+        position: relative;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-radius: 14px;
+        overscroll-behavior-x: contain;
+        scroll-behavior: smooth;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .events-carousel-viewport::-webkit-scrollbar {
+        display: none;
+    }
+
+    .events-carousel:not(.has-controls) .events-carousel-viewport {
+        overflow: hidden;
+        scroll-snap-type: none;
+    }
+
+    .events-carousel-viewport:focus-visible {
+        outline: 3px solid #d7ad45;
+        outline-offset: 3px;
+    }
+
+    .events-carousel-track {
+        display: flex;
+        align-items: stretch;
         gap: 1rem;
+    }
+
+    .events-carousel-track > .event-card {
+        flex: 0 0 100%;
+        min-width: 0;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+    }
+
+    .events-carousel-arrow {
+        display: inline-flex;
+        width: 42px;
+        height: 42px;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 50%;
+        background: #03595d;
+        color: #ffffff;
+        cursor: pointer;
+        font-size: 1.05rem;
+        box-shadow: 0 5px 14px rgba(18, 59, 57, 0.16);
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .events-carousel-arrow:hover {
+        background: #123b39;
+        transform: translateY(-1px);
+    }
+
+    .events-carousel-arrow:focus-visible {
+        outline: 3px solid #d7ad45;
+        outline-offset: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .events-carousel-viewport {
+            scroll-behavior: auto;
+        }
     }
 
     .event-card {
@@ -1808,6 +1886,16 @@
             padding: calc(var(--site-header-height, 70px) + 3.6rem) 0 3rem;
         }
 
+        .events-carousel.has-controls {
+            grid-template-columns: 36px minmax(0, 1fr) 36px;
+            gap: 0.45rem;
+        }
+
+        .events-carousel-arrow {
+            width: 36px;
+            height: 36px;
+        }
+
         .hero-content {
             padding: 0;
         }
@@ -2218,6 +2306,7 @@
 <!-- EVENTS SECTION -->
 {% set home_upcoming_events = upcoming_events if upcoming_events is defined else events %}
 {% set home_past_events = past_events if past_events is defined else [] %}
+{% set home_upcoming_event_count = (home_upcoming_events|length) + (1 if telemedicine else 0) %}
 {% if home_upcoming_events or home_past_events or telemedicine %}
 <section class="events-section">
     <div class="container">
@@ -2239,9 +2328,16 @@
         <div class="events-home-group">
             <h3>Upcoming Events</h3>
             {% if home_upcoming_events or telemedicine %}
-            <div class="events-home-list">
+            <div class="events-home-list events-carousel{% if home_upcoming_event_count > 1 %} has-controls{% endif %}" data-events-carousel role="region" aria-roledescription="carousel" aria-label="Upcoming events">
+                {% if home_upcoming_event_count > 1 %}
+                <button type="button" class="events-carousel-arrow" data-events-previous aria-label="Previous upcoming event">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                {% endif %}
+                <div class="events-carousel-viewport" data-events-viewport tabindex="0" aria-label="Upcoming event slides">
+                    <div class="events-carousel-track" data-events-track>
                 {% if telemedicine %}
-                <article class="event-card event-card-upcoming fade-in">
+                <article class="event-card event-card-upcoming fade-in" data-event-slide>
                     <div class="event-content">
                         <div class="event-topline">
                             <span class="event-badge event-badge-type">Telemedicine</span>
@@ -2283,7 +2379,7 @@
                 {% else %}
                     {% set status_label = 'Upcoming' %}
                 {% endif %}
-                <article class="event-card event-card-upcoming fade-in">
+                <article class="event-card event-card-upcoming fade-in" data-event-slide>
                     <div class="event-content">
                         <div class="event-topline">
                             <span class="event-badge event-badge-type">{{ (event.event_type or 'general')|replace('_', ' ')|title }}</span>
@@ -2322,6 +2418,13 @@
                     </div>
                 </article>
                 {% endfor %}
+                    </div>
+                </div>
+                {% if home_upcoming_event_count > 1 %}
+                <button type="button" class="events-carousel-arrow" data-events-next aria-label="Next upcoming event">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+                {% endif %}
             </div>
             {% else %}
             <p style="color: #666;">No upcoming events at the moment.</p>
@@ -2331,7 +2434,14 @@
         <div class="events-home-group">
             <h3>Past Events</h3>
             {% if home_past_events %}
-            <div class="events-home-list">
+            <div class="events-home-list events-carousel{% if home_past_events|length > 1 %} has-controls{% endif %}" data-events-carousel role="region" aria-roledescription="carousel" aria-label="Past events">
+                {% if home_past_events|length > 1 %}
+                <button type="button" class="events-carousel-arrow" data-events-previous aria-label="Previous past event">
+                    <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                </button>
+                {% endif %}
+                <div class="events-carousel-viewport" data-events-viewport tabindex="0" aria-label="Past event slides">
+                    <div class="events-carousel-track" data-events-track>
                 {% for event in home_past_events %}
                 {% set status_value = event.normalized_status() %}
                 {% if status_value == 'ongoing' %}
@@ -2341,7 +2451,7 @@
                 {% else %}
                     {% set status_label = 'Upcoming' %}
                 {% endif %}
-                <article class="event-card event-card-past fade-in">
+                <article class="event-card event-card-past fade-in" data-event-slide>
                     <div class="event-media">
                         {% set media_slides = event_slides_map.get(event.id, []) %}
                         {% if media_slides %}
@@ -2380,6 +2490,13 @@
                     </div>
                 </article>
                 {% endfor %}
+                    </div>
+                </div>
+                {% if home_past_events|length > 1 %}
+                <button type="button" class="events-carousel-arrow" data-events-next aria-label="Next past event">
+                    <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                </button>
+                {% endif %}
             </div>
             {% else %}
             <p style="color: #666;">No past events at the moment.</p>
@@ -2709,6 +2826,74 @@
                 return;
             }
             window.location.href = `${baseEventsUrl}?event_type=${encodeURIComponent(selectedType)}`;
+        });
+    })();
+
+    (function initEventsCarousels() {
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        document.querySelectorAll('[data-events-carousel]').forEach((carousel) => {
+            const viewport = carousel.querySelector('[data-events-viewport]');
+            const track = carousel.querySelector('[data-events-track]');
+            const slides = track ? Array.from(track.querySelectorAll('[data-event-slide]')) : [];
+            if (!viewport || slides.length <= 1) return;
+
+            const previousButton = carousel.querySelector('[data-events-previous]');
+            const nextButton = carousel.querySelector('[data-events-next]');
+            let currentIndex = 0;
+            let autoAdvanceTimer = null;
+            let scrollEndTimer = null;
+
+            const updateCurrentIndex = () => {
+                const scrollLeft = viewport.scrollLeft;
+                currentIndex = slides.reduce((nearestIndex, slide, index) => {
+                    const slideLeft = slide.offsetLeft - slides[0].offsetLeft;
+                    const nearestLeft = slides[nearestIndex].offsetLeft - slides[0].offsetLeft;
+                    return Math.abs(slideLeft - scrollLeft) < Math.abs(nearestLeft - scrollLeft)
+                        ? index
+                        : nearestIndex;
+                }, 0);
+            };
+
+            const showSlide = (index) => {
+                currentIndex = (index + slides.length) % slides.length;
+                const slideLeft = slides[currentIndex].offsetLeft - slides[0].offsetLeft;
+                viewport.scrollTo({
+                    left: slideLeft,
+                    behavior: reducedMotion ? 'auto' : 'smooth'
+                });
+            };
+
+            const resetAutoAdvance = () => {
+                if (autoAdvanceTimer) window.clearInterval(autoAdvanceTimer);
+                if (reducedMotion) return;
+                autoAdvanceTimer = window.setInterval(() => {
+                    updateCurrentIndex();
+                    showSlide(currentIndex + 1);
+                }, 30000);
+            };
+
+            if (previousButton) {
+                previousButton.addEventListener('click', () => {
+                    updateCurrentIndex();
+                    showSlide(currentIndex - 1);
+                    resetAutoAdvance();
+                });
+            }
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    updateCurrentIndex();
+                    showSlide(currentIndex + 1);
+                    resetAutoAdvance();
+                });
+            }
+
+            viewport.addEventListener('scroll', () => {
+                updateCurrentIndex();
+                if (scrollEndTimer) window.clearTimeout(scrollEndTimer);
+                scrollEndTimer = window.setTimeout(resetAutoAdvance, 250);
+            }, { passive: true });
+
+            resetAutoAdvance();
         });
     })();
 
