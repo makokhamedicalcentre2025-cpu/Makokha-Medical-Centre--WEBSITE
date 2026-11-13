@@ -495,9 +495,9 @@
         .admin-avatar-sm {
             width: 42px;
             height: 42px;
-            border-radius: 10px;
+            border-radius: 0;
             object-fit: cover;
-            border: 1px solid #d4e4dc;
+            border: 0;
             flex-shrink: 0;
         }
 
@@ -747,10 +747,10 @@
         }
 
         .admin-photo-card {
-            background: var(--admin-surface);
-            border: 1px solid var(--admin-border);
-            border-radius: 14px;
-            box-shadow: var(--admin-shadow-soft);
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -759,7 +759,7 @@
         .admin-photo-image-wrap {
             height: 170px;
             overflow: hidden;
-            background: #edf6f1;
+            background: transparent;
         }
 
         .admin-photo-image {
@@ -770,10 +770,13 @@
         }
 
         .admin-photo-body {
-            padding: 0.9rem;
+            padding: 0.9rem 0 0;
             display: flex;
             flex-direction: column;
             gap: 0.4rem;
+            background: transparent;
+            border: 0;
+            box-shadow: none;
         }
 
         .admin-photo-title {

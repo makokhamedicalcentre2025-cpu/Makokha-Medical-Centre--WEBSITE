@@ -61,18 +61,18 @@
     }
 
     .event-card {
-        background: white;
-        border-radius: 12px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
         overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        box-shadow: none;
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(260px, 36%);
-        transition: all 0.25s ease;
     }
 
     .event-card:hover {
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
-        transform: translateY(-3px);
+        box-shadow: none;
+        transform: none;
     }
 
     .event-card.event-card-past {
@@ -106,7 +106,10 @@
     }
 
     .event-content {
-        padding: 1.2rem 1.25rem;
+        padding: 1rem;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
     }
 
     .event-topline {
@@ -119,19 +122,20 @@
     .event-badge {
         display: inline-flex;
         align-items: center;
-        padding: 0.25rem 0.72rem;
-        border-radius: 999px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
         font-size: 0.78rem;
         font-weight: 600;
     }
 
     .event-badge-type {
-        background: #e7f3f0;
+        background: transparent;
         color: #03595d;
     }
 
     .event-badge-status {
-        background: #eef8f1;
+        background: transparent;
         color: #20843e;
     }
 

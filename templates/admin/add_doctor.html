@@ -42,13 +42,28 @@
     .doctor-image-toolbar {
         margin-top: 0.45rem;
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
     }
 
     .doctor-position-label {
         font-size: 0.78rem;
         color: #607186;
         white-space: nowrap;
+    }
+
+    .doctor-zoom-control {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 190px;
+    }
+
+    .doctor-zoom-control input {
+        flex: 1;
     }
 </style>
 {% endblock %}
@@ -128,6 +143,11 @@
                 </div>
                 <div class="doctor-image-toolbar">
                     <span class="doctor-position-label" id="doctorImagePositionLabel">50% x / 50% y</span>
+                    <label class="doctor-zoom-control">
+                        Zoom
+                        <input type="range" id="doctorImageZoom" min="1" max="2.5" step="0.05" value="1" aria-label="Doctor photo zoom">
+                        <span class="doctor-position-label" id="doctorImageZoomLabel">100%</span>
+                    </label>
                 </div>
             </div>
             <input type="file" id="doctorImageInput" name="image" class="form-control" accept="image/*">
@@ -155,29 +175,41 @@
         const stage = document.getElementById('doctorImageStage');
         const image = document.getElementById('doctorImagePreview');
         const label = document.getElementById('doctorImagePositionLabel');
+        const zoomInput = document.getElementById('doctorImageZoom');
+        const zoomLabel = document.getElementById('doctorImageZoomLabel');
         if (!hiddenInput || !fileInput || !editor || !stage || !image) return;
 
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
-        let position = { x: 50, y: 50 };
+        let position = { x: 50, y: 50, zoom: 1 };
         try {
             const parsed = JSON.parse(hiddenInput.value || '{}');
             position = {
-                x: clamp(Number(parsed.x) || 50, 0, 100),
-                y: clamp(Number(parsed.y) || 50, 0, 100)
+                x: clamp(Number.isFinite(Number(parsed.x)) ? Number(parsed.x) : 50, 0, 100),
+                y: clamp(Number.isFinite(Number(parsed.y)) ? Number(parsed.y) : 50, 0, 100),
+                zoom: clamp(Number.isFinite(Number(parsed.zoom)) ? Number(parsed.zoom) : 1, 1, 2.5)
             };
         } catch (error) {
-            position = { x: 50, y: 50 };
+            position = { x: 50, y: 50, zoom: 1 };
         }
 
         const sync = () => {
             hiddenInput.value = JSON.stringify(position);
             image.style.objectPosition = `${position.x.toFixed(2)}% ${position.y.toFixed(2)}%`;
+            image.style.transform = `scale(${position.zoom})`;
+            if (zoomInput) zoomInput.value = position.zoom.toFixed(2);
+            if (zoomLabel) zoomLabel.textContent = `${Math.round(position.zoom * 100)}%`;
             if (label) {
                 label.textContent = `${Math.round(position.x)}% x / ${Math.round(position.y)}% y`;
             }
         };
         sync();
+        if (zoomInput) {
+            zoomInput.addEventListener('input', () => {
+                position.zoom = clamp(Number(zoomInput.value) || 1, 1, 2.5);
+                sync();
+            });
+        }
 
         let dragging = false;
         let startX = 0;

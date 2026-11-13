@@ -242,30 +242,31 @@
     }
 
     .home-gallery-card {
-        background: #ffffff;
-        border: 1px solid #d6e8df;
-        border-radius: 14px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
         overflow: hidden;
-        box-shadow: 0 10px 24px rgba(15, 34, 60, 0.08);
-        transition: transform 0.24s ease, box-shadow 0.24s ease;
+        box-shadow: none;
     }
 
     .home-gallery-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 16px 30px rgba(15, 34, 60, 0.13);
+        transform: none;
+        box-shadow: none;
     }
 
     .home-gallery-image-wrap {
         position: relative;
         width: 100%;
         aspect-ratio: 4 / 3;
-        background: #e8f3ee;
+        background: transparent;
         overflow: hidden;
     }
 
     .home-gallery-image-wrap img {
+        display: block;
         width: 100%;
         height: 100%;
+        margin: 0;
         object-fit: cover;
     }
 
@@ -361,7 +362,10 @@
         height: auto;
         max-height: min(78vh, 760px);
         object-fit: contain;
-        border-radius: 14px;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
     }
 
     .services-grid {
@@ -376,7 +380,7 @@
         border-radius: 0;
         padding: 0.15rem 0 0.55rem;
         margin: 0;
-        border-bottom: 1px solid #d6e8df;
+        border-bottom: 0;
         box-shadow: none;
     }
 
@@ -490,16 +494,16 @@
     }
     
     .doctor-card {
-        background: white;
-        border-radius: 12px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
         overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
+        box-shadow: none;
     }
     
     .doctor-card:hover {
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        transform: translateY(-8px);
+        box-shadow: none;
+        transform: none;
     }
     
     .doctor-image {
@@ -514,7 +518,10 @@
     }
     
     .doctor-info {
-        padding: 1.5rem;
+        padding: 1rem 0 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
     }
     
     .doctor-name {
@@ -593,41 +600,39 @@
     }
 
     .founder-card {
-        background: #ffffff;
-        border: 1px solid #d6e8df;
-        border-radius: 16px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
         overflow: hidden;
-        box-shadow: 0 10px 26px rgba(15, 34, 60, 0.1);
-        transition: all 0.28s ease;
+        box-shadow: none;
         max-width: 390px;
         margin: 0;
     }
 
     .partner-card {
-        background: #ffffff;
-        border: 1px solid #d6e8df;
-        border-radius: 16px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
         overflow: hidden;
-        box-shadow: 0 10px 26px rgba(15, 34, 60, 0.1);
-        transition: all 0.28s ease;
+        box-shadow: none;
         max-width: 390px;
         margin: 0;
     }
 
     .founder-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 16px 32px rgba(15, 34, 60, 0.14);
+        transform: none;
+        box-shadow: none;
     }
 
     .partner-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 16px 32px rgba(15, 34, 60, 0.14);
+        transform: none;
+        box-shadow: none;
     }
 
     .founder-image {
         width: 100%;
         height: clamp(210px, 30vw, 260px);
-        background: linear-gradient(135deg, #edf6f1 0%, #d1ebe2 100%);
+        background: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -638,7 +643,7 @@
     .partner-image {
         width: 100%;
         height: clamp(210px, 30vw, 260px);
-        background: linear-gradient(135deg, #edf6f1 0%, #d1ebe2 100%);
+        background: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -647,11 +652,17 @@
     }
 
     .founder-details {
-        padding: 1.25rem 1.3rem 1.35rem;
+        padding: 1rem 0 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
     }
 
     .partner-details {
-        padding: 1.25rem 1.3rem 1.35rem;
+        padding: 1rem 0 0;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
     }
 
     .founder-name {
@@ -809,18 +820,18 @@
     }
 
     .event-card {
-        background: #fff;
-        border-radius: 12px;
+        background: transparent;
+        border: 0;
+        border-radius: 0;
         overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        box-shadow: none;
         display: grid;
         grid-template-columns: minmax(0, 1fr) minmax(250px, 36%);
-        transition: all 0.25s ease;
     }
 
     .event-card:hover {
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
-        transform: translateY(-3px);
+        box-shadow: none;
+        transform: none;
     }
 
     .event-card.event-card-past {
@@ -854,7 +865,10 @@
     }
 
     .event-content {
-        padding: 1.2rem 1.25rem;
+        padding: 1rem 0 1rem 1rem;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
     }
 
     .event-topline {
@@ -867,19 +881,20 @@
     .event-badge {
         display: inline-flex;
         align-items: center;
-        padding: 0.24rem 0.72rem;
-        border-radius: 999px;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
         font-size: 0.78rem;
         font-weight: 600;
     }
 
     .event-badge-type {
-        background: #e7f3f0;
+        background: transparent;
         color: #03595d;
     }
 
     .event-badge-status {
-        background: #eef8f1;
+        background: transparent;
         color: #20843e;
     }
 
@@ -1402,7 +1417,7 @@
             <div class="doctor-card fade-in">
                 <div class="doctor-image">
                     {% if doctor.image_filename %}
-                        <img src="{{ uploaded_image_url(doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }};">
+                        <img src="{{ uploaded_image_url(doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((doctor.image_zoom if doctor.image_zoom is not none else 1.0)) }};">
                     {% else %}
                         <i class="fas fa-user-md"></i>
                     {% endif %}
@@ -1677,7 +1692,7 @@
                         <article class="founder-card">
                             <div class="founder-image">
                                 {% if founder.image_filename %}
-                                    <img src="{{ uploaded_image_url(founder.image_filename) }}" alt="{{ founder.full_name }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((founder.image_focus_x if founder.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((founder.image_focus_y if founder.image_focus_y is not none else 50.0)) }};">
+                                    <img src="{{ uploaded_image_url(founder.image_filename) }}" alt="{{ founder.full_name }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((founder.image_focus_x if founder.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((founder.image_focus_y if founder.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((founder.image_zoom if founder.image_zoom is not none else 1.0)) }};">
                                 {% else %}
                                     <i class="fas fa-user-tie"></i>
                                 {% endif %}
@@ -1721,7 +1736,7 @@
                         <article class="partner-card">
                             <div class="partner-image">
                                 {% if partner.image_filename %}
-                                    <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                                    <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" style="width: 100%; height: 100%; object-fit: cover; object-position: center; --profile-image-zoom: {{ '%.2f'|format((partner.image_zoom if partner.image_zoom is not none else 1.0)) }};">
                                 {% else %}
                                     <i class="fas fa-handshake"></i>
                                 {% endif %}

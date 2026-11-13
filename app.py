@@ -15,6 +15,7 @@ import re
 import json
 import threading
 import hashlib
+import math
 import mimetypes
 from uuid import uuid4
 from sqlalchemy import desc, inspect, text, or_, func
@@ -331,6 +332,7 @@ class Doctor(db.Model):
     image_filename = db.Column(db.String(255), nullable=True)
     image_focus_x = db.Column(db.Float, default=50.0)
     image_focus_y = db.Column(db.Float, default=50.0)
+    image_zoom = db.Column(db.Float, default=1.0)
     available_days = db.Column(db.String(255), nullable=True)  # JSON string of days
     consulting_hours = db.Column(db.String(100), nullable=True)  # e.g., "9:00 AM - 5:00 PM"
     is_active = db.Column(db.Boolean, default=True)
@@ -356,6 +358,7 @@ class Founder(db.Model):
     image_filename = db.Column(db.String(255), nullable=True)
     image_focus_x = db.Column(db.Float, default=50.0)
     image_focus_y = db.Column(db.Float, default=50.0)
+    image_zoom = db.Column(db.Float, default=1.0)
     display_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -374,6 +377,7 @@ class Partner(db.Model):
     title = db.Column(db.String(160), nullable=False)
     bio = db.Column(db.Text, nullable=True)
     image_filename = db.Column(db.String(255), nullable=True)
+    image_zoom = db.Column(db.Float, default=1.0)
     display_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
@@ -1562,9 +1566,20 @@ def _clamp_focus_percent(value, default=50.0):
     return max(0.0, min(100.0, numeric_value))
 
 
-def _parse_focus_position_json(raw_value):
-    """Parse one focus position payload ({x, y})."""
-    fallback = {'x': 50.0, 'y': 50.0}
+def _clamp_image_zoom(value, default=1.0):
+    """Clamp a profile-image zoom multiplier to the supported range."""
+    try:
+        numeric_value = float(value)
+    except (TypeError, ValueError):
+        numeric_value = float(default)
+    if not math.isfinite(numeric_value):
+        numeric_value = float(default)
+    return max(1.0, min(2.5, numeric_value))
+
+
+def _parse_focus_position_json(raw_value, default_zoom=1.0):
+    """Parse saved image positioning and zoom settings."""
+    fallback = {'x': 50.0, 'y': 50.0, 'zoom': _clamp_image_zoom(default_zoom)}
     if not raw_value:
         return fallback
 
@@ -1578,7 +1593,8 @@ def _parse_focus_position_json(raw_value):
 
     return {
         'x': _clamp_focus_percent(parsed.get('x'), 50.0),
-        'y': _clamp_focus_percent(parsed.get('y'), 50.0)
+        'y': _clamp_focus_percent(parsed.get('y'), 50.0),
+        'zoom': _clamp_image_zoom(parsed.get('zoom', default_zoom), default_zoom)
     }
 
 
@@ -1667,7 +1683,7 @@ def _attach_uploaded_event_images(event, uploaded_files):
 
 
 def _ensure_founder_table():
-    """Ensure founder table and image-focus columns exist for older DB files."""
+    """Ensure founder image-focus and zoom columns exist for older databases."""
     global FOUNDER_TABLE_READY
     if FOUNDER_TABLE_READY:
         return
@@ -1685,29 +1701,41 @@ def _ensure_founder_table():
     if 'image_focus_y' not in existing_columns:
         db.session.execute(text("ALTER TABLE founder ADD COLUMN image_focus_y FLOAT DEFAULT 50.0"))
         schema_changed = True
+    if 'image_zoom' not in existing_columns:
+        db.session.execute(text("ALTER TABLE founder ADD COLUMN image_zoom FLOAT DEFAULT 1.0"))
+        schema_changed = True
 
     if schema_changed:
         db.session.commit()
 
     db.session.execute(text("UPDATE founder SET image_focus_x = 50.0 WHERE image_focus_x IS NULL"))
     db.session.execute(text("UPDATE founder SET image_focus_y = 50.0 WHERE image_focus_y IS NULL"))
+    db.session.execute(text("UPDATE founder SET image_zoom = 1.0 WHERE image_zoom IS NULL"))
     db.session.commit()
     FOUNDER_TABLE_READY = True
 
 
 def _ensure_partner_table():
-    """Ensure partner table exists for deployments on older DB files."""
+    """Ensure partner table and image-zoom column exist for older databases."""
     global PARTNER_TABLE_READY
     if PARTNER_TABLE_READY:
         return
     inspector = inspect(db.engine)
     if 'partner' not in inspector.get_table_names():
         Partner.__table__.create(db.engine, checkfirst=True)
+
+    inspector = inspect(db.engine)
+    existing_columns = {column['name'] for column in inspector.get_columns('partner')}
+    if 'image_zoom' not in existing_columns:
+        db.session.execute(text("ALTER TABLE partner ADD COLUMN image_zoom FLOAT DEFAULT 1.0"))
+        db.session.commit()
+    db.session.execute(text("UPDATE partner SET image_zoom = 1.0 WHERE image_zoom IS NULL"))
+    db.session.commit()
     PARTNER_TABLE_READY = True
 
 
 def _ensure_doctor_schema():
-    """Ensure doctor image-focus columns exist for drag-position support."""
+    """Ensure doctor image-focus and zoom columns exist for image adjustment."""
     global DOCTOR_SCHEMA_READY
     if DOCTOR_SCHEMA_READY:
         return
@@ -1725,12 +1753,16 @@ def _ensure_doctor_schema():
     if 'image_focus_y' not in existing_columns:
         db.session.execute(text("ALTER TABLE doctor ADD COLUMN image_focus_y FLOAT DEFAULT 50.0"))
         schema_changed = True
+    if 'image_zoom' not in existing_columns:
+        db.session.execute(text("ALTER TABLE doctor ADD COLUMN image_zoom FLOAT DEFAULT 1.0"))
+        schema_changed = True
 
     if schema_changed:
         db.session.commit()
 
     db.session.execute(text("UPDATE doctor SET image_focus_x = 50.0 WHERE image_focus_x IS NULL"))
     db.session.execute(text("UPDATE doctor SET image_focus_y = 50.0 WHERE image_focus_y IS NULL"))
+    db.session.execute(text("UPDATE doctor SET image_zoom = 1.0 WHERE image_zoom IS NULL"))
     db.session.commit()
     DOCTOR_SCHEMA_READY = True
 
@@ -3321,7 +3353,7 @@ def admin_founders():
 def admin_add_founder():
     """Add founder profile."""
     _ensure_founder_table()
-    founder_focus = {'x': 50.0, 'y': 50.0}
+    founder_focus = {'x': 50.0, 'y': 50.0, 'zoom': 1.0}
     if request.method == 'POST':
         try:
             founder_focus = _parse_focus_position_json(request.form.get('founder_image_position_json'))
@@ -3331,6 +3363,7 @@ def admin_add_founder():
                 bio=(request.form.get('bio') or '').strip(),
                 image_focus_x=founder_focus['x'],
                 image_focus_y=founder_focus['y'],
+                image_zoom=founder_focus['zoom'],
                 display_order=request.form.get('display_order', type=int) or 0,
                 is_active=request.form.get('is_active') == 'on'
             )
@@ -3370,17 +3403,22 @@ def admin_edit_founder(founder_id):
     founder = Founder.query.get_or_404(founder_id)
     founder_focus = {
         'x': _clamp_focus_percent(founder.image_focus_x, 50.0),
-        'y': _clamp_focus_percent(founder.image_focus_y, 50.0)
+        'y': _clamp_focus_percent(founder.image_focus_y, 50.0),
+        'zoom': _clamp_image_zoom(founder.image_zoom, 1.0)
     }
 
     if request.method == 'POST':
         try:
-            founder_focus = _parse_focus_position_json(request.form.get('founder_image_position_json'))
+            founder_focus = _parse_focus_position_json(
+                request.form.get('founder_image_position_json'),
+                default_zoom=founder.image_zoom or 1.0
+            )
             founder.full_name = (request.form.get('full_name') or '').strip()
             founder.title = (request.form.get('title') or '').strip()
             founder.bio = (request.form.get('bio') or '').strip()
             founder.image_focus_x = founder_focus['x']
             founder.image_focus_y = founder_focus['y']
+            founder.image_zoom = founder_focus['zoom']
             founder.display_order = request.form.get('display_order', type=int) or 0
             founder.is_active = request.form.get('is_active') == 'on'
 
@@ -3458,6 +3496,7 @@ def admin_add_partner():
                 full_name=(request.form.get('full_name') or '').strip(),
                 title=(request.form.get('title') or '').strip(),
                 bio=(request.form.get('bio') or '').strip(),
+                image_zoom=_clamp_image_zoom(request.form.get('partner_image_zoom'), 1.0),
                 display_order=request.form.get('display_order', type=int) or 0,
                 is_active=request.form.get('is_active') == 'on'
             )
@@ -3486,7 +3525,7 @@ def admin_add_partner():
             db.session.rollback()
             flash(f'Error adding partner: {str(e)}', 'error')
 
-    return render_template('admin/add_partner.html')
+    return render_template('admin/add_partner.html', partner_zoom=1.0)
 
 
 @app.route('/admin/partner/edit/<int:partner_id>', methods=['GET', 'POST'])
@@ -3501,6 +3540,10 @@ def admin_edit_partner(partner_id):
             partner.full_name = (request.form.get('full_name') or '').strip()
             partner.title = (request.form.get('title') or '').strip()
             partner.bio = (request.form.get('bio') or '').strip()
+            partner.image_zoom = _clamp_image_zoom(
+                request.form.get('partner_image_zoom'),
+                partner.image_zoom or 1.0
+            )
             partner.display_order = request.form.get('display_order', type=int) or 0
             partner.is_active = request.form.get('is_active') == 'on'
 
@@ -3536,7 +3579,11 @@ def admin_edit_partner(partner_id):
             db.session.rollback()
             flash(f'Error updating partner: {str(e)}', 'error')
 
-    return render_template('admin/edit_partner.html', partner=partner)
+    return render_template(
+        'admin/edit_partner.html',
+        partner=partner,
+        partner_zoom=_clamp_image_zoom(partner.image_zoom, 1.0)
+    )
 
 
 @app.route('/admin/partner/delete/<int:partner_id>', methods=['POST'])
@@ -3577,7 +3624,8 @@ def admin_add_doctor():
                 available_days=request.form.get('available_days'),
                 consulting_hours=request.form.get('consulting_hours'),
                 image_focus_x=doctor_focus['x'],
-                image_focus_y=doctor_focus['y']
+                image_focus_y=doctor_focus['y'],
+                image_zoom=doctor_focus['zoom']
             )
             
             # Handle image upload
@@ -3599,7 +3647,10 @@ def admin_add_doctor():
             db.session.rollback()
             flash(f'Error adding doctor: {str(e)}', 'error')
     
-    return render_template('admin/add_doctor.html', doctor_focus={'x': 50.0, 'y': 50.0})
+    return render_template(
+        'admin/add_doctor.html',
+        doctor_focus={'x': 50.0, 'y': 50.0, 'zoom': 1.0}
+    )
 
 
 @app.route('/admin/doctor/edit/<int:doctor_id>', methods=['GET', 'POST'])
@@ -3611,7 +3662,10 @@ def admin_edit_doctor(doctor_id):
     
     if request.method == 'POST':
         try:
-            doctor_focus = _parse_focus_position_json(request.form.get('doctor_image_position_json'))
+            doctor_focus = _parse_focus_position_json(
+                request.form.get('doctor_image_position_json'),
+                default_zoom=doctor.image_zoom or 1.0
+            )
             doctor.first_name = request.form.get('first_name')
             doctor.last_name = request.form.get('last_name')
             doctor.specialty = request.form.get('specialty')
@@ -3623,6 +3677,7 @@ def admin_edit_doctor(doctor_id):
             doctor.consulting_hours = request.form.get('consulting_hours')
             doctor.image_focus_x = doctor_focus['x']
             doctor.image_focus_y = doctor_focus['y']
+            doctor.image_zoom = doctor_focus['zoom']
             
             # Handle image upload
             if 'image' in request.files:
@@ -3652,7 +3707,8 @@ def admin_edit_doctor(doctor_id):
     
     doctor_focus = {
         'x': _clamp_focus_percent(doctor.image_focus_x, 50.0),
-        'y': _clamp_focus_percent(doctor.image_focus_y, 50.0)
+        'y': _clamp_focus_percent(doctor.image_focus_y, 50.0),
+        'zoom': _clamp_image_zoom(doctor.image_zoom, 1.0)
     }
     return render_template('admin/edit_doctor.html', doctor=doctor, doctor_focus=doctor_focus)
 
