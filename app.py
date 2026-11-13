@@ -854,6 +854,13 @@ def _copy_default_services():
     return [{**service} for service in FACILITY_SERVICES]
 
 
+def _is_placeholder_service(name, description):
+    return (
+        str(name or '').strip().casefold() == 'burner below'
+        and str(description or '').strip().casefold() == 'fa-user-doctor'
+    )
+
+
 def _split_non_empty_lines(value):
     return [line.strip() for line in (value or '').splitlines() if line.strip()]
 
@@ -877,7 +884,7 @@ def _parse_services_json(raw_value):
             continue
         name = str(item.get('name') or '').strip()
         description = str(item.get('description') or '').strip()
-        if not name or not description:
+        if not name or not description or _is_placeholder_service(name, description):
             continue
         services.append({
             'name': name,
@@ -1611,7 +1618,7 @@ def _upsert_site_settings(updates):
 
 
 def _remove_retired_service_content():
-    """Remove retired hours and service-icon data from saved settings."""
+    """Remove retired hours and placeholder service content from saved settings."""
     changed = False
     opening_hours_setting = SiteSetting.query.filter_by(setting_key='opening_hours').first()
     if opening_hours_setting:
@@ -1632,6 +1639,8 @@ def _remove_retired_service_content():
                     continue
                 name = str(service.get('name') or '').strip()
                 description = str(service.get('description') or '').strip()
+                if _is_placeholder_service(name, description):
+                    continue
                 if name.casefold() == 'emergency care' and '24/7' in description:
                     description = 'Emergency response and urgent stabilization services.'
                 if name and description:
