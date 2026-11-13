@@ -565,8 +565,8 @@
                 const dx = event.clientX - startX;
                 const dy = event.clientY - startY;
 
-                position.x = clamp(originX + ((dx / width) * 100), 0, 100);
-                position.y = clamp(originY + ((dy / height) * 100), 0, 100);
+                position.x = clamp(originX - ((dx / width) * 100), 0, 100);
+                position.y = clamp(originY - ((dy / height) * 100), 0, 100);
                 positionMap[imageName] = position;
                 renderPosition();
                 syncPositionInput();
@@ -656,8 +656,8 @@
                 const dx = event.clientX - startX;
                 const dy = event.clientY - startY;
 
-                servicesPosition.x = clamp(originX + ((dx / width) * 100), 0, 100);
-                servicesPosition.y = clamp(originY + ((dy / height) * 100), 0, 100);
+                servicesPosition.x = clamp(originX - ((dx / width) * 100), 0, 100);
+                servicesPosition.y = clamp(originY - ((dy / height) * 100), 0, 100);
                 renderServicesPosition();
                 syncServicesPosition();
             });

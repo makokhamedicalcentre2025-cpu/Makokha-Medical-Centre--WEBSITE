@@ -66,19 +66,6 @@
             linear-gradient(0deg, rgba(7, 47, 45, 0.08), transparent 58%);
     }
 
-    .hero::after {
-        content: '';
-        position: absolute;
-        width: 280px;
-        height: 280px;
-        right: 7%;
-        bottom: -155px;
-        border: 1px solid rgba(242, 197, 29, 0.5);
-        border-radius: 50%;
-        box-shadow: 0 0 0 28px rgba(242, 197, 29, 0.08), 0 0 0 58px rgba(242, 197, 29, 0.05);
-        pointer-events: none;
-    }
-    
     .hero-content {
         position: relative;
         z-index: 2;
@@ -344,6 +331,33 @@
         min-width: 0;
     }
 
+    .services-video-reel {
+        margin-top: 1rem;
+    }
+
+    .services-video-reel video {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 12px;
+        background: #123b39;
+        object-fit: cover;
+    }
+
+    .services-video-caption {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-top: 0.55rem;
+        color: #5d6775;
+        font-size: 0.88rem;
+    }
+
+    .services-video-caption strong {
+        color: #173c3b;
+    }
+
     .services-banner {
         width: 100%;
         border-radius: 14px;
@@ -368,6 +382,9 @@
         border: 0;
         border-radius: 0;
         box-shadow: none;
+        filter: none;
+        opacity: 1;
+        image-rendering: auto;
     }
 
     .services-grid {
@@ -1294,15 +1311,15 @@
 
     .hero {
         background:
-            linear-gradient(110deg, rgba(7, 40, 39, 0.88) 0%, rgba(7, 40, 39, 0.72) 48%, rgba(7, 40, 39, 0.22) 100%),
-            linear-gradient(0deg, rgba(7, 40, 39, 0.42), transparent 58%),
+            linear-gradient(110deg, rgba(7, 40, 39, 0.48) 0%, rgba(7, 40, 39, 0.26) 48%, rgba(7, 40, 39, 0.08) 100%),
+            linear-gradient(0deg, rgba(7, 40, 39, 0.14), transparent 58%),
             linear-gradient(135deg, #123b39 0%, #03595d 100%);
     }
 
     .hero::before {
         background:
-            linear-gradient(90deg, rgba(7, 40, 39, 0.88) 0%, rgba(7, 40, 39, 0.72) 48%, rgba(7, 40, 39, 0.22) 100%),
-            linear-gradient(0deg, rgba(7, 40, 39, 0.32), transparent 58%);
+            linear-gradient(90deg, rgba(7, 40, 39, 0.48) 0%, rgba(7, 40, 39, 0.26) 48%, rgba(7, 40, 39, 0.08) 100%),
+            linear-gradient(0deg, rgba(7, 40, 39, 0.14), transparent 58%);
     }
 
     .hero-content {
@@ -1392,7 +1409,6 @@
         border-color: rgba(255, 255, 255, 0.75);
         background: rgba(255, 255, 255, 0.08);
         color: #ffffff;
-        backdrop-filter: blur(5px);
     }
 
     .btn-hero-secondary:hover {
@@ -1532,7 +1548,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 1.5rem;
-        margin-top: 2rem;
+        margin-top: 1rem;
         padding: 1.4rem 1.6rem;
         border-left: 4px solid #d7ad45;
         border-radius: 0 14px 14px 0;
@@ -2009,7 +2025,7 @@
         <h2 class="services-heading">Services Offered at Orivana Care Medical Centre Ltd</h2>
         <p class="services-subheading">Comprehensive facility services for outpatient care, diagnostics, treatment, and long-term follow-up.</p>
 
-        <div class="services-layout{% if site_content.services_banner_image_url %} has-banner{% endif %}">
+        <div class="services-layout{% if site_content.services_banner_image_url or homepage_videos %} has-banner{% endif %}">
             <div class="services-details">
                 <div class="services-grid">
                     {% for service in services %}
@@ -2034,24 +2050,53 @@
                 </div>
             </div>
 
-            {% if site_content.services_banner_image_url %}
+            {% if site_content.services_banner_image_url or homepage_videos %}
             <div class="services-banner-wrap">
+                {% if site_content.services_banner_image_url %}
                 <div class="services-banner fade-in">
-                    <img src="{{ site_content.services_banner_image_url }}" alt="Orivana Care Medical Services Banner" style="object-position: {{ '%.2f'|format(site_content.services_banner_position.x) }}% {{ '%.2f'|format(site_content.services_banner_position.y) }}%;">
+                    <img src="{{ site_content.services_banner_image_url }}" alt="Orivana Care Medical Services Banner" loading="lazy" decoding="async" style="object-position: {{ '%.2f'|format(site_content.services_banner_position.x) }}% {{ '%.2f'|format(site_content.services_banner_position.y) }}%;">
+                </div>
+                {% endif %}
+                {% if homepage_videos %}
+                <div class="services-video-reel fade-in" data-services-video-reel>
+                    <video controls muted playsinline preload="none" aria-label="Short video about Orivana Care">
+                        <source src="{{ homepage_videos[0].url }}" type="{{ homepage_videos[0].content_type }}">
+                    </video>
+                    <div class="services-video-sources" hidden>
+                        {% for video in homepage_videos %}
+                        <span data-video-url="{{ video.url }}" data-video-type="{{ video.content_type }}" data-video-title="{{ video.title }}"></span>
+                        {% endfor %}
+                    </div>
+                    <div class="services-video-caption">
+                        <strong data-video-title-label>{{ homepage_videos[0].title }}</strong>
+                        <span data-video-status aria-live="polite">Short videos from our care team</span>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="services-next-step">
+                    <div>
+                        <h3>Need help choosing a service?</h3>
+                        <p>Our team can answer questions and help you plan your visit.</p>
+                    </div>
+                    <a href="{{ url_for('contact') }}" class="btn btn-primary">
+                        Contact our team <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    </a>
                 </div>
             </div>
             {% endif %}
         </div>
 
+        {% if not site_content.services_banner_image_url and not homepage_videos %}
         <div class="services-next-step">
             <div>
-                <h3>Not sure where to start?</h3>
-                <p>Talk to our team about your needs and the right next step.</p>
+                <h3>Need help choosing a service?</h3>
+                <p>Our team can answer questions and help you plan your visit.</p>
             </div>
             <a href="{{ url_for('contact') }}" class="btn btn-primary">
-                Talk to our team <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                Contact our team <i class="fas fa-arrow-right" aria-hidden="true"></i>
             </a>
         </div>
+        {% endif %}
     </div>
 </section>
 
@@ -2067,7 +2112,7 @@
             <div class="doctor-card fade-in">
                 <div class="doctor-image">
                     {% if doctor.image_filename %}
-                        <img src="{{ uploaded_image_url(doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((doctor.image_zoom if doctor.image_zoom is not none else 1.0)) }};">
+                        <img src="{{ uploaded_image_url(doctor.image_filename) }}" alt="{{ doctor.full_name() }}" style="width: 100%; height: 100%; object-fit: {{ 'contain' if doctor.image_zoom is not none and doctor.image_zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format((doctor.image_focus_x if doctor.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((doctor.image_focus_y if doctor.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((doctor.image_zoom if doctor.image_zoom is not none else 1.0)) }};">
                     {% else %}
                         <i class="fas fa-user-md"></i>
                     {% endif %}
@@ -2344,7 +2389,7 @@
                         <article class="founder-card">
                             <div class="founder-image">
                                 {% if founder.image_filename %}
-                                    <img src="{{ uploaded_image_url(founder.image_filename) }}" alt="{{ founder.full_name }}" style="width: 100%; height: 100%; object-fit: cover; object-position: {{ '%.2f'|format((founder.image_focus_x if founder.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((founder.image_focus_y if founder.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((founder.image_zoom if founder.image_zoom is not none else 1.0)) }};">
+                                    <img src="{{ uploaded_image_url(founder.image_filename) }}" alt="{{ founder.full_name }}" style="width: 100%; height: 100%; object-fit: {{ 'contain' if founder.image_zoom is not none and founder.image_zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format((founder.image_focus_x if founder.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((founder.image_focus_y if founder.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((founder.image_zoom if founder.image_zoom is not none else 1.0)) }};">
                                 {% else %}
                                     <i class="fas fa-user-tie"></i>
                                 {% endif %}
@@ -2388,7 +2433,7 @@
                         <article class="partner-card">
                             <div class="partner-image">
                                 {% if partner.image_filename %}
-                                    <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" style="width: 100%; height: 100%; object-fit: cover; object-position: center; --profile-image-zoom: {{ '%.2f'|format((partner.image_zoom if partner.image_zoom is not none else 1.0)) }};">
+                                    <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" style="width: 100%; height: 100%; object-fit: {{ 'contain' if partner.image_zoom is not none and partner.image_zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format((partner.image_focus_x if partner.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((partner.image_focus_y if partner.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((partner.image_zoom if partner.image_zoom is not none else 1.0)) }};">
                                 {% else %}
                                     <i class="fas fa-handshake"></i>
                                 {% endif %}
@@ -2466,6 +2511,89 @@
             currentIndex = (currentIndex + 1) % slideCount;
             track.style.transform = `translate3d(-${currentIndex * 100}%, 0, 0)`;
         }, 10000);
+    })();
+
+    (function initServicesVideoReel() {
+        const reel = document.querySelector('[data-services-video-reel]');
+        if (!reel) return;
+
+        const video = reel.querySelector('video');
+        const titleLabel = reel.querySelector('[data-video-title-label]');
+        const statusLabel = reel.querySelector('[data-video-status]');
+        const sources = Array.from(reel.querySelectorAll('[data-video-url]'))
+            .map((item) => ({
+                url: item.dataset.videoUrl,
+                title: item.dataset.videoTitle
+            }))
+            .filter((item) => item.url);
+        if (!video || !sources.length) return;
+
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reducedMotion) return;
+
+        let currentIndex = -1;
+        let hasStarted = false;
+        const playRandomVideo = () => {
+            if (sources.length === 1) {
+                currentIndex = 0;
+            } else {
+                let nextIndex = Math.floor(Math.random() * sources.length);
+                if (nextIndex === currentIndex) {
+                    nextIndex = (nextIndex + 1 + Math.floor(Math.random() * (sources.length - 1))) % sources.length;
+                }
+                currentIndex = nextIndex;
+            }
+
+            const currentVideo = sources[currentIndex];
+            video.src = currentVideo.url;
+            video.load();
+            if (titleLabel) titleLabel.textContent = currentVideo.title;
+
+            const playRequest = video.play();
+            if (playRequest && typeof playRequest.catch === 'function') {
+                playRequest.catch((error) => {
+                    console.warn('Homepage video autoplay could not start.', error);
+                    if (statusLabel) statusLabel.textContent = 'Press play to watch this video.';
+                });
+            }
+        };
+
+        video.addEventListener('ended', playRandomVideo);
+        video.addEventListener('error', () => {
+            console.error('A homepage video could not be loaded.', video.currentSrc);
+            if (statusLabel) statusLabel.textContent = 'This video could not be played. Please contact the site administrator.';
+        });
+
+        const startWhenVisible = () => {
+            if (typeof IntersectionObserver !== 'function') {
+                hasStarted = true;
+                playRandomVideo();
+                return;
+            }
+
+            const observer = new IntersectionObserver((entries) => {
+                const isVisible = entries.some((entry) => entry.isIntersecting);
+                if (isVisible) {
+                    if (!hasStarted) {
+                        hasStarted = true;
+                        playRandomVideo();
+                    } else if (video.paused) {
+                        const playRequest = video.play();
+                        if (playRequest && typeof playRequest.catch === 'function') {
+                            playRequest.catch((error) => {
+                                console.warn('Homepage video playback could not resume.', error);
+                                if (statusLabel) statusLabel.textContent = 'Press play to resume this video.';
+                            });
+                        }
+                    }
+                } else {
+                    video.pause();
+                }
+            }, { rootMargin: '100px' });
+            observer.observe(reel);
+        };
+
+        startWhenVisible();
     })();
 
     (function initHomeEventTypeRedirect() {

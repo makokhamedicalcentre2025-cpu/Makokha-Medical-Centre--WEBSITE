@@ -1,0 +1,228 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Homepage Videos - Admin Panel{% endblock %}
+{% block page_title %}Homepage Videos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .video-upload-card,
+    .homepage-video-card {
+        border: 1px solid #dce6f3;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 1rem;
+    }
+
+    .video-upload-preview {
+        display: block;
+        width: min(100%, 560px);
+        margin-top: 0.75rem;
+        aspect-ratio: 16 / 9;
+        border-radius: 10px;
+        background: #123b39;
+    }
+
+    .video-upload-status {
+        display: block;
+        margin-top: 0.45rem;
+        color: #46615d;
+        font-size: 0.88rem;
+    }
+
+    .video-upload-status.is-error {
+        color: #a52a2a;
+    }
+
+    .homepage-video-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1rem;
+        margin-top: 1.25rem;
+    }
+
+    .homepage-video-card video {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 8px;
+        background: #123b39;
+    }
+
+    .homepage-video-card h3 {
+        margin: 0.75rem 0 0.25rem;
+        font-size: 1rem;
+    }
+
+    .homepage-video-card p {
+        margin: 0 0 0.75rem;
+        color: #5f6b7a;
+        font-size: 0.84rem;
+    }
+
+    .homepage-video-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 640px) {
+        .homepage-video-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-form-layout">
+    <div class="admin-page-intro">
+        <h1><i class="fas fa-film"></i> Homepage Videos</h1>
+        <p>Upload short clips to the homepage services section. Active videos play one at a time in a random order.</p>
+    </div>
+
+    <section class="video-upload-card">
+        <h2 class="admin-form-title">Add a Video</h2>
+        <p class="admin-field-note">Use MP4 or WebM, keep clips at or under {{ max_video_duration_seconds }} seconds, and keep each file under {{ (max_video_file_bytes / 1024 / 1024)|round|int }} MB. Upload one video at a time. Only publish footage approved for public viewing; obtain consent before uploading identifiable patients.</p>
+        <form method="POST" enctype="multipart/form-data" id="homepageVideoForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label class="form-label" for="homepageVideoTitle">Video title (optional)</label>
+                <input type="text" id="homepageVideoTitle" name="title" class="form-control" maxlength="200" placeholder="e.g., A visit to our clinic">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="homepageVideoFile">MP4 or WebM video</label>
+                <input type="file" id="homepageVideoFile" name="video" class="form-control" accept="video/mp4,video/webm,.mp4,.webm" required>
+                <video id="homepageVideoPreview" class="video-upload-preview" controls muted playsinline preload="metadata" hidden></video>
+                <span id="homepageVideoStatus" class="video-upload-status" role="status">Choose a clip up to {{ max_video_duration_seconds }} seconds long.</span>
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" name="is_active" checked>
+                    Play on the public homepage
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary" id="homepageVideoSubmit">
+                <i class="fas fa-upload" aria-hidden="true"></i> Upload Video
+            </button>
+        </form>
+    </section>
+
+    <section style="margin-top: 1.5rem;">
+        <h2 class="admin-form-title">Uploaded Videos</h2>
+        {% if videos %}
+        <div class="homepage-video-grid">
+            {% for video in videos %}
+            <article class="homepage-video-card">
+                <video controls muted playsinline preload="none" aria-label="Preview: {{ video.title }}">
+                    <source src="{{ uploaded_image_url(video.filename) }}" type="{{ 'video/webm' if video.filename.lower().endswith('.webm') else 'video/mp4' }}">
+                </video>
+                <h3>{{ video.title }}</h3>
+                <p>{{ video.created_at.strftime('%Y-%m-%d %H:%M') }} - {{ 'Active on homepage' if video.is_active else 'Hidden from homepage' }}</p>
+                <div class="homepage-video-actions">
+                    <form method="POST" action="{{ url_for('admin_toggle_video', video_id=video.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline">{{ 'Hide' if video.is_active else 'Show' }}</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin_delete_video', video_id=video.id) }}" onsubmit="return confirm('Delete this video permanently?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline">Delete</button>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="admin-field-note">No videos have been uploaded yet. Upload your first short clip above.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function initHomepageVideoUploadPreview() {
+        const form = document.getElementById('homepageVideoForm');
+        const fileInput = document.getElementById('homepageVideoFile');
+        const preview = document.getElementById('homepageVideoPreview');
+        const status = document.getElementById('homepageVideoStatus');
+        const submitButton = document.getElementById('homepageVideoSubmit');
+        if (!form || !fileInput || !preview || !status || !submitButton) return;
+
+        const maxFileBytes = {{ max_video_file_bytes|int }};
+        const maxDurationSeconds = {{ max_video_duration_seconds|int }};
+        const maxFileMegabytes = Math.round(maxFileBytes / 1024 / 1024);
+        let validationState = 'missing';
+        let previewUrl = '';
+
+        const showStatus = (message, isError) => {
+            status.textContent = message;
+            status.classList.toggle('is-error', Boolean(isError));
+        };
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = '';
+            }
+            preview.removeAttribute('src');
+            preview.hidden = true;
+            preview.load();
+            submitButton.disabled = false;
+
+            if (!file) {
+                validationState = 'missing';
+                showStatus(`Choose a clip up to ${maxDurationSeconds} seconds long.`, false);
+                return;
+            }
+
+            if (file.size > maxFileBytes) {
+                validationState = 'invalid';
+                fileInput.value = '';
+                submitButton.disabled = true;
+                showStatus(`This file is too large. Choose a video no larger than ${maxFileMegabytes} MB.`, true);
+                return;
+            }
+
+            validationState = 'checking';
+            submitButton.disabled = true;
+            showStatus('Checking video duration...', false);
+            previewUrl = URL.createObjectURL(file);
+            const selectedPreviewUrl = previewUrl;
+            preview.hidden = false;
+            preview.addEventListener('loadedmetadata', () => {
+                if (previewUrl !== selectedPreviewUrl) return;
+                const duration = preview.duration;
+                if (!Number.isFinite(duration) || duration <= 0) {
+                    validationState = 'invalid';
+                    showStatus('The video duration could not be read. Choose another MP4 or WebM file.', true);
+                    return;
+                }
+                if (duration > maxDurationSeconds) {
+                    validationState = 'invalid';
+                    showStatus(`This video is ${Math.ceil(duration)} seconds long. Choose a clip of ${maxDurationSeconds} seconds or less.`, true);
+                    return;
+                }
+                validationState = 'valid';
+                submitButton.disabled = false;
+                showStatus(`${duration.toFixed(1)} second clip is ready to upload.`, false);
+            }, { once: true });
+            preview.addEventListener('error', () => {
+                if (previewUrl !== selectedPreviewUrl) return;
+                validationState = 'invalid';
+                showStatus('The video preview could not be loaded. Choose an MP4 or WebM file.', true);
+            }, { once: true });
+            preview.src = previewUrl;
+            preview.load();
+        });
+
+        form.addEventListener('submit', (event) => {
+            if (validationState !== 'valid') {
+                event.preventDefault();
+                showStatus('Select a valid video and wait for its duration check before uploading.', true);
+                fileInput.focus();
+            }
+        });
+    })();
+</script>
+{% endblock %}

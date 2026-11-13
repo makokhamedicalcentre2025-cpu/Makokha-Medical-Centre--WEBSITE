@@ -119,13 +119,13 @@
                     <span class="founder-position-label" id="founderImagePositionLabel">50% x / 50% y</span>
                     <label class="founder-zoom-control">
                         Zoom
-                        <input type="range" id="founderImageZoom" min="1" max="2.5" step="0.05" value="1" aria-label="Founder photo zoom">
+                        <input type="range" id="founderImageZoom" min="0.5" max="2.5" step="0.05" value="1" aria-label="Founder photo zoom">
                         <span class="founder-position-label" id="founderImageZoomLabel">100%</span>
                     </label>
                 </div>
             </div>
             <input type="file" id="founderImageInput" name="image" class="form-control" accept="image/*">
-            <small class="admin-field-note">Upload first, then drag preview to choose exactly what appears on the website before saving.</small>
+            <small class="admin-field-note">Drag the live preview to reposition. Use below 100% to fit more of the photo, or above 100% to crop closer.</small>
         </div>
 
         <div class="admin-form-actions">
@@ -161,7 +161,7 @@
             position = {
                 x: clamp(Number.isFinite(Number(parsed.x)) ? Number(parsed.x) : 50, 0, 100),
                 y: clamp(Number.isFinite(Number(parsed.y)) ? Number(parsed.y) : 50, 0, 100),
-                zoom: clamp(Number.isFinite(Number(parsed.zoom)) ? Number(parsed.zoom) : 1, 1, 2.5)
+                zoom: clamp(Number.isFinite(Number(parsed.zoom)) ? Number(parsed.zoom) : 1, 0.5, 2.5)
             };
         } catch (error) {
             position = { x: 50, y: 50, zoom: 1 };
@@ -170,6 +170,7 @@
         const sync = () => {
             hiddenInput.value = JSON.stringify(position);
             image.style.objectPosition = `${position.x.toFixed(2)}% ${position.y.toFixed(2)}%`;
+            image.style.objectFit = position.zoom < 1 ? 'contain' : 'cover';
             image.style.transform = `scale(${position.zoom})`;
             if (zoomInput) zoomInput.value = position.zoom.toFixed(2);
             if (zoomLabel) zoomLabel.textContent = `${Math.round(position.zoom * 100)}%`;
@@ -180,7 +181,7 @@
         sync();
         if (zoomInput) {
             zoomInput.addEventListener('input', () => {
-                position.zoom = clamp(Number(zoomInput.value) || 1, 1, 2.5);
+                position.zoom = clamp(Number(zoomInput.value) || 1, 0.5, 2.5);
                 sync();
             });
         }
@@ -209,8 +210,8 @@
             const height = Math.max(stage.clientHeight, 1);
             const dx = event.clientX - startX;
             const dy = event.clientY - startY;
-            position.x = clamp(originX + ((dx / width) * 100), 0, 100);
-            position.y = clamp(originY + ((dy / height) * 100), 0, 100);
+            position.x = clamp(originX - ((dx / width) * 100), 0, 100);
+            position.y = clamp(originY - ((dy / height) * 100), 0, 100);
             sync();
         });
 

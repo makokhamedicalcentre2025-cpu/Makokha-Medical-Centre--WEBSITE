@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initMobileMenu();
     initAlerts();
     initScrollBehavior();
+    initBackToTop();
     initFormValidation();
 });
 
@@ -128,8 +129,28 @@ function initScrollBehavior() {
     
     if (!header) return;
 
+    let lastScrollY = Math.max(window.scrollY, 0);
+
     const updateHeaderState = () => {
-        if (window.scrollY > 50) {
+        const currentScrollY = Math.max(window.scrollY, 0);
+        const scrollDelta = currentScrollY - lastScrollY;
+        const navigationIsOpen = header.querySelector('.nav-menu.active, .mobile-menu-toggle.active');
+        const keepHeaderVisible = currentScrollY <= 80 ||
+            header.contains(document.activeElement) ||
+            navigationIsOpen;
+
+        if (keepHeaderVisible) {
+            header.classList.remove('is-hidden');
+            lastScrollY = currentScrollY;
+        } else if (scrollDelta > 8) {
+            header.classList.add('is-hidden');
+            lastScrollY = currentScrollY;
+        } else if (scrollDelta < -8) {
+            header.classList.remove('is-hidden');
+            lastScrollY = currentScrollY;
+        }
+
+        if (currentScrollY > 50) {
             header.classList.add('scrolled');
         } else {
             header.classList.remove('scrolled');
@@ -148,6 +169,28 @@ function initScrollBehavior() {
     updateHeaderState();
     window.addEventListener('scroll', updateHeaderState, { passive: true });
     window.addEventListener('resize', updateHeaderState);
+    window.addEventListener('pageshow', updateHeaderState);
+}
+
+function initBackToTop() {
+    const button = document.getElementById('backToTop');
+    if (!button) return;
+
+    const updateVisibility = () => {
+        button.hidden = window.scrollY < 320 && document.activeElement !== button;
+    };
+
+    button.addEventListener('click', () => {
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({
+            top: 0,
+            behavior: reducedMotion ? 'auto' : 'smooth'
+        });
+    });
+
+    button.addEventListener('blur', updateVisibility);
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
 }
 
 // ================================

@@ -892,6 +892,12 @@
                     </a>
                 </li>
                 <li class="admin-sidebar-item">
+                    <a href="{{ url_for('admin_videos') }}" class="admin-sidebar-link {% if request.endpoint == 'admin_videos' %}active{% endif %}">
+                        <i class="fas fa-film"></i>
+                        Homepage Videos
+                    </a>
+                </li>
+                <li class="admin-sidebar-item">
                     <a href="{{ url_for('admin_doctors') }}" class="admin-sidebar-link {% if 'doctor' in request.endpoint %}active{% endif %}">
                         <i class="fas fa-user-md"></i>
                         Doctors

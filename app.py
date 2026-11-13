@@ -19,6 +19,7 @@ import math
 import mimetypes
 from uuid import uuid4
 from sqlalchemy import desc, inspect, text, or_, func
+from sqlalchemy.exc import SQLAlchemyError
 from urllib.parse import urlparse, urlencode
 from urllib import error as urllib_error
 from urllib import request as urllib_request
@@ -94,6 +95,10 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = IS_PRODUCTION
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=_env_int('SESSION_LIFETIME_HOURS', 12))
 
+ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm'}
+MAX_VIDEO_FILE_BYTES = 15 * 1024 * 1024
+MAX_VIDEO_DURATION_SECONDS = 30
+
 engine_options = {'pool_pre_ping': True}
 if database_uri.startswith('postgresql://'):
     engine_options.update({
@@ -154,7 +159,6 @@ FACILITY_SERVICES = [
     {
         'name': 'Outpatient Consultation',
         'description': 'General and specialist consultations for everyday health concerns.',
-        'icon': 'fa-user-doctor'
     },
     {
         'name': 'Emergency Care',
@@ -377,6 +381,8 @@ class Partner(db.Model):
     title = db.Column(db.String(160), nullable=False)
     bio = db.Column(db.Text, nullable=True)
     image_filename = db.Column(db.String(255), nullable=True)
+    image_focus_x = db.Column(db.Float, default=50.0)
+    image_focus_y = db.Column(db.Float, default=50.0)
     image_zoom = db.Column(db.Float, default=1.0)
     display_order = db.Column(db.Integer, default=0)
     is_active = db.Column(db.Boolean, default=True)
@@ -465,6 +471,20 @@ class Photo(db.Model):
     
     def __repr__(self):
         return f'<Photo {self.filename}>'
+
+
+class HomepageVideo(db.Model):
+    """Short public videos shown in the homepage services section."""
+    __tablename__ = 'homepage_video'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False, unique=True)
+    title = db.Column(db.String(200), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f'<HomepageVideo {self.title}>'
 
 
 class UploadedAsset(db.Model):
@@ -1194,6 +1214,42 @@ def _save_uploaded_image(
     return True
 
 
+def _save_uploaded_video(file_obj, filename, owner_type='homepage_video'):
+    """Validate and store a short browser-playable video in database-backed storage."""
+    safe_filename = _safe_uploaded_filename(filename)
+    if not safe_filename:
+        raise ValueError('Invalid video filename.')
+
+    extension = safe_filename.rsplit('.', 1)[1].lower() if '.' in safe_filename else ''
+    if extension not in ALLOWED_VIDEO_EXTENSIONS:
+        raise ValueError('Video must be MP4 or WebM.')
+
+    payload = _read_uploaded_file_bytes(file_obj)
+    if not payload:
+        raise ValueError('Uploaded video is empty.')
+    if len(payload) > MAX_VIDEO_FILE_BYTES:
+        raise ValueError('Each video must be 15 MB or smaller.')
+
+    content_type_by_extension = {
+        'mp4': 'video/mp4',
+        'webm': 'video/webm'
+    }
+    if extension == 'mp4' and b'ftyp' not in payload[:32]:
+        raise ValueError('The uploaded file is not a valid MP4 video.')
+    if extension == 'webm' and not payload.startswith(b'\x1a\x45\xdf\xa3'):
+        raise ValueError('The uploaded file is not a valid WebM video.')
+
+    original_filename = _safe_uploaded_filename(getattr(file_obj, 'filename', '')) or safe_filename
+    _store_uploaded_asset(
+        filename=safe_filename,
+        payload_bytes=payload,
+        content_type=content_type_by_extension[extension],
+        original_filename=original_filename,
+        owner_type=owner_type
+    )
+    return len(payload)
+
+
 def _parse_uploaded_image_list(raw_value):
     """Decode stored JSON filename list for uploaded images."""
     if not raw_value:
@@ -1574,7 +1630,7 @@ def _clamp_image_zoom(value, default=1.0):
         numeric_value = float(default)
     if not math.isfinite(numeric_value):
         numeric_value = float(default)
-    return max(1.0, min(2.5, numeric_value))
+    return max(0.5, min(2.5, numeric_value))
 
 
 def _parse_focus_position_json(raw_value, default_zoom=1.0):
@@ -1726,9 +1782,21 @@ def _ensure_partner_table():
 
     inspector = inspect(db.engine)
     existing_columns = {column['name'] for column in inspector.get_columns('partner')}
+    schema_changed = False
+    if 'image_focus_x' not in existing_columns:
+        db.session.execute(text("ALTER TABLE partner ADD COLUMN image_focus_x FLOAT DEFAULT 50.0"))
+        schema_changed = True
+    if 'image_focus_y' not in existing_columns:
+        db.session.execute(text("ALTER TABLE partner ADD COLUMN image_focus_y FLOAT DEFAULT 50.0"))
+        schema_changed = True
     if 'image_zoom' not in existing_columns:
         db.session.execute(text("ALTER TABLE partner ADD COLUMN image_zoom FLOAT DEFAULT 1.0"))
+        schema_changed = True
+
+    if schema_changed:
         db.session.commit()
+    db.session.execute(text("UPDATE partner SET image_focus_x = 50.0 WHERE image_focus_x IS NULL"))
+    db.session.execute(text("UPDATE partner SET image_focus_y = 50.0 WHERE image_focus_y IS NULL"))
     db.session.execute(text("UPDATE partner SET image_zoom = 1.0 WHERE image_zoom IS NULL"))
     db.session.commit()
     PARTNER_TABLE_READY = True
@@ -2606,6 +2674,17 @@ def index():
             'description': (photo.description or '').strip(),
             'category': (photo.category or '').strip()
         })
+
+    homepage_videos = []
+    for video in HomepageVideo.query.filter_by(is_active=True).order_by(HomepageVideo.created_at.asc()).all():
+        video_url = _uploaded_image_url(video.filename)
+        if not video_url:
+            continue
+        homepage_videos.append({
+            'url': video_url,
+            'content_type': _guess_mime_type(video.filename, 'video/mp4'),
+            'title': video.title
+        })
     
     return render_template(
         'index.html',
@@ -2623,7 +2702,8 @@ def index():
         event_slides_map=event_slides_map,
         event_type_options=EVENT_TYPE_FILTER_OPTIONS,
         live_stats=live_stats,
-        gallery_photos=gallery_photos
+        gallery_photos=gallery_photos,
+        homepage_videos=homepage_videos
     )
 
 
@@ -3492,11 +3572,16 @@ def admin_add_partner():
     _ensure_partner_table()
     if request.method == 'POST':
         try:
+            partner_focus = _parse_focus_position_json(
+                request.form.get('partner_image_position_json')
+            )
             partner = Partner(
                 full_name=(request.form.get('full_name') or '').strip(),
                 title=(request.form.get('title') or '').strip(),
                 bio=(request.form.get('bio') or '').strip(),
-                image_zoom=_clamp_image_zoom(request.form.get('partner_image_zoom'), 1.0),
+                image_focus_x=partner_focus['x'],
+                image_focus_y=partner_focus['y'],
+                image_zoom=partner_focus['zoom'],
                 display_order=request.form.get('display_order', type=int) or 0,
                 is_active=request.form.get('is_active') == 'on'
             )
@@ -3525,7 +3610,11 @@ def admin_add_partner():
             db.session.rollback()
             flash(f'Error adding partner: {str(e)}', 'error')
 
-    return render_template('admin/add_partner.html', partner_zoom=1.0)
+    return render_template(
+        'admin/add_partner.html',
+        partner_focus={'x': 50.0, 'y': 50.0, 'zoom': 1.0},
+        partner_zoom=1.0
+    )
 
 
 @app.route('/admin/partner/edit/<int:partner_id>', methods=['GET', 'POST'])
@@ -3534,16 +3623,24 @@ def admin_edit_partner(partner_id):
     """Edit partner profile."""
     _ensure_partner_table()
     partner = Partner.query.get_or_404(partner_id)
+    partner_focus = {
+        'x': _clamp_focus_percent(partner.image_focus_x, 50.0),
+        'y': _clamp_focus_percent(partner.image_focus_y, 50.0),
+        'zoom': _clamp_image_zoom(partner.image_zoom, 1.0)
+    }
 
     if request.method == 'POST':
         try:
+            partner_focus = _parse_focus_position_json(
+                request.form.get('partner_image_position_json'),
+                default_zoom=partner.image_zoom or 1.0
+            )
             partner.full_name = (request.form.get('full_name') or '').strip()
             partner.title = (request.form.get('title') or '').strip()
             partner.bio = (request.form.get('bio') or '').strip()
-            partner.image_zoom = _clamp_image_zoom(
-                request.form.get('partner_image_zoom'),
-                partner.image_zoom or 1.0
-            )
+            partner.image_focus_x = partner_focus['x']
+            partner.image_focus_y = partner_focus['y']
+            partner.image_zoom = partner_focus['zoom']
             partner.display_order = request.form.get('display_order', type=int) or 0
             partner.is_active = request.form.get('is_active') == 'on'
 
@@ -3582,7 +3679,8 @@ def admin_edit_partner(partner_id):
     return render_template(
         'admin/edit_partner.html',
         partner=partner,
-        partner_zoom=_clamp_image_zoom(partner.image_zoom, 1.0)
+        partner_focus=partner_focus,
+        partner_zoom=partner_focus['zoom']
     )
 
 
@@ -3976,6 +4074,89 @@ def admin_delete_photo(photo_id):
         flash(f'Error deleting photo: {str(e)}', 'error')
     
     return redirect(url_for('admin_photos'))
+
+
+@app.route('/admin/videos', methods=['GET', 'POST'])
+@admin_required
+def admin_videos():
+    """Upload and manage short videos featured in the homepage services section."""
+    if request.method == 'POST':
+        file_obj = request.files.get('video')
+        if not file_obj or not file_obj.filename:
+            flash('Choose an MP4 or WebM video to upload.', 'error')
+            return redirect(url_for('admin_videos'))
+
+        try:
+            original_name = secure_filename(file_obj.filename)
+            extension = original_name.rsplit('.', 1)[1].lower() if '.' in original_name else ''
+            if extension not in ALLOWED_VIDEO_EXTENSIONS:
+                raise ValueError('Video must be MP4 or WebM.')
+
+            title = (request.form.get('title') or '').strip()
+            if len(title) > 200:
+                raise ValueError('Video title must be 200 characters or fewer.')
+
+            filename = f'homepage_video_{uuid4().hex}.{extension}'
+            _save_uploaded_video(file_obj, filename)
+            video_title = title or os.path.splitext(original_name)[0]
+            db.session.add(
+                HomepageVideo(
+                    filename=filename,
+                    title=video_title[:200],
+                    is_active=request.form.get('is_active') == 'on'
+                )
+            )
+            db.session.commit()
+            flash('Homepage video uploaded successfully.', 'success')
+            return redirect(url_for('admin_videos'))
+        except ValueError as e:
+            db.session.rollback()
+            flash(f'Could not upload video: {str(e)}', 'error')
+        except SQLAlchemyError:
+            db.session.rollback()
+            app.logger.exception('Homepage video upload failed.')
+            flash('Could not save the video. Please try again.', 'error')
+
+    videos = HomepageVideo.query.order_by(HomepageVideo.created_at.desc()).all()
+    return render_template(
+        'admin/videos.html',
+        videos=videos,
+        max_video_file_bytes=MAX_VIDEO_FILE_BYTES,
+        max_video_duration_seconds=MAX_VIDEO_DURATION_SECONDS
+    )
+
+
+@app.route('/admin/video/<int:video_id>/toggle', methods=['POST'])
+@admin_required
+def admin_toggle_video(video_id):
+    """Enable or disable a homepage video without deleting its upload."""
+    video = HomepageVideo.query.get_or_404(video_id)
+    video.is_active = not video.is_active
+    try:
+        db.session.commit()
+        flash('Video visibility updated.', 'success')
+    except SQLAlchemyError:
+        db.session.rollback()
+        app.logger.exception('Homepage video visibility update failed.')
+        flash('Could not update video visibility. Please try again.', 'error')
+    return redirect(url_for('admin_videos'))
+
+
+@app.route('/admin/video/<int:video_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete_video(video_id):
+    """Delete a homepage video and its database-backed binary asset."""
+    video = HomepageVideo.query.get_or_404(video_id)
+    try:
+        _delete_uploaded_asset(video.filename)
+        db.session.delete(video)
+        db.session.commit()
+        flash('Homepage video deleted.', 'success')
+    except SQLAlchemyError:
+        db.session.rollback()
+        app.logger.exception('Homepage video deletion failed.')
+        flash('Could not delete video. Please try again.', 'error')
+    return redirect(url_for('admin_videos'))
 
 
 @app.route('/admin/reviews')

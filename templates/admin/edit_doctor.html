@@ -145,7 +145,7 @@
                         alt="{{ doctor.full_name() }}"
                         id="doctorImagePreview"
                         class="doctor-adjust-image"
-                        style="object-position: {{ '%.2f'|format(doctor_focus.x) }}% {{ '%.2f'|format(doctor_focus.y) }}%; transform: scale({{ doctor_focus.zoom }});"
+                        style="object-fit: {{ 'contain' if doctor_focus.zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format(doctor_focus.x) }}% {{ '%.2f'|format(doctor_focus.y) }}%; transform: scale({{ doctor_focus.zoom }});"
                     >
                     {% else %}
                     <img src="" alt="Doctor photo preview" id="doctorImagePreview" class="doctor-adjust-image">
@@ -156,13 +156,13 @@
                     <span class="doctor-position-label" id="doctorImagePositionLabel">{{ '%.0f'|format(doctor_focus.x) }}% x / {{ '%.0f'|format(doctor_focus.y) }}% y</span>
                     <label class="doctor-zoom-control">
                         Zoom
-                        <input type="range" id="doctorImageZoom" min="1" max="2.5" step="0.05" value="{{ doctor_focus.zoom }}" aria-label="Doctor photo zoom">
+                        <input type="range" id="doctorImageZoom" min="0.5" max="2.5" step="0.05" value="{{ doctor_focus.zoom }}" aria-label="Doctor photo zoom">
                         <span class="doctor-position-label" id="doctorImageZoomLabel">{{ '%.0f'|format(doctor_focus.zoom * 100) }}%</span>
                     </label>
                 </div>
             </div>
             <input type="file" id="doctorImageInput" name="image" class="form-control" accept="image/*">
-            <small class="admin-field-note">Leave blank to keep current photo. If you upload a new one, preview above updates and remains draggable.</small>
+            <small class="admin-field-note">Leave blank to keep the current photo. Drag the live preview to reposition; use below 100% to fit more of the photo.</small>
         </div>
 
         <div class="admin-form-actions">
@@ -198,7 +198,7 @@
             position = {
                 x: clamp(Number.isFinite(Number(parsed.x)) ? Number(parsed.x) : 50, 0, 100),
                 y: clamp(Number.isFinite(Number(parsed.y)) ? Number(parsed.y) : 50, 0, 100),
-                zoom: clamp(Number.isFinite(Number(parsed.zoom)) ? Number(parsed.zoom) : 1, 1, 2.5)
+                zoom: clamp(Number.isFinite(Number(parsed.zoom)) ? Number(parsed.zoom) : 1, 0.5, 2.5)
             };
         } catch (error) {
             position = { x: 50, y: 50, zoom: 1 };
@@ -207,6 +207,7 @@
         const sync = () => {
             hiddenInput.value = JSON.stringify(position);
             image.style.objectPosition = `${position.x.toFixed(2)}% ${position.y.toFixed(2)}%`;
+            image.style.objectFit = position.zoom < 1 ? 'contain' : 'cover';
             image.style.transform = `scale(${position.zoom})`;
             if (zoomInput) zoomInput.value = position.zoom.toFixed(2);
             if (zoomLabel) zoomLabel.textContent = `${Math.round(position.zoom * 100)}%`;
@@ -217,7 +218,7 @@
         sync();
         if (zoomInput) {
             zoomInput.addEventListener('input', () => {
-                position.zoom = clamp(Number(zoomInput.value) || 1, 1, 2.5);
+                position.zoom = clamp(Number(zoomInput.value) || 1, 0.5, 2.5);
                 sync();
             });
         }
@@ -246,8 +247,8 @@
             const height = Math.max(stage.clientHeight, 1);
             const dx = event.clientX - startX;
             const dy = event.clientY - startY;
-            position.x = clamp(originX + ((dx / width) * 100), 0, 100);
-            position.y = clamp(originY + ((dy / height) * 100), 0, 100);
+            position.x = clamp(originX - ((dx / width) * 100), 0, 100);
+            position.y = clamp(originY - ((dy / height) * 100), 0, 100);
             sync();
         });
 
@@ -270,6 +271,7 @@
             const file = fileInput.files && fileInput.files[0];
             if (!file) return;
             image.src = URL.createObjectURL(file);
+            position = { x: 50, y: 50, zoom: 1 };
             editor.hidden = false;
             sync();
         });

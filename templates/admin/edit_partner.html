@@ -11,17 +11,44 @@
     }
 
     .partner-image-stage {
+        position: relative;
         width: 100%;
         aspect-ratio: 4 / 5;
         overflow: hidden;
+        border-radius: 8px;
+        border: 1px solid #d6e8df;
         background: #123b39;
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .partner-image-stage.dragging {
+        cursor: grabbing;
     }
 
     .partner-image-stage img {
+        display: block;
         width: 100%;
         height: 100%;
         object-fit: cover;
+        pointer-events: none;
+        user-select: none;
         transform-origin: center;
+    }
+
+    .partner-image-toolbar {
+        margin-top: 0.45rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .partner-position-label {
+        color: #607186;
+        font-size: 0.78rem;
+        white-space: nowrap;
     }
 
     .partner-zoom-control {
@@ -46,6 +73,7 @@
 
     <form method="POST" enctype="multipart/form-data" class="admin-form-shell">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" id="partnerImagePositionJson" name="partner_image_position_json" value='{{ partner_focus|tojson }}'>
         <h3 class="admin-form-title">Partner Profile</h3>
 
         <div class="admin-grid-2">
@@ -80,22 +108,24 @@
         <div class="form-group">
             <label class="form-label">Partner Photo</label>
             <div class="partner-image-editor" id="partnerImageEditor" {% if not partner.image_filename %}hidden{% endif %}>
-                <div class="partner-image-stage">
+                <div class="partner-image-stage" id="partnerImageStage">
                     {% if partner.image_filename %}
-                    <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" id="partnerImagePreview" style="transform: scale({{ partner_zoom }});">
+                    <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" id="partnerImagePreview" style="object-fit: {{ 'contain' if partner_focus.zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format(partner_focus.x) }}% {{ '%.2f'|format(partner_focus.y) }}%; transform: scale({{ partner_zoom }});">
                     {% else %}
                     <img src="" alt="Partner photo preview" id="partnerImagePreview">
                     {% endif %}
                 </div>
-                <small class="admin-field-note">Current photo preview.</small>
+                <div class="partner-image-toolbar">
+                    <span class="partner-position-label" id="partnerImagePositionLabel">{{ '%.0f'|format(partner_focus.x) }}% x / {{ '%.0f'|format(partner_focus.y) }}% y</span>
+                    <label class="partner-zoom-control">
+                        Zoom
+                        <input type="range" id="partnerImageZoom" min="0.5" max="2.5" step="0.05" value="{{ partner_zoom }}" aria-label="Partner photo zoom">
+                        <span class="partner-position-label" id="partnerImageZoomLabel">{{ '%.0f'|format(partner_zoom * 100) }}%</span>
+                    </label>
+                </div>
             </div>
             <input type="file" id="partnerImageInput" name="image" class="form-control" accept="image/*">
-            <label class="partner-zoom-control">
-                Zoom
-                <input type="range" id="partnerImageZoom" name="partner_image_zoom" min="1" max="2.5" step="0.05" value="{{ partner_zoom }}" aria-label="Partner photo zoom">
-                <span class="admin-field-note" id="partnerImageZoomLabel">{{ '%.0f'|format(partner_zoom * 100) }}%</span>
-            </label>
-            <small class="admin-field-note">Leave blank to keep current photo. Adjust zoom to fit the displayed area.</small>
+            <small class="admin-field-note">Leave blank to keep the current photo. Drag the live preview to reposition; use below 100% to fit more of the photo.</small>
         </div>
 
         <div class="admin-form-actions">
@@ -113,26 +143,88 @@
 {% block extra_js %}
 <script>
     (function initPartnerImageEditor() {
+        const hiddenInput = document.getElementById('partnerImagePositionJson');
         const fileInput = document.getElementById('partnerImageInput');
         const editor = document.getElementById('partnerImageEditor');
+        const stage = document.getElementById('partnerImageStage');
         const image = document.getElementById('partnerImagePreview');
+        const positionLabel = document.getElementById('partnerImagePositionLabel');
         const zoomInput = document.getElementById('partnerImageZoom');
         const zoomLabel = document.getElementById('partnerImageZoomLabel');
-        if (!fileInput || !editor || !image || !zoomInput) return;
+        if (!hiddenInput || !fileInput || !editor || !stage || !image || !zoomInput) return;
 
-        const syncZoom = () => {
-            const zoom = Math.min(2.5, Math.max(1, Number(zoomInput.value) || 1));
-            image.style.transform = `scale(${zoom})`;
-            zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
+        const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+        let position = { x: 50, y: 50, zoom: Number(zoomInput.value) || 1 };
+        try {
+            const parsed = JSON.parse(hiddenInput.value || '{}');
+            position = {
+                x: clamp(Number(parsed.x) || 50, 0, 100),
+                y: clamp(Number(parsed.y) || 50, 0, 100),
+                zoom: clamp(Number(parsed.zoom) || 1, 0.5, 2.5)
+            };
+        } catch (error) {
+            position = { x: 50, y: 50, zoom: 1 };
+        }
+
+        const sync = () => {
+            hiddenInput.value = JSON.stringify(position);
+            image.style.objectPosition = `${position.x.toFixed(2)}% ${position.y.toFixed(2)}%`;
+            image.style.objectFit = position.zoom < 1 ? 'contain' : 'cover';
+            image.style.transform = `scale(${position.zoom})`;
+            zoomInput.value = position.zoom.toFixed(2);
+            zoomLabel.textContent = `${Math.round(position.zoom * 100)}%`;
+            positionLabel.textContent = `${Math.round(position.x)}% x / ${Math.round(position.y)}% y`;
         };
-        zoomInput.addEventListener('input', syncZoom);
-        syncZoom();
+        sync();
+        zoomInput.addEventListener('input', () => {
+            position.zoom = clamp(Number(zoomInput.value) || 1, 0.5, 2.5);
+            sync();
+        });
+
+        let dragging = false;
+        let startX = 0;
+        let startY = 0;
+        let originX = position.x;
+        let originY = position.y;
+        stage.addEventListener('pointerdown', (event) => {
+            if (editor.hidden) return;
+            dragging = true;
+            startX = event.clientX;
+            startY = event.clientY;
+            originX = position.x;
+            originY = position.y;
+            stage.classList.add('dragging');
+            stage.setPointerCapture(event.pointerId);
+            event.preventDefault();
+        });
+        stage.addEventListener('pointermove', (event) => {
+            if (!dragging) return;
+            const width = Math.max(stage.clientWidth, 1);
+            const height = Math.max(stage.clientHeight, 1);
+            position.x = clamp(originX - ((event.clientX - startX) / width * 100), 0, 100);
+            position.y = clamp(originY - ((event.clientY - startY) / height * 100), 0, 100);
+            sync();
+        });
+
+        const stopDragging = (event) => {
+            if (!dragging) return;
+            dragging = false;
+            stage.classList.remove('dragging');
+            if (stage.hasPointerCapture(event.pointerId)) {
+                stage.releasePointerCapture(event.pointerId);
+            }
+        };
+        stage.addEventListener('pointerup', stopDragging);
+        stage.addEventListener('pointercancel', stopDragging);
+        stage.addEventListener('lostpointercapture', stopDragging);
 
         fileInput.addEventListener('change', () => {
             const file = fileInput.files && fileInput.files[0];
             if (!file) return;
             image.src = URL.createObjectURL(file);
+            position = { x: 50, y: 50, zoom: 1 };
             editor.hidden = false;
+            sync();
         });
     })();
 </script>
