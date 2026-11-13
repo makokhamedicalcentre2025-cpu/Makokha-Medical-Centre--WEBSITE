@@ -324,6 +324,14 @@
         gap: 2rem;
     }
 
+    .services-layout.has-banner:not(.has-services) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .services-layout:not(.has-services) .services-banner-wrap {
+        grid-column: 1 / -1;
+    }
+
     .services-details {
         min-width: 0;
     }
@@ -385,7 +393,7 @@
         padding: 0;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         min-height: 0;
     }
 
@@ -394,7 +402,7 @@
         max-width: 100%;
         width: 100%;
         height: auto;
-        max-height: min(78vh, 760px);
+        max-height: min(88vh, 900px);
         object-fit: contain;
         margin: 0;
         border: 0;
@@ -2034,7 +2042,8 @@
         <h2 class="services-heading">Services Offered at Orivana Care Medical Centre Ltd</h2>
         <p class="services-subheading">Comprehensive facility services for outpatient care, diagnostics, treatment, and long-term follow-up.</p>
 
-        <div class="services-layout{% if site_content.services_banner_image_url or homepage_videos %} has-banner{% endif %}">
+        <div class="services-layout{% if services %} has-services{% endif %}{% if site_content.services_banner_image_url or homepage_videos %} has-banner{% endif %}">
+            {% if services %}
             <div class="services-details">
                 <div class="services-grid">
                     {% for service in services %}
@@ -2046,6 +2055,7 @@
                 </div>
 
             </div>
+            {% endif %}
 
             {% if site_content.services_banner_image_url or homepage_videos %}
             <div class="services-banner-wrap">
