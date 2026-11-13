@@ -2512,6 +2512,17 @@ def sitemap():
     )
 
 
+@app.route('/favicon.ico')
+def favicon():
+    """Serve the site favicon at the conventional root URL."""
+    return send_from_directory(
+        app.static_folder,
+        'favicon.ico',
+        mimetype='image/vnd.microsoft.icon',
+        max_age=86400
+    )
+
+
 @app.route('/robots.txt')
 def robots():
     """Serve robots.txt from the project root."""
