@@ -221,24 +221,6 @@
                 
                 <div class="contact-info-card">
                     <div class="contact-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="contact-detail">
-                        <h3>Hours</h3>
-                        <p>
-                            {% if site_content.opening_hours_lines %}
-                                {% for opening_line in site_content.opening_hours_lines %}
-                                    {{ opening_line }}{% if not loop.last %}<br>{% endif %}
-                                {% endfor %}
-                            {% else %}
-                                Open 24/7
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="contact-info-card">
-                    <div class="contact-icon">
                         <i class="fas fa-triangle-exclamation"></i>
                     </div>
                     <div class="contact-detail">

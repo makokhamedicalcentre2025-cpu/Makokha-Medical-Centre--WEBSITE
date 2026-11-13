@@ -170,38 +170,31 @@ FACILITY_SERVICES = [
     },
     {
         'name': 'Emergency Care',
-        'description': '24/7 emergency response and urgent stabilization services.',
-        'icon': 'fa-ambulance'
+        'description': '24/7 emergency response and urgent stabilization services.'
     },
     {
         'name': 'Maternal and Child Health',
-        'description': 'Antenatal, postnatal, family planning, and child wellness services.',
-        'icon': 'fa-baby'
+        'description': 'Antenatal, postnatal, family planning, and child wellness services.'
     },
     {
         'name': 'Laboratory Services',
-        'description': 'Diagnostic laboratory tests for accurate and timely treatment planning.',
-        'icon': 'fa-vials'
+        'description': 'Diagnostic laboratory tests for accurate and timely treatment planning.'
     },
     {
         'name': 'Pharmacy Services',
-        'description': 'On-site dispensing of prescribed medication and treatment counseling.',
-        'icon': 'fa-pills'
+        'description': 'On-site dispensing of prescribed medication and treatment counseling.'
     },
     {
         'name': 'Immunization Clinic',
-        'description': 'Routine and campaign-based vaccination for children and adults.',
-        'icon': 'fa-syringe'
+        'description': 'Routine and campaign-based vaccination for children and adults.'
     },
     {
         'name': 'Chronic Disease Management',
-        'description': 'Follow-up care for hypertension, diabetes, asthma, and long-term conditions.',
-        'icon': 'fa-heart-pulse'
+        'description': 'Follow-up care for hypertension, diabetes, asthma, and long-term conditions.'
     },
     {
         'name': 'Minor Procedures',
-        'description': 'Wound care, dressing, and selected outpatient procedures.',
-        'icon': 'fa-notes-medical'
+        'description': 'Wound care, dressing, and selected outpatient procedures.'
     }
 ]
 
@@ -275,12 +268,6 @@ DEFAULT_SITE_SETTINGS = {
         'Press the button below to alert customer care immediately.'
     )
 }
-LEGACY_DEFAULT_OPENING_HOURS = (
-    'Monday - Friday: 9:00 AM - 5:00 PM\n'
-    'Saturday: 9:00 AM - 1:00 PM\n'
-    'Sunday: Emergency Only'
-)
-
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'gif'}
 MAX_HERO_IMAGES_PER_UPLOAD = 10
 
@@ -883,17 +870,13 @@ def _parse_services_json(raw_value):
     for item in parsed:
         if not isinstance(item, dict):
             continue
-        name = (item.get('name') or '').strip()
-        description = (item.get('description') or '').strip()
-        icon = (item.get('icon') or '').strip()
+        name = str(item.get('name') or '').strip()
+        description = str(item.get('description') or '').strip()
         if not name or not description:
             continue
-        if not icon.startswith('fa-'):
-            icon = 'fa-stethoscope'
         services.append({
             'name': name,
-            'description': description,
-            'icon': icon
+            'description': description
         })
 
     return services if services else _copy_default_services()
@@ -904,8 +887,7 @@ def _services_to_editor_text(services):
     for service in services:
         lines.append(
             f"{service.get('name', '').strip()} | "
-            f"{service.get('description', '').strip()} | "
-            f"{service.get('icon', 'fa-stethoscope').strip()}"
+            f"{service.get('description', '').strip()}"
         )
     return '\n'.join(lines)
 
@@ -923,17 +905,13 @@ def _parse_services_editor_text(editor_text):
 
         name = parts[0]
         description = parts[1]
-        icon = parts[2] if len(parts) >= 3 and parts[2] else 'fa-stethoscope'
 
         if not name or not description:
             continue
-        if not icon.startswith('fa-'):
-            icon = 'fa-stethoscope'
 
         services.append({
             'name': name,
-            'description': description,
-            'icon': icon
+            'description': description
         })
 
     return services if services else _copy_default_services()
@@ -1419,9 +1397,6 @@ def get_site_content():
     for key, legacy_value in legacy_contact_settings.items():
         if data.get(key, '').strip() == legacy_value:
             data[key] = DEFAULT_SITE_SETTINGS[key]
-    if data.get('opening_hours', '').strip() == LEGACY_DEFAULT_OPENING_HOURS:
-        data['opening_hours'] = DEFAULT_SITE_SETTINGS['opening_hours']
-
     services = _parse_services_json(data.get('services_json'))
     data['services'] = services
     data['services_editor_text'] = _services_to_editor_text(services)
@@ -1462,7 +1437,6 @@ def get_site_content():
     data['contact_phone_lines'] = _split_non_empty_lines(data.get('contact_phones'))
     data['contact_email_lines'] = _split_non_empty_lines(data.get('contact_emails'))
     data['opening_hours_lines'] = _split_non_empty_lines(data.get('opening_hours'))
-
     return data
 
 
@@ -1479,6 +1453,35 @@ def _upsert_site_settings(updates):
             existing[key].setting_value = normalized
         else:
             db.session.add(SiteSetting(setting_key=key, setting_value=normalized))
+
+
+def _remove_retired_service_content():
+    """Remove retired service-icon metadata from saved settings."""
+    changed = False
+    services_setting = SiteSetting.query.filter_by(setting_key='services_json').first()
+    if services_setting:
+        try:
+            parsed_services = json.loads(services_setting.setting_value or '')
+        except (TypeError, ValueError):
+            parsed_services = None
+
+        if isinstance(parsed_services, list):
+            cleaned_services = []
+            for service in parsed_services:
+                if not isinstance(service, dict):
+                    continue
+                name = str(service.get('name') or '').strip()
+                description = str(service.get('description') or '').strip()
+                if name and description:
+                    cleaned_services.append({'name': name, 'description': description})
+
+            cleaned_json = json.dumps(cleaned_services)
+            if services_setting.setting_value != cleaned_json:
+                services_setting.setting_value = cleaned_json
+                changed = True
+
+    if changed:
+        db.session.commit()
 
 
 def _normalize_rating_value(raw_rating):
@@ -2529,6 +2532,7 @@ def _ensure_runtime_schema_once():
         ensure_runtime_schema()
         ensure_event_schema()
         ensure_site_settings()
+        _remove_retired_service_content()
         _migrate_referenced_uploads_to_database()
         _seed_builtin_homepage_videos()
         RUNTIME_SCHEMA_READY = True
@@ -3313,7 +3317,6 @@ def admin_site_content():
                 'contact_address': request.form.get('contact_address', ''),
                 'contact_phones': request.form.get('contact_phones', ''),
                 'contact_emails': request.form.get('contact_emails', ''),
-                'opening_hours': request.form.get('opening_hours', ''),
                 'emergency_call_title': request.form.get('emergency_call_title', ''),
                 'emergency_call_description': request.form.get('emergency_call_description', ''),
                 'telemedicine_title': request.form.get('telemedicine_title', ''),

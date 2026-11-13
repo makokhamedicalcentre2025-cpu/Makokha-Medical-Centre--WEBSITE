@@ -201,7 +201,7 @@
 <div class="admin-form-layout">
     <div class="admin-page-intro">
         <h1><i class="fas fa-pen-ruler"></i> Edit Public Website Content</h1>
-        <p>Update services, opening hours, about details, contact information, and emergency call content from one place.</p>
+        <p>Update services, images, about details, contact information, and emergency call content from one place.</p>
     </div>
 
     <form method="POST" enctype="multipart/form-data" class="admin-form-shell">
@@ -209,7 +209,7 @@
         <div class="site-content-grid">
             <section class="site-content-card">
                 <h3><i class="fas fa-stethoscope"></i> Services Offered</h3>
-                <p>One service per line: <code>Name | Description | fa-icon</code>. Icon must start with <code>fa-</code>.</p>
+                <p>One service per line: <code>Name | Description</code>.</p>
                 <div class="form-group">
                     <label class="form-label" for="services_editor">Services List</label>
                     <textarea id="services_editor" name="services_editor" class="form-textarea tall" required>{{ services_editor_text }}</textarea>
@@ -247,15 +247,6 @@
                     <label class="form-label" for="services_banner_image">Upload Banner Image</label>
                     <input id="services_banner_image" type="file" name="services_banner_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif">
                     <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF.</p>
-                </div>
-            </section>
-
-            <section class="site-content-card">
-                <h3><i class="fas fa-clock"></i> Opening Hours</h3>
-                <p>Shown on public pages and used by clients when checking availability.</p>
-                <div class="form-group">
-                    <label class="form-label" for="opening_hours">Opening Hours</label>
-                    <textarea id="opening_hours" name="opening_hours" class="form-textarea" required>{{ site_content.opening_hours }}</textarea>
                 </div>
             </section>
 

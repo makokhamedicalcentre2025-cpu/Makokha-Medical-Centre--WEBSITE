@@ -406,30 +406,26 @@
 
     .services-grid {
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.68rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
     }
 
     .service-card {
-        background: transparent;
-        border: none;
-        border-radius: 0;
-        padding: 0.15rem 0 0.55rem;
+        min-width: 0;
+        background: #ffffff;
+        border: 1px solid #e1ebe6;
+        border-left: 3px solid #d5ad4a;
+        border-radius: 14px;
+        padding: 1rem 1.05rem;
         margin: 0;
-        border-bottom: 0;
-        box-shadow: none;
+        box-shadow: 0 5px 16px rgba(19, 62, 55, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
-    .service-card-icon {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        background: #e8f3ee;
-        color: #03595d;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
+    .service-card:hover {
+        transform: translateY(-2px);
+        border-color: #bfd7cd;
+        box-shadow: 0 10px 24px rgba(19, 62, 55, 0.1);
     }
 
     .service-card h3 {
@@ -444,6 +440,28 @@
         color: #5d6775;
         font-size: 0.92rem;
         line-height: 1.5;
+    }
+
+    .services-hours {
+        margin-top: 1rem;
+        border: 1px solid #d8e5fa;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 1rem 1.1rem;
+    }
+
+    .services-hours h3 {
+        margin: 0 0 0.5rem;
+        color: #263b39;
+        font-size: 1.02rem;
+    }
+
+    .services-hours ul {
+        margin: 0;
+        padding-left: 1rem;
+        color: #42556b;
+        line-height: 1.55;
+        font-size: 0.92rem;
     }
 
     .telemedicine-card {
@@ -495,28 +513,6 @@
         color: #f2f8ff;
     }
 
-    .services-hours {
-        margin-top: 1rem;
-        border: 1px solid #d8e5fa;
-        border-radius: 12px;
-        background: #ffffff;
-        padding: 1rem 1.1rem;
-    }
-
-    .services-hours h3 {
-        margin: 0 0 0.5rem;
-        color: #263b39;
-        font-size: 1.02rem;
-    }
-
-    .services-hours ul {
-        margin: 0;
-        padding-left: 1rem;
-        color: #42556b;
-        line-height: 1.55;
-        font-size: 0.92rem;
-    }
-    
     .doctors-section {
         background: #f7faf8;
         padding: 5rem 0;
@@ -1082,7 +1078,7 @@
         }
 
         .services-grid {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .header.over-hero .nav-menu {
@@ -1261,6 +1257,10 @@
 
         .services-banner img {
             max-height: 72vh;
+        }
+
+        .services-grid {
+            grid-template-columns: 1fr;
         }
 
         .people-slider-arrow {
@@ -1976,9 +1976,6 @@
             </div>
             <div class="hero-details-row">
                 <span><i class="fas fa-map-marker-alt" aria-hidden="true"></i>Maliki, Kenya</span>
-                {% if site_content.opening_hours_lines %}
-                <span><i class="fas fa-clock" aria-hidden="true"></i>{{ site_content.opening_hours_lines[0] }}</span>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -2007,14 +2004,6 @@
                 </div>
                 <h3>Care in One Place</h3>
                 <p>Outpatient, laboratory, pharmacy, maternal and child health services in one care centre.</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <h3>Clear Opening Hours</h3>
-                <p>Check our current opening hours and contact us if you need help planning your visit.</p>
             </div>
             
             <div class="feature-card">
@@ -2071,6 +2060,7 @@
                         {% endfor %}
                     </ul>
                 </div>
+
             </div>
 
             {% if site_content.services_banner_image_url or homepage_videos %}
