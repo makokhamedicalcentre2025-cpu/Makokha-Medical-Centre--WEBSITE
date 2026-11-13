@@ -1292,14 +1292,610 @@
         }
     }
 
+    .hero {
+        background:
+            linear-gradient(110deg, rgba(7, 40, 39, 0.88) 0%, rgba(7, 40, 39, 0.72) 48%, rgba(7, 40, 39, 0.22) 100%),
+            linear-gradient(0deg, rgba(7, 40, 39, 0.42), transparent 58%),
+            linear-gradient(135deg, #123b39 0%, #03595d 100%);
+    }
+
+    .hero::before {
+        background:
+            linear-gradient(90deg, rgba(7, 40, 39, 0.88) 0%, rgba(7, 40, 39, 0.72) 48%, rgba(7, 40, 39, 0.22) 100%),
+            linear-gradient(0deg, rgba(7, 40, 39, 0.32), transparent 58%);
+    }
+
+    .hero-content {
+        max-width: 790px;
+        padding: 1rem 0 1.5rem;
+    }
+
+    .hero-eyebrow,
+    .section-eyebrow {
+        color: #d7ad45;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        line-height: 1.4;
+        text-transform: uppercase;
+    }
+
+    .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        margin-bottom: 1.1rem;
+    }
+
+    .hero-eyebrow::before {
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 50%;
+        background: #e7bd56;
+        box-shadow: 0 0 0 5px rgba(231, 189, 86, 0.16);
+        content: "";
+    }
+
+    .hero h1 {
+        max-width: 760px;
+        margin: 0 0 1.1rem;
+        font-size: clamp(3rem, 6vw, 5.25rem);
+        font-weight: 800;
+        letter-spacing: -0.055em;
+        line-height: 1.03;
+        text-shadow: 0 3px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .hero h1 span {
+        color: #f1cb6c;
+    }
+
+    .hero p {
+        max-width: 640px;
+        margin: 0 0 1.65rem;
+        color: rgba(255, 255, 255, 0.94);
+        font-size: clamp(1.05rem, 1.35vw, 1.2rem);
+        line-height: 1.7;
+        text-shadow: 0 2px 12px rgba(0, 0, 0, 0.32);
+    }
+
+    .hero-buttons {
+        align-items: center;
+        gap: 0.85rem;
+    }
+
+    .btn-hero {
+        display: inline-flex;
+        min-height: 54px;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        padding: 0.9rem 1.35rem;
+        border: 1px solid transparent;
+        font-weight: 750;
+        text-decoration: none;
+    }
+
+    .btn-hero-primary {
+        background: #f1cb6c;
+        color: #173c3b;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .btn-hero-primary:hover {
+        background: #ffda7c;
+        color: #173c3b;
+        transform: translateY(-2px);
+    }
+
+    .btn-hero-secondary {
+        border-color: rgba(255, 255, 255, 0.75);
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+        backdrop-filter: blur(5px);
+    }
+
+    .btn-hero-secondary:hover {
+        border-color: #ffffff;
+        background: rgba(255, 255, 255, 0.16);
+        color: #ffffff;
+    }
+
+    .hero-support-row,
+    .hero-details-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.7rem 1.5rem;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.92rem;
+    }
+
+    .hero-support-row {
+        margin-top: 1.25rem;
+    }
+
+    .hero-details-row {
+        margin-top: 1.15rem;
+        color: rgba(255, 255, 255, 0.84);
+        font-size: 0.88rem;
+    }
+
+    .hero-support-row a {
+        color: #ffffff;
+        font-weight: 700;
+        text-decoration: underline;
+        text-decoration-color: rgba(241, 203, 108, 0.8);
+        text-underline-offset: 4px;
+    }
+
+    .hero-support-row a:hover {
+        color: #f1cb6c;
+    }
+
+    .hero-support-row i,
+    .hero-details-row i {
+        margin-right: 0.4rem;
+        color: #f1cb6c;
+    }
+
+    .home-values {
+        background: linear-gradient(180deg, #f8fbf9 0%, #ffffff 100%);
+        padding: clamp(3.5rem, 7vw, 5.5rem) 0;
+    }
+
+    .home-section-heading {
+        max-width: 760px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .home-section-heading .section-eyebrow {
+        margin: 0 0 0.65rem;
+        color: #087a70;
+    }
+
+    .home-section-heading h2 {
+        margin: 0 0 0.8rem;
+        color: #173c3b;
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        letter-spacing: -0.035em;
+        line-height: 1.15;
+    }
+
+    .home-section-heading > p:last-child {
+        max-width: 660px;
+        margin: 0 auto;
+        color: #5d6775;
+        font-size: 1.04rem;
+        line-height: 1.7;
+    }
+
+    .home-values .features-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .home-values .feature-card {
+        display: grid;
+        grid-template-columns: 3.25rem minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+        column-gap: 1rem;
+        row-gap: 0.35rem;
+        align-content: start;
+        padding: 1.45rem;
+        border: 1px solid rgba(3, 89, 93, 0.1);
+        border-radius: 18px;
+        background: #ffffff;
+        box-shadow: 0 8px 26px rgba(20, 57, 52, 0.055);
+        text-align: left;
+    }
+
+    .home-values .feature-card:hover {
+        border-color: rgba(3, 89, 93, 0.2);
+        box-shadow: 0 16px 34px rgba(20, 57, 52, 0.11);
+        transform: translateY(-4px);
+    }
+
+    .home-values .feature-icon {
+        display: grid;
+        width: 3.15rem;
+        height: 3.15rem;
+        grid-row: 1 / span 2;
+        place-items: center;
+        margin: 0;
+        border-radius: 1rem;
+        background: #e8f4f0;
+        color: #087a70;
+        font-size: 1.35rem;
+    }
+
+    .home-values .feature-card h3 {
+        align-self: center;
+        margin: 0;
+        color: #173c3b;
+        font-size: 1.08rem;
+        line-height: 1.35;
+    }
+
+    .home-values .feature-card p {
+        grid-column: 2;
+        margin: 0;
+        color: #5d6775;
+        font-size: 0.94rem;
+        line-height: 1.6;
+    }
+
+    .services-next-step {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-top: 2rem;
+        padding: 1.4rem 1.6rem;
+        border-left: 4px solid #d7ad45;
+        border-radius: 0 14px 14px 0;
+        background: #f3f8f6;
+    }
+
+    .services-next-step h3 {
+        margin: 0 0 0.3rem;
+        color: #173c3b;
+        font-size: 1.18rem;
+    }
+
+    .services-next-step p {
+        margin: 0;
+        color: #5d6775;
+    }
+
+    .services-next-step .btn {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .homepage-live-stats {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+
+    .homepage-live-stats .stats-section {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 0 auto;
+        padding: 1.35rem;
+        border-radius: 22px;
+        background: linear-gradient(120deg, #123b39, #03595d);
+        box-shadow: 0 18px 40px rgba(18, 59, 57, 0.15);
+    }
+
+    .homepage-live-stats .stat-item {
+        flex: 1 1 180px;
+        max-width: 280px;
+        padding: 0.65rem 0.9rem;
+    }
+
+    .homepage-live-stats .stat-number {
+        color: #ffffff;
+        font-size: 2.2rem;
+    }
+
+    .homepage-live-stats .stat-label {
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 0.92rem;
+    }
+
+    .homepage-live-stats [data-live-stat-item][hidden] {
+        display: none;
+    }
+
+    .cta-section {
+        position: relative;
+        overflow: hidden;
+        padding: clamp(2.4rem, 6vw, 4.4rem) 1.5rem;
+        border-radius: 24px;
+        background: linear-gradient(120deg, #123b39 0%, #03595d 100%);
+        box-shadow: 0 18px 44px rgba(18, 59, 57, 0.16);
+    }
+
+    .cta-section h2 {
+        max-width: 760px;
+        margin: 0 auto 0.8rem;
+        font-size: clamp(2rem, 4.5vw, 3rem);
+        letter-spacing: -0.04em;
+        line-height: 1.12;
+    }
+
+    .cta-section p {
+        max-width: 660px;
+        margin-bottom: 1.6rem;
+    }
+
+    .home-reviews {
+        background: #f8fbf9;
+    }
+
+    .home-review-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(250px, 0.8fr);
+        align-items: center;
+        gap: 2rem;
+        padding: clamp(1.6rem, 5vw, 3.5rem);
+        border-radius: 24px;
+        background: linear-gradient(120deg, #123b39 0%, #03595d 100%);
+        color: #ffffff;
+    }
+
+    .home-review-copy .section-eyebrow {
+        margin: 0 0 0.7rem;
+    }
+
+    .home-review-copy h2 {
+        margin: 0 0 0.8rem;
+        color: #ffffff;
+        font-size: clamp(1.9rem, 4vw, 2.65rem);
+        letter-spacing: -0.035em;
+        line-height: 1.15;
+    }
+
+    .home-review-copy p:last-child {
+        max-width: 520px;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.82);
+        line-height: 1.65;
+    }
+
+    .home-review-score {
+        padding-left: 2rem;
+        border-left: 1px solid rgba(255, 255, 255, 0.24);
+        text-align: center;
+    }
+
+    .home-review-rating {
+        margin: 0 0 0.2rem;
+        color: #f1cb6c;
+        font-size: clamp(2.5rem, 5vw, 3.6rem);
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        line-height: 1;
+    }
+
+    .home-review-rating small {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0;
+    }
+
+    .home-review-stars {
+        margin: 0.55rem 0;
+        color: #f1cb6c;
+        letter-spacing: 0.12em;
+    }
+
+    .home-review-count {
+        margin: 0 0 1rem;
+        color: rgba(255, 255, 255, 0.82);
+        font-size: 0.92rem;
+    }
+
+    .home-reviews-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #ffffff;
+        font-weight: 750;
+        text-decoration: underline;
+        text-decoration-color: rgba(241, 203, 108, 0.8);
+        text-underline-offset: 4px;
+    }
+
+    .home-reviews-link:hover {
+        color: #f1cb6c;
+    }
+
+    @media (max-width: 900px) {
+        .home-values .features-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .home-review-panel {
+            grid-template-columns: minmax(0, 1fr) minmax(220px, 0.75fr);
+            gap: 1.4rem;
+        }
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+        .hero {
+            padding: calc(var(--site-header-height, 70px) + 2.2rem) 0 1.5rem;
+        }
+
+        .hero-content {
+            padding: 0;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.6rem, 5vw, 3.7rem);
+        }
+
+        .hero p {
+            margin-bottom: 1.2rem;
+            font-size: 1.05rem;
+            line-height: 1.55;
+        }
+
+        .hero-support-row {
+            margin-top: 0.9rem;
+        }
+
+        .hero-details-row {
+            margin-top: 0.75rem;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .hero {
+            padding: calc(var(--site-header-height, 70px) + 3.6rem) 0 3rem;
+        }
+
+        .hero-content {
+            padding: 0;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.4rem, 8vw, 3.8rem);
+        }
+
+        .hero-buttons {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .services-next-step {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .home-review-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .home-review-score {
+            padding: 1.25rem 0 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.24);
+            border-left: 0;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero {
+            padding: calc(var(--site-header-height, 70px) + 2.6rem) 0 2.4rem;
+        }
+
+        .hero-eyebrow {
+            margin-bottom: 0.8rem;
+            font-size: 0.65rem;
+            letter-spacing: 0.09em;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.15rem, 10vw, 2.8rem);
+        }
+
+        .hero p {
+            margin-bottom: 1.2rem;
+            font-size: 1rem;
+            line-height: 1.55;
+        }
+
+        .hero-buttons {
+            align-items: stretch;
+            gap: 0.65rem;
+        }
+
+        .btn-hero {
+            width: 100%;
+            min-height: 48px;
+            padding: 0.75rem 1rem;
+        }
+
+        .hero-support-row,
+        .hero-details-row {
+            gap: 0.55rem 1rem;
+            font-size: 0.84rem;
+        }
+
+        .home-values .features-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .home-values .feature-card {
+            padding: 1.2rem;
+        }
+
+        .services-next-step {
+            padding: 1.2rem;
+        }
+
+        .services-next-step .btn {
+            width: 100%;
+            white-space: normal;
+        }
+
+        .homepage-live-stats .stats-section {
+            padding: 1rem;
+        }
+
+        .homepage-live-stats .stat-item {
+            flex-basis: 130px;
+        }
+    }
+
+    @media (max-height: 500px) and (orientation: landscape) {
+        .hero {
+            padding: calc(var(--site-header-height, 70px) + 0.65rem) 0 0.4rem;
+        }
+
+        .hero-content {
+            padding: 0;
+        }
+
+        .hero-eyebrow {
+            margin-bottom: 0.45rem;
+        }
+
+        .hero h1 {
+            margin-bottom: 0.5rem;
+            font-size: clamp(1.8rem, 4.5vw, 2.65rem);
+        }
+
+        .hero p {
+            margin-bottom: 0.7rem;
+            font-size: 0.96rem;
+            line-height: 1.45;
+        }
+
+        .hero-buttons {
+            flex-direction: row;
+            gap: 0.55rem;
+        }
+
+        .btn-hero {
+            width: auto;
+            min-height: 42px;
+            flex: 0 1 auto;
+            padding: 0.55rem 0.8rem;
+            font-size: 0.88rem;
+        }
+
+        .hero-details-row {
+            display: none;
+        }
+
+        .hero-support-row {
+            margin-top: 0.55rem;
+            font-size: 0.82rem;
+        }
+    }
+
 </style>
 {% endblock %}
 
 {% block content %}
 {% set initial_live_stats = live_stats if live_stats is defined else {} %}
 {% set hero_slider_images = site_content.hero_background_slides if site_content.hero_background_slides is defined else [] %}
+{% set hero_phone_line = site_content.contact_phone_lines[0] if site_content.contact_phone_lines is defined and site_content.contact_phone_lines else '' %}
+{% set hero_phone_number = hero_phone_line.rsplit(':', 1)[-1]|trim %}
+{% set homepage_doctor_count = initial_live_stats.get('total_doctors', total_doctors or 0)|int %}
+{% set homepage_interaction_count = initial_live_stats.get('total_interactions', 0)|int %}
+{% set homepage_rating = initial_live_stats.get('avg_rating', avg_rating or 0)|float %}
+{% set homepage_emergency_count = initial_live_stats.get('emergency_today_calls', 0)|int %}
+{% set has_homepage_live_stats = homepage_doctor_count > 0 or homepage_interaction_count > 0 or homepage_rating > 0 or homepage_emergency_count > 0 %}
 <!-- HERO SECTION -->
-<section class="hero">
+<section class="hero" aria-labelledby="home-hero-title">
     {% if hero_slider_images %}
     <div class="hero-bg-slider" aria-hidden="true">
         <div class="hero-bg-track" id="heroBgTrack">
@@ -1316,69 +1912,92 @@
         </div>
     </div>
     {% endif %}
-    <div class="container">
+    <div class="container hero-container">
         <div class="hero-content">
-            <h1>Orivana Care Medical Centre</h1>
-            <p>Welcome to Orivana Care Medical Centre, your trusted partner in accessible, affordable and quality healthcare in Maliki, Kenya. Formerly Makokha Medical Centre.</p>
+            <div class="hero-eyebrow">Orivana Care <span aria-hidden="true">·</span> Formerly Makokha Medical Centre</div>
+            <h1 id="home-hero-title">Quality care,<br><span>closer to home.</span></h1>
+            <p>Your health deserves care that listens. Find accessible services, clear guidance and a team ready to help you take the next step—right here in Maliki.</p>
             <div class="hero-buttons">
-                <button class="btn btn-hero btn-hero-primary" onclick="scrollToElement('.doctors-section')">Meet Our Doctors</button>
-                <a href="{{ url_for('contact') }}" class="btn btn-hero btn-hero-secondary">Book Appointment</a>
+                <a href="{{ url_for('contact') }}" class="btn btn-hero btn-hero-primary">
+                    <i class="fas fa-calendar-check" aria-hidden="true"></i> Book an appointment
+                </a>
+                <a href="#services-offered" class="btn btn-hero btn-hero-secondary">
+                    Explore our services <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+            </div>
+            <div class="hero-support-row">
+                <a href="{{ url_for('doctors_page') }}"><i class="fas fa-user-md" aria-hidden="true"></i>Meet the medical team</a>
+                {% if hero_phone_number %}
+                <a href="tel:{{ hero_phone_number|replace(' ', '')|replace('(', '')|replace(')', '')|replace('-', '') }}">
+                    <i class="fas fa-phone-alt" aria-hidden="true"></i>Call customer care
+                </a>
+                {% endif %}
+            </div>
+            <div class="hero-details-row">
+                <span><i class="fas fa-map-marker-alt" aria-hidden="true"></i>Maliki, Kenya</span>
+                {% if site_content.opening_hours_lines %}
+                <span><i class="fas fa-clock" aria-hidden="true"></i>{{ site_content.opening_hours_lines[0] }}</span>
+                {% endif %}
             </div>
         </div>
     </div>
 </section>
 
 <!-- FEATURES SECTION -->
-<section class="features">
+<section class="features home-values" id="why-us">
     <div class="container">
-        <h2 class="text-center">Why Choose Orivana Care Medical Centre Ltd?</h2>
+        <div class="home-section-heading">
+            <p class="section-eyebrow">WHY ORIVANA CARE</p>
+            <h2>Good healthcare begins with listening.</h2>
+            <p>From everyday appointments to ongoing support, our goal is to make care feel clear, respectful and close to home.</p>
+        </div>
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-stethoscope"></i>
                 </div>
-                <h3>Expert Doctors</h3>
-                <p>Highly qualified physicians with years of experience in their specialties.</p>
+                <h3>Care That Listens</h3>
+                <p>We want every visit to feel welcoming, with clear guidance and room for your questions.</p>
             </div>
             
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-hospital"></i>
                 </div>
-                <h3>Modern Facilities</h3>
-                <p>State-of-the-art medical equipment and comfortable patient care environments.</p>
+                <h3>Care in One Place</h3>
+                <p>Outpatient, laboratory, pharmacy, maternal and child health services in one care centre.</p>
             </div>
             
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-clock"></i>
                 </div>
-                <h3>24/7 Service</h3>
-                <p>Available round the clock for emergencies and urgent medical care.</p>
+                <h3>Clear Opening Hours</h3>
+                <p>Check our current opening hours and contact us if you need help planning your visit.</p>
             </div>
             
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-shield-alt"></i>
                 </div>
-                <h3>Patient Safety</h3>
-                <p>Strict adherence to hygiene and safety protocols for your protection.</p>
+                <h3>Respectful, Safe Care</h3>
+                <p>Your comfort, privacy and wellbeing matter at every step of your care.</p>
             </div>
             
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-headset"></i>
                 </div>
-                <h3>Support Services</h3>
-                <p>Friendly staff ready to assist with any medical or administrative needs.</p>
+                <h3>People Here to Help</h3>
+                <p>Our staff can guide you through services, appointments and practical next steps.</p>
             </div>
             
             <div class="feature-card">
                 <div class="feature-icon">
                     <i class="fas fa-heart"></i>
                 </div>
-                <h3>Patient Care</h3>
-                <p>Compassionate care focused on your complete health and well-being.</p>
+                <h3>Support for Every Stage</h3>
+                <p>Care for individuals and families, including maternal and child health services.</p>
             </div>
         </div>
     </div>
@@ -1423,6 +2042,16 @@
             </div>
             {% endif %}
         </div>
+
+        <div class="services-next-step">
+            <div>
+                <h3>Not sure where to start?</h3>
+                <p>Talk to our team about your needs and the right next step.</p>
+            </div>
+            <a href="{{ url_for('contact') }}" class="btn btn-primary">
+                Talk to our team <i class="fas fa-arrow-right" aria-hidden="true"></i>
+            </a>
+        </div>
     </div>
 </section>
 
@@ -1465,24 +2094,24 @@
 {% endif %}
 
 <!-- STATS SECTION -->
-<section class="container">
+<section class="container homepage-live-stats" data-live-stats-container{% if not has_homepage_live_stats %} hidden{% endif %}>
     <div class="stats-section">
-        <div class="stat-item">
+        <div class="stat-item" data-live-stat-item{% if homepage_doctor_count <= 0 %} hidden{% endif %}>
             <div class="stat-number" data-live-stat="total_doctors">{{ initial_live_stats.get('total_doctors', total_doctors or 0) }}</div>
             <div class="stat-label">Doctors</div>
         </div>
-        <div class="stat-item">
+        <div class="stat-item" data-live-stat-item{% if homepage_interaction_count <= 0 %} hidden{% endif %}>
             <div class="stat-number" data-live-stat="total_interactions">{{ initial_live_stats.get('total_interactions', 0) }}</div>
             <div class="stat-label">Patient Interactions</div>
         </div>
-        <div class="stat-item">
+        <div class="stat-item" data-live-stat-item{% if homepage_rating <= 0 %} hidden{% endif %}>
             <div class="stat-number">
-                <i class="fas fa-star" style="color: #e6a71b;"></i>
+                <i class="fas fa-star" style="color: #f1cb6c;"></i>
                 <span data-live-stat="avg_rating" data-live-format="decimal1">{{ initial_live_stats.get('avg_rating', avg_rating or 0) }}</span>
             </div>
-            <div class="stat-label">Hospital Rating</div>
+            <div class="stat-label">Patient rating</div>
         </div>
-        <div class="stat-item">
+        <div class="stat-item" data-live-stat-item{% if homepage_emergency_count <= 0 %} hidden{% endif %}>
             <div class="stat-number" data-live-stat="emergency_today_calls">{{ initial_live_stats.get('emergency_today_calls', 0) }}</div>
             <div class="stat-label">Emergency Calls Today</div>
         </div>
@@ -1689,9 +2318,11 @@
 <!-- CTA SECTION -->
 <div class="container">
     <section class="cta-section">
-        <h2>Ready to Book an Appointment?</h2>
-        <p>Contact us today to schedule your consultation with our experienced medical team.</p>
-        <a href="{{ url_for('contact') }}" class="btn btn-hero btn-hero-primary">Get In Touch</a>
+        <h2>Your next step starts with a conversation.</h2>
+        <p>Whether you are planning a visit or have a question, our team is ready to help you get started.</p>
+        <a href="{{ url_for('contact') }}" class="btn btn-hero btn-hero-primary">
+            Talk to our team <i class="fas fa-arrow-right" aria-hidden="true"></i>
+        </a>
     </section>
 </div>
 
@@ -1784,17 +2415,35 @@
 {% endif %}
 
 <!-- REVIEWS SECTION -->
-<section class="features">
+<section class="features home-reviews">
     <div class="container">
-        <h2 class="text-center">Patient Reviews</h2>
-        <p class="text-center" style="color: #666; margin-bottom: 2rem;">See what our patients say about their experience</p>
-        
-        <div style="text-align: center;">
-            <div class="stat-number" style="margin-bottom: 0.5rem;">
-                <i class="fas fa-star" style="color: #e6a71b;"></i> {{ avg_rating or 0 }}/5
+        <div class="home-review-panel">
+            <div class="home-review-copy">
+                <p class="section-eyebrow">COMMUNITY VOICES</p>
+                <h2>Real experiences. Care that feels personal.</h2>
+                <p>See what patients share about their experience with Orivana Care.</p>
             </div>
-            <p style="color: #666; margin-bottom: 2rem;">Based on {{ total_reviews or 0 }} patient reviews</p>
-            <a href="{{ url_for('reviews_page') }}" class="btn btn-primary">Read All Reviews</a>
+            <div class="home-review-score">
+                {% if total_reviews %}
+                <p class="home-review-rating">{{ avg_rating or 0 }}<small>/5</small></p>
+                <div class="home-review-stars" role="img" aria-label="{{ avg_rating or 0 }} out of 5 stars">
+                    <i class="fas fa-star" aria-hidden="true"></i>
+                    <i class="fas fa-star" aria-hidden="true"></i>
+                    <i class="fas fa-star" aria-hidden="true"></i>
+                    <i class="fas fa-star" aria-hidden="true"></i>
+                    <i class="fas fa-star" aria-hidden="true"></i>
+                </div>
+                <p class="home-review-count">Based on {{ total_reviews }} patient reviews</p>
+                <a href="{{ url_for('reviews_page') }}" class="home-reviews-link">
+                    Read patient reviews <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                {% else %}
+                <p class="home-review-count">We welcome your feedback and questions.</p>
+                <a href="{{ url_for('reviews_page') }}" class="home-reviews-link">
+                    Visit patient reviews <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                </a>
+                {% endif %}
+            </div>
         </div>
     </div>
 </section>

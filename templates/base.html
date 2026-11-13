@@ -788,6 +788,16 @@
                 if (!key || !(key in statsPayload)) return;
                 const formatMode = node.getAttribute('data-live-format') || 'integer';
                 node.textContent = formatLiveStatValue(statsPayload[key], formatMode);
+
+                const statItem = node.closest('[data-live-stat-item]');
+                if (statItem) {
+                    const numericValue = Number(statsPayload[key]);
+                    statItem.hidden = !Number.isFinite(numericValue) || numericValue <= 0;
+                }
+            });
+
+            document.querySelectorAll('[data-live-stats-container]').forEach((container) => {
+                container.hidden = !container.querySelector('[data-live-stat-item]:not([hidden])');
             });
         }
 
