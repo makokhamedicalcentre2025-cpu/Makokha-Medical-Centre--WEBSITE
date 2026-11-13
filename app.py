@@ -15,11 +15,8 @@ import re
 import json
 import threading
 import hashlib
-import smtplib
-import ssl
 import mimetypes
 from uuid import uuid4
-from email.message import EmailMessage
 from sqlalchemy import desc, inspect, text, or_, func
 from urllib.parse import urlparse, urlencode
 from urllib import error as urllib_error
@@ -1982,9 +1979,8 @@ def _unique_email_recipients(values):
 
 
 def _configured_staff_email_recipients():
-    """Resolve staff alert inboxes (doctor@ / admin@) for Spaceship delivery."""
-    recipients = []
-    recipients.extend(_read_csv_env('STAFF_ALERT_EMAILS', aliases=('SPACESHIP_STAFF_EMAILS',)))
+    """Resolve staff alert inboxes for delivery through Resend."""
+    recipients = _read_csv_env('STAFF_ALERT_EMAILS', aliases=('SPACESHIP_STAFF_EMAILS',))
 
     for env_key in [
         'STAFF_DOCTOR_EMAIL',
@@ -1998,8 +1994,12 @@ def _configured_staff_email_recipients():
         if env_value:
             recipients.append(env_value)
 
+    if not recipients:
+        admin_email = (os.getenv('ADMIN_EMAIL') or '').strip()
+        if admin_email:
+            recipients.append(admin_email)
+
     if not recipients and IS_PRODUCTION:
-        # Explicit fallback requested by project requirements.
         recipients.extend([
             'doctor@makokhamedicalcentre.top',
             'admin@makokhamedicalcentre.top'
@@ -2008,7 +2008,7 @@ def _configured_staff_email_recipients():
     return _unique_email_recipients(recipients)
 
 
-def _send_plain_email_via_resend(recipient_email, subject, plain_text):
+def _send_plain_email(recipient_email, subject, plain_text):
     """Send plain-text email via Resend API."""
     resend_api_key = (os.getenv('RESEND_API_KEY') or '').strip()
     resend_from = (
@@ -2021,8 +2021,13 @@ def _send_plain_email_via_resend(recipient_email, subject, plain_text):
 
     if not recipient_email:
         return False, 'Recipient email is required.'
-    if not resend_api_key or not resend_from:
-        return False, 'Resend configuration is incomplete.'
+    missing_configuration = []
+    if not resend_api_key:
+        missing_configuration.append('RESEND_API_KEY')
+    if not resend_from:
+        missing_configuration.append('RESEND_FROM_EMAIL')
+    if missing_configuration:
+        return False, 'Resend configuration is incomplete; set ' + ', '.join(missing_configuration) + '.'
 
     payload = {
         'from': resend_from,
@@ -2067,77 +2072,31 @@ def _send_plain_email_via_resend(recipient_email, subject, plain_text):
         except Exception:
             error_body = str(exc)
         app.logger.error('Resend HTTP error (%s): %s', getattr(exc, 'code', 'unknown'), error_body)
+        try:
+            error_payload = json.loads(error_body)
+        except ValueError:
+            error_payload = {}
+        error_message = error_payload.get('message')
+        if isinstance(error_message, str) and error_message.strip():
+            return False, f'Resend rejected the email: {error_message.strip()}'
         return False, f'Resend HTTP error: {getattr(exc, "code", "unknown")}'
     except Exception as exc:
         app.logger.error('Resend send failed: %s', str(exc))
         return False, str(exc)
 
 
-def _send_plain_email_via_spaceship(recipient_email, subject, plain_text):
-    """Send plain-text email via Spaceship SMTP credentials."""
-    smtp_host = (os.getenv('SPACESHIP_SMTP_HOST') or '').strip()
-    smtp_port = max(1, _env_int('SPACESHIP_SMTP_PORT', 465))
-    smtp_username = (os.getenv('SPACESHIP_SMTP_USERNAME') or '').strip()
-    smtp_password = (os.getenv('SPACESHIP_SMTP_PASSWORD') or '').strip()
-    smtp_from = (os.getenv('SPACESHIP_FROM_EMAIL') or smtp_username).strip()
-    smtp_reply_to = (os.getenv('SPACESHIP_REPLY_TO') or '').strip()
-    smtp_timeout = max(5, _env_int('SPACESHIP_SMTP_TIMEOUT_SECONDS', 20))
-    smtp_use_ssl = _env_flag('SPACESHIP_SMTP_USE_SSL', default=(smtp_port == 465))
-    smtp_use_starttls = _env_flag('SPACESHIP_SMTP_USE_STARTTLS', default=not smtp_use_ssl)
-
-    if not recipient_email:
-        return False, 'Recipient email is required.'
-    if not smtp_host or not smtp_username or not smtp_password or not smtp_from:
-        return False, 'Spaceship SMTP configuration is incomplete.'
-
-    message = EmailMessage()
-    message['From'] = smtp_from
-    message['To'] = recipient_email
-    message['Subject'] = subject
-    if smtp_reply_to:
-        message['Reply-To'] = smtp_reply_to
-    message.set_content(plain_text)
-
-    try:
-        ssl_context = ssl.create_default_context()
-        if smtp_use_ssl:
-            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=smtp_timeout, context=ssl_context) as server:
-                server.login(smtp_username, smtp_password)
-                server.send_message(message)
-        else:
-            with smtplib.SMTP(smtp_host, smtp_port, timeout=smtp_timeout) as server:
-                server.ehlo()
-                if smtp_use_starttls:
-                    server.starttls(context=ssl_context)
-                    server.ehlo()
-                server.login(smtp_username, smtp_password)
-                server.send_message(message)
-        return True, 'Email sent successfully via Spaceship SMTP.'
-    except Exception as exc:
-        app.logger.error('Spaceship SMTP send failed: %s', str(exc))
-        return False, str(exc)
-
-
-def _send_plain_email(recipient_email, subject, plain_text, provider='resend'):
-    """Send plain-text email through configured provider."""
-    provider_name = (provider or 'resend').strip().lower()
-    if provider_name == 'spaceship':
-        return _send_plain_email_via_spaceship(recipient_email, subject, plain_text)
-    return _send_plain_email_via_resend(recipient_email, subject, plain_text)
-
-
 def _send_transactional_email(recipient_email, subject, plain_text):
     """Resend channel for appointment confirmations, password resets, telemedicine links."""
-    return _send_plain_email(recipient_email, subject, plain_text, provider='resend')
+    return _send_plain_email(recipient_email, subject, plain_text)
 
 
 def _send_staff_email(recipient_email, subject, plain_text):
-    """Spaceship channel for internal staff mailboxes."""
-    return _send_plain_email(recipient_email, subject, plain_text, provider='spaceship')
+    """Send internal staff email through Resend."""
+    return _send_plain_email(recipient_email, subject, plain_text)
 
 
 def _send_staff_alert_email(subject, plain_text):
-    """Deliver internal alerts to staff inboxes using Spaceship SMTP."""
+    """Deliver internal alerts to staff inboxes using Resend."""
     recipients = _configured_staff_email_recipients()
     if not recipients:
         return False, 'No staff alert recipients are configured.'
