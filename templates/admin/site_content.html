@@ -449,7 +449,7 @@
 
             <section class="site-content-card">
                 <h3><i class="fas fa-image"></i> Homepage Hero Background</h3>
-                <p>Upload up to 10 images or videos for the hero slider. Each file must be 5 MB or smaller; videos must be 40 seconds or shorter. Drag inside each preview to set the visible focus area, drag handles to reorder slides, and tick remove for media you want deleted.</p>
+                <p>Upload up to 10 images or videos for the hero slider. Images may be up to 5 MB; videos may be up to 40 MB and 40 seconds. Drag inside each preview to set the visible focus area, drag handles to reorder slides, and tick remove for media you want deleted.</p>
                 <input type="hidden" id="heroPositionsJson" name="hero_positions_json" value='{{ site_content.hero_background_positions|tojson }}'>
                 <input type="hidden" id="heroOrderJson" name="hero_order_json" value='{{ site_content.hero_background_images|tojson }}'>
                 {% if site_content.hero_background_slides %}
@@ -512,7 +512,7 @@
                     <label class="form-label" for="hero_background_images">Hero Background Images or Videos</label>
                     <input id="hero_background_images" type="file" name="hero_background_images" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,video/mp4,video/webm" multiple>
                     <div class="hero-preview-grid hero-upload-preview-grid" id="heroUploadPreviewGrid" aria-live="polite"></div>
-                    <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF, MP4, and WebM. Upload limit: 10 files per save; each file must be 5 MB or smaller. Videos must be 40 seconds or shorter.</p>
+                    <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF, MP4, and WebM. Upload limit: 10 files per save; images may be up to 5 MB and videos up to 40 MB. Videos must be 40 seconds or shorter. The first selected video previews muted; all video previews have playback controls.</p>
                 </div>
             </section>
         </div>
@@ -534,16 +534,19 @@
     (function initHeroEditor() {
         const maxUpload = 10;
         const maxUploadFileBytes = {{ max_upload_file_bytes|int }};
+        const maxVideoFileBytes = {{ max_video_file_bytes|int }};
         const maxVideoDurationSeconds = {{ max_video_duration_seconds|int }};
         const fileInput = document.getElementById('hero_background_images');
         const uploadPreviewGrid = document.getElementById('heroUploadPreviewGrid');
         if (fileInput) {
             let uploadPreviewUrls = [];
             let overlongVideoFiles = new Set();
+            let unplayableVideoFiles = new Set();
             fileInput.addEventListener('change', () => {
                 uploadPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
                 uploadPreviewUrls = [];
                 overlongVideoFiles = new Set();
+                unplayableVideoFiles = new Set();
                 if (uploadPreviewGrid) uploadPreviewGrid.replaceChildren();
 
                 if (fileInput.files && fileInput.files.length > maxUpload) {
@@ -553,6 +556,7 @@
                     return;
                 }
 
+                let autoPlayStarted = false;
                 Array.from(fileInput.files || []).forEach((file) => {
                     if (!uploadPreviewGrid) return;
                     const previewUrl = URL.createObjectURL(file);
@@ -572,8 +576,8 @@
                     } else {
                         media.alt = file.name;
                     }
-                    media.src = previewUrl;
                     stage.appendChild(media);
+                    let durationLabel = null;
                     if (isVideo) {
                         card.appendChild(stage);
                     } else {
@@ -604,18 +608,21 @@
                     const label = document.createElement('p');
                     label.className = 'form-help';
                     label.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
-                    if (file.size > maxUploadFileBytes) {
+                    const maxFileBytes = isVideo ? maxVideoFileBytes : maxUploadFileBytes;
+                    if (file.size > maxFileBytes) {
                         label.classList.add('is-error');
-                        label.textContent += ' - exceeds the 5 MB file limit.';
+                        const maxMegabytes = Math.round(maxFileBytes / 1024 / 1024);
+                        label.textContent += ` - exceeds the ${maxMegabytes} MB ${isVideo ? 'video' : 'image'} limit.`;
                     }
                     card.appendChild(label);
                     if (isVideo) {
-                        const durationLabel = document.createElement('p');
+                        durationLabel = document.createElement('p');
                         durationLabel.className = 'form-help';
                         durationLabel.setAttribute('aria-live', 'polite');
                         durationLabel.textContent = 'Checking video duration...';
                         card.appendChild(durationLabel);
                         media.addEventListener('loadedmetadata', () => {
+                            if (!uploadPreviewUrls.includes(previewUrl)) return;
                             if (!Number.isFinite(media.duration)) {
                                 durationLabel.textContent = 'Duration unavailable; server validation is required.';
                             } else if (media.duration > maxVideoDurationSeconds) {
@@ -627,17 +634,50 @@
                                 durationLabel.textContent = `${media.duration.toFixed(1)} seconds`;
                             }
                         }, { once: true });
+                        media.addEventListener('playing', () => {
+                            if (!uploadPreviewUrls.includes(previewUrl)) return;
+                            unplayableVideoFiles.delete(file);
+                            if (!overlongVideoFiles.has(file)) {
+                                durationLabel.textContent = `${media.duration.toFixed(1)} seconds. Preview is playing muted.`;
+                                durationLabel.classList.remove('is-error');
+                            }
+                        });
                         media.addEventListener('error', () => {
-                            durationLabel.textContent = 'Preview unavailable in this browser; server will validate the video.';
+                            if (!uploadPreviewUrls.includes(previewUrl)) return;
+                            unplayableVideoFiles.add(file);
+                            durationLabel.textContent = 'Preview failed. Choose an MP4 or WebM video with a browser-compatible codec.';
+                            durationLabel.classList.add('is-error');
                         }, { once: true });
                     }
                     uploadPreviewGrid.appendChild(card);
+                    media.src = previewUrl;
+                    if (isVideo && !autoPlayStarted) {
+                        autoPlayStarted = true;
+                        const playRequest = media.play();
+                        if (playRequest && typeof playRequest.catch === 'function') {
+                            playRequest.catch((error) => {
+                                if (!uploadPreviewUrls.includes(previewUrl) || media.error || !durationLabel) return;
+                                if (error && error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
+                                    unplayableVideoFiles.add(file);
+                                    durationLabel.textContent = 'Preview failed. Choose an MP4 or WebM video with a browser-compatible codec.';
+                                    durationLabel.classList.add('is-error');
+                                } else {
+                                    durationLabel.textContent = 'Preview is ready. Press Play if playback did not start automatically.';
+                                }
+                            });
+                        }
+                    }
                 });
             });
 
             const form = fileInput.closest('form');
             if (form) {
                 form.addEventListener('submit', (event) => {
+                    if (unplayableVideoFiles.size) {
+                        event.preventDefault();
+                        alert('One or more videos could not be previewed. Choose browser-compatible MP4 or WebM videos before saving.');
+                        return;
+                    }
                     if (!overlongVideoFiles.size) return;
                     event.preventDefault();
                     alert(`Hero videos must be ${maxVideoDurationSeconds} seconds or shorter.`);

@@ -1016,10 +1016,15 @@
 
         document.querySelectorAll('input[type="file"]:not(#homepageVideoFile)').forEach((input) => {
             input.addEventListener('change', () => {
+                const isVideoUpload = input.accept.toLowerCase().includes('video/');
+                const maxFileBytes = (isVideoUpload ? 40 : 5) * 1024 * 1024;
+                const maxFileMegabytes = isVideoUpload ? 40 : 5;
                 const oversizedFile = Array.from(input.files || [])
-                    .find((file) => file.size > 5 * 1024 * 1024);
+                    .find((file) => file.size > maxFileBytes);
                 input.setCustomValidity(
-                    oversizedFile ? 'Each uploaded file must be 5 MB or smaller.' : ''
+                    oversizedFile
+                        ? `Each ${isVideoUpload ? 'video' : 'image'} must be ${maxFileMegabytes} MB or smaller.`
+                        : ''
                 );
                 if (oversizedFile) input.reportValidity();
             });

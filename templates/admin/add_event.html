@@ -71,9 +71,9 @@
         <div class="form-group">
             <label class="form-label" for="eventVideoUpload">Event Video (optional)</label>
             <input type="file" id="eventVideoUpload" name="video" class="form-control" accept="video/mp4,video/webm">
-            <small class="admin-field-note">Add one MP4 or WebM clip, up to 40 seconds and 5 MB. Event photos remain available alongside the video.</small>
+            <small class="admin-field-note">Add one MP4 or WebM clip, up to 40 seconds and 40 MB. Its preview starts muted; use the player controls to replay or unmute. Event photos remain available alongside the video.</small>
             <div class="event-video-preview" data-event-video-preview hidden>
-                <video controls playsinline preload="metadata"></video>
+                <video controls muted playsinline preload="metadata"></video>
                 <p data-event-video-status role="status" aria-live="polite"></p>
             </div>
         </div>

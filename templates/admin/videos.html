@@ -83,7 +83,7 @@
 
     <section class="video-upload-card">
         <h2 class="admin-form-title">Add a Video</h2>
-        <p class="admin-field-note">Use MP4 or WebM, keep clips at or under {{ max_video_duration_seconds }} seconds, and keep each file at or under {{ (max_video_file_bytes / 1024 / 1024)|round|int }} MB. 4K and 8K resolution is accepted; browser preview depends on codec support. Upload one video at a time. Only publish footage approved for public viewing; obtain consent before uploading identifiable patients.</p>
+        <p class="admin-field-note">Use MP4 or WebM, keep clips at or under {{ max_video_duration_seconds }} seconds, and keep each file at or under {{ (max_video_file_bytes / 1024 / 1024)|round|int }} MB. The selected clip previews automatically while muted; use the player controls to replay or unmute. 4K and 8K resolution is accepted when the browser supports the codec. Upload one video at a time. Only publish footage approved for public viewing; obtain consent before uploading identifiable patients.</p>
         <form method="POST" enctype="multipart/form-data" id="homepageVideoForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
@@ -94,7 +94,7 @@
                 <label class="form-label" for="homepageVideoFile">MP4 or WebM video</label>
                 <input type="file" id="homepageVideoFile" name="video" class="form-control" accept="video/mp4,video/webm,.mp4,.webm" required>
                 <video id="homepageVideoPreview" class="video-upload-preview" controls muted playsinline preload="metadata" hidden></video>
-                <span id="homepageVideoStatus" class="video-upload-status" role="status">Choose a clip up to {{ max_video_duration_seconds }} seconds and 5 MB.</span>
+                <span id="homepageVideoStatus" class="video-upload-status" role="status">Choose a clip up to {{ max_video_duration_seconds }} seconds and {{ (max_video_file_bytes / 1024 / 1024)|round|int }} MB.</span>
             </div>
             <div class="form-group">
                 <label class="form-label">
@@ -166,6 +166,7 @@
                 URL.revokeObjectURL(previewUrl);
                 previewUrl = '';
             }
+            preview.pause();
             preview.removeAttribute('src');
             preview.hidden = true;
             preview.load();
@@ -204,17 +205,40 @@
                     showStatus(`This video is ${Math.ceil(duration)} seconds long. Choose a clip of ${maxDurationSeconds} seconds or less.`, true);
                     return;
                 }
-                validationState = 'valid';
-                submitButton.disabled = false;
-                showStatus(`${duration.toFixed(1)} second clip is ready to upload.`, false);
+                const readyMessage = `${duration.toFixed(1)} second clip is ready to upload.`;
+                const markPreviewReady = (message) => {
+                    if (previewUrl !== selectedPreviewUrl) return;
+                    validationState = 'valid';
+                    submitButton.disabled = false;
+                    showStatus(message, false);
+                };
+                const playRequest = preview.play();
+                if (playRequest && typeof playRequest.then === 'function') {
+                    playRequest.then(() => {
+                        markPreviewReady(`${readyMessage} Preview is playing muted.`);
+                    }).catch((error) => {
+                        if (previewUrl !== selectedPreviewUrl || preview.error) return;
+                        if (error && error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
+                            validationState = 'invalid';
+                            submitButton.disabled = true;
+                            showStatus('This browser cannot play the video codec. Choose a browser-compatible MP4 or WebM video.', true);
+                        } else {
+                            markPreviewReady(`${readyMessage} Press Play to preview.`);
+                        }
+                    });
+                } else {
+                    markPreviewReady(`${readyMessage} Press Play to preview.`);
+                }
             }, { once: true });
             preview.addEventListener('error', () => {
                 if (previewUrl !== selectedPreviewUrl) return;
                 validationState = 'invalid';
-                validationState = 'valid';
-                submitButton.disabled = false;
-                showStatus('This browser cannot preview the video codec. The server will still validate its MP4/WebM format and duration.', false);
+                submitButton.disabled = true;
+                showStatus('This browser cannot play the video codec. Choose a browser-compatible MP4 or WebM video.', true);
             }, { once: true });
+            preview.muted = true;
+            preview.controls = true;
+            preview.playsInline = true;
             preview.src = previewUrl;
             preview.load();
         });

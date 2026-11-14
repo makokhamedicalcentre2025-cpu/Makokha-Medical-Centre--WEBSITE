@@ -291,9 +291,9 @@
             </div>
             {% endif %}
             <input type="file" id="eventVideoUpload" name="video" class="form-control" accept="video/mp4,video/webm">
-            <small class="admin-field-note">Leave blank to keep the current video. A new clip replaces it. MP4 or WebM, up to 40 seconds and 5 MB.</small>
+            <small class="admin-field-note">Leave blank to keep the current video. A new clip replaces it. MP4 or WebM, up to 40 seconds and 40 MB. Its preview starts muted; use the player controls to replay or unmute.</small>
             <div class="event-video-preview" data-event-video-preview hidden>
-                <video controls playsinline preload="metadata"></video>
+                <video controls muted playsinline preload="metadata"></video>
                 <p data-event-video-status role="status" aria-live="polite"></p>
             </div>
         </div>

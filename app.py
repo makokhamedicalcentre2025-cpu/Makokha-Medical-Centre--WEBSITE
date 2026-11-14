@@ -63,9 +63,10 @@ app = Flask(__name__)
 APP_ENV = (os.getenv('APP_ENV') or os.getenv('FLASK_ENV') or ('production' if os.getenv('RENDER') else 'development')).strip().lower()
 IS_PRODUCTION = APP_ENV == 'production'
 MAX_UPLOAD_FILE_BYTES = 5 * 1024 * 1024
+MAX_VIDEO_FILE_BYTES = 40 * 1024 * 1024
 MAX_HERO_MEDIA_PER_UPLOAD = 10
 MAX_UPLOAD_REQUEST_BYTES = (
-    MAX_UPLOAD_FILE_BYTES * MAX_HERO_MEDIA_PER_UPLOAD
+    MAX_VIDEO_FILE_BYTES * MAX_HERO_MEDIA_PER_UPLOAD
 ) + (2 * 1024 * 1024)
 
 secret_key = (os.getenv('SECRET_KEY') or '').strip()
@@ -102,7 +103,6 @@ app.config['SESSION_COOKIE_SECURE'] = IS_PRODUCTION
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=_env_int('SESSION_LIFETIME_HOURS', 12))
 
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm'}
-MAX_VIDEO_FILE_BYTES = MAX_UPLOAD_FILE_BYTES
 MAX_VIDEO_DURATION_SECONDS = 40
 FREE_SERVICE_WEEK_BANNER_FILENAME = 'event_20260603094216919930_0_1001142836.png'
 FREE_SERVICE_WEEK_BANNER_SOURCE_SHA256 = '206237d514796c8f69287d1fb9bc7628cc8c98cf864b3e5f37692b89d734e35f'
@@ -1008,14 +1008,18 @@ def _rewind_upload_stream(file_obj):
         pass
 
 
-def _read_uploaded_file_bytes(file_obj):
+def _read_uploaded_file_bytes(
+    file_obj,
+    max_bytes=MAX_UPLOAD_FILE_BYTES,
+    too_large_message='Each uploaded file must be 5 MB or smaller.'
+):
     _rewind_upload_stream(file_obj)
-    payload = file_obj.read(MAX_UPLOAD_FILE_BYTES + 1)
+    payload = file_obj.read(max_bytes + 1)
     if isinstance(payload, str):
         payload = payload.encode('utf-8')
     _rewind_upload_stream(file_obj)
-    if len(payload) > MAX_UPLOAD_FILE_BYTES:
-        raise ValueError('Each uploaded file must be 5 MB or smaller.')
+    if len(payload) > max_bytes:
+        raise ValueError(too_large_message)
     return payload or b''
 
 
@@ -1284,11 +1288,16 @@ def _save_uploaded_video(file_obj, filename, owner_type='homepage_video', owner_
     if extension not in ALLOWED_VIDEO_EXTENSIONS:
         raise ValueError('Video must be MP4 or WebM.')
 
-    payload = _read_uploaded_file_bytes(file_obj)
+    video_size_error = f'Each video must be {MAX_VIDEO_FILE_BYTES // (1024 * 1024)} MB or smaller.'
+    payload = _read_uploaded_file_bytes(
+        file_obj,
+        max_bytes=MAX_VIDEO_FILE_BYTES,
+        too_large_message=video_size_error
+    )
     if not payload:
         raise ValueError('Uploaded video is empty.')
     if len(payload) > MAX_VIDEO_FILE_BYTES:
-        raise ValueError('Each video must be 5 MB or smaller.')
+        raise ValueError(video_size_error)
 
     content_type_by_extension = {
         'mp4': 'video/mp4',
@@ -3765,6 +3774,7 @@ def admin_site_content():
         site_content=site_content,
         services_editor_text=site_content.get('services_editor_text', ''),
         max_upload_file_bytes=MAX_UPLOAD_FILE_BYTES,
+        max_video_file_bytes=MAX_VIDEO_FILE_BYTES,
         max_video_duration_seconds=MAX_VIDEO_DURATION_SECONDS
     )
 
