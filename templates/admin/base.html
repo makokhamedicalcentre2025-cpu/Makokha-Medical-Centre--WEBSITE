@@ -898,6 +898,12 @@
                     </a>
                 </li>
                 <li class="admin-sidebar-item">
+                    <a href="{{ url_for('admin_awareness') }}" class="admin-sidebar-link {% if request.endpoint in ['admin_awareness', 'admin_add_awareness_media', 'admin_edit_awareness_media', 'admin_delete_awareness_media'] %}active{% endif %}">
+                        <i class="fas fa-heart-pulse"></i>
+                        Health Awareness
+                    </a>
+                </li>
+                <li class="admin-sidebar-item">
                     <a href="{{ url_for('admin_doctors') }}" class="admin-sidebar-link {% if 'doctor' in request.endpoint %}active{% endif %}">
                         <i class="fas fa-user-md"></i>
                         Doctors

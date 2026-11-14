@@ -449,7 +449,8 @@
 
             <section class="site-content-card">
                 <h3><i class="fas fa-image"></i> Homepage Hero Background</h3>
-                <p>Upload up to {{ max_hero_media_per_upload }} hero media files per save, with no more than {{ max_hero_videos_per_upload }} videos. Images may be up to 5 MB; videos may be up to 40 MB and 40 seconds. Drag inside each preview to set the visible focus area, drag handles to reorder slides, and tick remove for media you want deleted.</p>
+                <p>The bundled hero video plays first, followed by uploaded media. If a hero image or video fails to load, it is disabled and the administrator is emailed. After repairing the media, select the option below to re-enable it. Upload up to {{ max_hero_media_per_upload }} hero media files per save, with no more than {{ max_hero_videos_per_upload }} videos. Images may be up to 5 MB; videos may be up to 40 MB and 40 seconds. Drag inside each preview to set the visible focus area, drag handles to reorder slides, and tick remove for media you want deleted.</p>
+                <label class="form-help"><input type="checkbox" name="reenable_disabled_hero_media" value="on"> Re-enable hero media disabled after load errors (select only after repairs).</label>
                 <input type="hidden" id="heroPositionsJson" name="hero_positions_json" value='{{ site_content.hero_background_positions|tojson }}'>
                 <input type="hidden" id="heroOrderJson" name="hero_order_json" value='{{ site_content.hero_background_images|tojson }}'>
                 {% if site_content.hero_background_slides %}

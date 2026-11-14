@@ -66,6 +66,8 @@ MAX_UPLOAD_FILE_BYTES = 5 * 1024 * 1024
 MAX_VIDEO_FILE_BYTES = 40 * 1024 * 1024
 MAX_HERO_MEDIA_PER_UPLOAD = 10
 MAX_HERO_VIDEOS_PER_UPLOAD = 5
+MAX_AWARENESS_MEDIA = 20
+MAX_AWARENESS_VIDEO_UPLOADS = 10
 MAX_UPLOAD_REQUEST_BYTES = (
     MAX_VIDEO_FILE_BYTES * MAX_HERO_MEDIA_PER_UPLOAD
 ) + (2 * 1024 * 1024)
@@ -115,8 +117,53 @@ BUILTIN_HOMEPAGE_VIDEOS = (
     ('service-laboratory.mp4', 'Laboratory Services'),
     ('service-pharmacy.mp4', 'Pharmacy Services')
 )
+DEFAULT_WHY_REASONS = (
+    ('Care That Listens', 'We want every visit to feel welcoming, with clear guidance and room for your questions.', 'fas fa-stethoscope'),
+    ('Care in One Place', 'Outpatient, laboratory, pharmacy, maternal and child health services in one care centre.', 'fas fa-hospital'),
+    ('Respectful, Safe Care', 'Your comfort, privacy and wellbeing matter at every step of your care.', 'fas fa-shield-alt'),
+    ('People Here to Help', 'Our staff can guide you through services, appointments and practical next steps.', 'fas fa-headset'),
+    ('Support for Every Stage', 'Care for individuals and families, including maternal and child health services.', 'fas fa-heart')
+)
+DEFAULT_HEALTH_TIPS = (
+    (
+        'High blood pressure',
+        'Know your blood pressure numbers',
+        'High blood pressure may have no obvious symptoms. Ask a health professional about regular checks, keep follow-up visits, and take medicines only as prescribed. Do not stop treatment without speaking with your care team.'
+    ),
+    (
+        'Diabetes',
+        'Keep up with diabetes reviews',
+        'Attend the check-ups recommended by your clinician and agree on a food, activity, and monitoring plan that fits you. Ask your care team before changing medicines or starting supplements.'
+    ),
+    (
+        'Asthma',
+        'Review your asthma action plan',
+        'Use inhalers as prescribed and ask a clinician to check your technique and action plan. Severe or rapidly worsening difficulty breathing needs urgent medical attention.'
+    ),
+    (
+        'Arthritis',
+        'Plan movement and pain care with your clinician',
+        'A care professional can help you choose suitable movement and symptom-management options. Check before starting a new medicine or supplement, and seek advice if symptoms change.'
+    ),
+    (
+        'Chronic kidney disease',
+        'Keep kidney-health follow-ups',
+        'Attend recommended checks and ask a clinician or pharmacist to review your medicines. Some pain relievers and supplements may not be suitable for everyone with kidney disease.'
+    )
+)
+DEFAULT_AWARENESS_CAMPAIGNS = (
+    ('service-outpatient.mp4', 'Outpatient care: check in early', 'Learn how a conversation with a care professional can help you plan your next step.'),
+    ('service-emergency.mp4', 'Emergency care: know where to go', 'A short service overview. Seek urgent local care for a medical emergency.'),
+    ('service-maternal-child.mp4', 'Maternal and child health', 'Ask the care team about routine visits and services for parents and children.'),
+    ('service-laboratory.mp4', 'Laboratory services: follow through', 'Your clinician can explain which tests are appropriate and what your results mean.'),
+    ('service-pharmacy.mp4', 'Pharmacy support: ask questions', 'Ask a qualified health professional before changing a prescribed medicine.')
+)
+BUILTIN_AWARENESS_MEDIA_SEED_KEY = 'homepage_awareness_media_seeded'
+BUILTIN_WHY_REASONS_SEED_KEY = 'homepage_why_reasons_seeded'
+BUILTIN_HEALTH_TIPS_SEED_KEY = 'homepage_health_tips_seeded'
 BUILTIN_HOMEPAGE_VIDEOS_SEED_KEY = 'homepage_builtin_videos_seeded'
 EMERGENCY_VIDEO_CONTENT_MIGRATION_KEY = 'homepage_emergency_video_content_v2'
+DEFAULT_HERO_VIDEO_FILENAME = 'hero-default.mp4'
 
 engine_options = {'pool_pre_ping': True}
 if database_uri.startswith('postgresql://'):
@@ -267,6 +314,7 @@ DEFAULT_SITE_SETTINGS = {
     'hero_background_image': '',
     'hero_background_images_json': '[]',
     'hero_background_positions_json': '{}',
+    'hero_disabled_media_json': '[]',
     'telemedicine_title': UPCOMING_TELEMEDICINE['title'],
     'telemedicine_subtitle': UPCOMING_TELEMEDICINE['subtitle'],
     'telemedicine_description': UPCOMING_TELEMEDICINE['description'],
@@ -491,6 +539,44 @@ class HomepageVideo(db.Model):
 
     def __repr__(self):
         return f'<HomepageVideo {self.title}>'
+
+
+class WhyReason(db.Model):
+    """Editable reason cards shown in the homepage care section."""
+    __tablename__ = 'why_reason'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    icon = db.Column(db.String(60), nullable=False)
+    display_order = db.Column(db.Integer, nullable=False, default=0)
+
+
+class HealthTip(db.Model):
+    """Short, general health education cards for the homepage awareness carousel."""
+    __tablename__ = 'health_tip'
+
+    id = db.Column(db.Integer, primary_key=True)
+    condition = db.Column(db.String(120), nullable=False)
+    title = db.Column(db.String(160), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    display_order = db.Column(db.Integer, nullable=False, default=0)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+
+
+class AwarenessMedia(db.Model):
+    """Uploaded video/image slides paired with homepage health-awareness tips."""
+    __tablename__ = 'awareness_media'
+
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False, unique=True)
+    title = db.Column(db.String(160), nullable=False)
+    description = db.Column(db.Text, nullable=False, default='')
+    media_type = db.Column(db.String(10), nullable=False)
+    content_type = db.Column(db.String(120), nullable=False)
+    display_order = db.Column(db.Integer, nullable=False, default=0)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    seed_key = db.Column(db.String(120), nullable=True, unique=True)
 
 
 class UploadedAsset(db.Model):
@@ -1322,6 +1408,32 @@ def _save_uploaded_video(file_obj, filename, owner_type='homepage_video', owner_
     return len(payload)
 
 
+def _save_awareness_media_upload(file_obj):
+    """Validate and store one awareness image or short video in database-backed storage."""
+    original_name = _safe_uploaded_filename(getattr(file_obj, 'filename', ''))
+    extension = original_name.rsplit('.', 1)[1].lower() if '.' in original_name else ''
+    filename = f'awareness_{uuid4().hex}.{extension}'
+    if extension in ALLOWED_VIDEO_EXTENSIONS:
+        _save_uploaded_video(file_obj, filename, owner_type='awareness_media')
+        media_type = 'video'
+    elif extension in ALLOWED_IMAGE_EXTENSIONS:
+        _save_uploaded_image(
+            file_obj,
+            filename,
+            image_label='Awareness image',
+            owner_type='awareness_media'
+        )
+        media_type = 'image'
+    else:
+        raise ValueError('Awareness media must be PNG, JPG, JPEG, WEBP, GIF, MP4, or WebM.')
+
+    content_type = _guess_mime_type(
+        filename,
+        'video/mp4' if media_type == 'video' else 'image/jpeg'
+    )
+    return filename, media_type, content_type
+
+
 def _iter_mp4_boxes(payload, start, end):
     """Yield ISO BMFF box type and payload bounds without decoding video frames."""
     offset = start
@@ -1508,6 +1620,111 @@ def _seed_builtin_homepage_videos():
     app.logger.info('Seeded %s built-in homepage service videos.', seeded_count)
 
 
+def _ensure_awareness_content():
+    """Seed editable homepage care reasons, chronic-condition tips, and service clips once."""
+    reason_seeded = SiteSetting.query.filter_by(setting_key=BUILTIN_WHY_REASONS_SEED_KEY).first()
+    if not reason_seeded:
+        if WhyReason.query.count() == 0:
+            db.session.add_all([
+                WhyReason(
+                    title=title,
+                    description=description,
+                    icon=icon,
+                    display_order=index
+                )
+                for index, (title, description, icon) in enumerate(DEFAULT_WHY_REASONS, start=1)
+            ])
+        db.session.add(SiteSetting(setting_key=BUILTIN_WHY_REASONS_SEED_KEY, setting_value='1'))
+
+    tips_seeded = SiteSetting.query.filter_by(setting_key=BUILTIN_HEALTH_TIPS_SEED_KEY).first()
+    if not tips_seeded:
+        if HealthTip.query.count() == 0:
+            db.session.add_all([
+                HealthTip(
+                    condition=condition,
+                    title=title,
+                    description=description,
+                    display_order=index,
+                    is_active=True
+                )
+                for index, (condition, title, description) in enumerate(DEFAULT_HEALTH_TIPS, start=1)
+            ])
+        db.session.add(SiteSetting(setting_key=BUILTIN_HEALTH_TIPS_SEED_KEY, setting_value='1'))
+
+    media_seeded = SiteSetting.query.filter_by(
+        setting_key=BUILTIN_AWARENESS_MEDIA_SEED_KEY
+    ).first()
+    if not media_seeded:
+        for index, (source_filename, title, description) in enumerate(DEFAULT_AWARENESS_CAMPAIGNS, start=1):
+            seed_key = f'builtin:{source_filename}'
+            if AwarenessMedia.query.filter_by(seed_key=seed_key).first():
+                continue
+
+            source_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                'assets',
+                'homepage-videos',
+                source_filename
+            )
+            source_asset = _get_uploaded_asset(source_filename)
+            if source_asset and source_asset.file_data:
+                payload = source_asset.file_data
+            else:
+                with open(source_path, 'rb') as video_file:
+                    payload = video_file.read(MAX_VIDEO_FILE_BYTES + 1)
+
+            if not payload or len(payload) > MAX_VIDEO_FILE_BYTES:
+                raise ValueError(f'Bundled awareness video {source_filename} is empty or too large.')
+            if b'ftyp' not in payload[:32]:
+                raise ValueError(f'Bundled awareness video {source_filename} is not a valid MP4 file.')
+
+            filename = f'awareness_{uuid4().hex}.mp4'
+            _store_uploaded_asset(
+                filename=filename,
+                payload_bytes=payload,
+                content_type='video/mp4',
+                original_filename=source_filename,
+                owner_type='awareness_media'
+            )
+            db.session.add(AwarenessMedia(
+                filename=filename,
+                title=title,
+                description=description,
+                media_type='video',
+                content_type='video/mp4',
+                display_order=index,
+                is_active=True,
+                seed_key=seed_key
+            ))
+        db.session.add(SiteSetting(
+            setting_key=BUILTIN_AWARENESS_MEDIA_SEED_KEY,
+            setting_value='1'
+        ))
+
+    db.session.commit()
+
+
+def _get_awareness_media(active_only=True):
+    query = AwarenessMedia.query
+    if active_only:
+        query = query.filter_by(is_active=True)
+    slides = []
+    for media in query.order_by(AwarenessMedia.display_order.asc(), AwarenessMedia.id.asc()).all():
+        media_url = _uploaded_image_url(media.filename)
+        if not media_url:
+            continue
+        slides.append({
+            'id': media.id,
+            'filename': media.filename,
+            'url': media_url,
+            'title': media.title,
+            'description': media.description,
+            'media_type': media.media_type,
+            'content_type': media.content_type
+        })
+    return slides
+
+
 def _parse_hero_media_list(raw_value):
     """Decode stored JSON filename list for hero images and videos."""
     if not raw_value:
@@ -1619,6 +1836,9 @@ def get_site_content():
     services = _parse_services_json(data.get('services_json'))
     data['services'] = services
     data['services_editor_text'] = _services_to_editor_text(services)
+    disabled_hero_media = set(_parse_hero_media_list(data.get('hero_disabled_media_json')))
+    data['hero_disabled_media'] = sorted(disabled_hero_media)
+    data['default_hero_video_filename'] = DEFAULT_HERO_VIDEO_FILENAME
     hero_filenames = _resolve_hero_background_filenames(raw_map)
     hero_positions = _parse_hero_background_positions(raw_map.get('hero_background_positions_json'))
     hero_image_urls = []
@@ -1626,6 +1846,8 @@ def get_site_content():
     hero_slides = []
     resolved_positions = {}
     for image_name in hero_filenames:
+        if image_name in disabled_hero_media:
+            continue
         image_url = _uploaded_image_url(image_name)
         if not image_url:
             continue
@@ -1829,6 +2051,8 @@ def inject_site_content():
         fallback['hero_background_positions'] = {}
         fallback['hero_background_positions_json'] = '{}'
         fallback['hero_background_image_url'] = ''
+        fallback['hero_disabled_media'] = []
+        fallback['default_hero_video_filename'] = DEFAULT_HERO_VIDEO_FILENAME
         fallback['services_banner_image_url'] = ''
         fallback['services_banner_position'] = _parse_focus_position_json(fallback.get('services_banner_position_json'))
         fallback['telemedicine'] = _build_telemedicine_content(fallback)
@@ -2829,6 +3053,7 @@ def _ensure_runtime_schema_once():
         _remove_retired_service_content()
         _migrate_referenced_uploads_to_database()
         _seed_builtin_homepage_videos()
+        _ensure_awareness_content()
         _update_emergency_video_content_once()
         RUNTIME_SCHEMA_READY = True
 
@@ -3048,6 +3273,13 @@ def index():
             'content_type': _guess_mime_type(video.filename, 'video/mp4'),
             'title': video.title
         })
+
+    why_reasons = WhyReason.query.order_by(WhyReason.display_order.asc(), WhyReason.id.asc()).all()
+    health_tips = HealthTip.query.filter_by(is_active=True).order_by(
+        HealthTip.display_order.asc(),
+        HealthTip.id.asc()
+    ).all()
+    awareness_media = _get_awareness_media()
     
     return render_template(
         'index.html',
@@ -3066,8 +3298,76 @@ def index():
         event_type_options=EVENT_TYPE_FILTER_OPTIONS,
         live_stats=live_stats,
         gallery_photos=gallery_photos,
-        homepage_videos=homepage_videos
+        homepage_videos=homepage_videos,
+        why_reasons=why_reasons,
+        health_tips=health_tips,
+        awareness_media=awareness_media
     )
+
+
+@app.route('/api/hero-media-failure', methods=['POST'])
+def report_hero_media_failure():
+    """Disable a failed homepage hero asset and alert the administrator."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({'success': False, 'message': 'A hero media filename is required.'}), 400
+
+    filename = secure_filename(str(data.get('filename') or '').strip())
+    if not filename or not _is_allowed_hero_media_filename(filename):
+        return jsonify({'success': False, 'message': 'The hero media filename is invalid.'}), 400
+
+    raw_map = _load_site_setting_map()
+    active_filenames = _resolve_hero_background_filenames(raw_map)
+    if filename != DEFAULT_HERO_VIDEO_FILENAME and filename not in active_filenames:
+        return jsonify({'success': False, 'message': 'The hero media is not configured.'}), 404
+
+    disabled_filenames = _parse_hero_media_list(raw_map.get('hero_disabled_media_json'))
+    if filename in disabled_filenames:
+        return jsonify({
+            'success': True,
+            'disabled': True,
+            'already_disabled': True,
+            'notification_sent': False,
+            'admin_notified': False,
+            'message': 'This hero media was already disabled.'
+        })
+
+    disabled_filenames.append(filename)
+    _upsert_site_settings({'hero_disabled_media_json': json.dumps(disabled_filenames)})
+    db.session.commit()
+
+    subject = 'Homepage hero media failed to load'
+    message = (
+        'The homepage automatically disabled a hero image or video after a browser reported that it '
+        'could not load.\n\n'
+        f'File: {filename}\n'
+        f'Reported at: {datetime.now(timezone.utc).isoformat()}\n\n'
+        'Please check the file and save the Homepage Hero Background settings to re-enable media after repair.'
+    )
+    admin_email = (os.getenv('ADMIN_EMAIL') or '').strip()
+    recipients = _unique_email_recipients([admin_email] + _configured_staff_email_recipients())
+    admin_notified = False
+    notification_sent = False
+    for recipient in recipients:
+        sent, result = _send_staff_email(recipient, subject, message)
+        notification_sent = notification_sent or sent
+        if admin_email and recipient.lower() == admin_email.lower():
+            admin_notified = sent
+        if not sent:
+            app.logger.error('Hero media failure notification to %s failed: %s', recipient, result)
+
+    if not recipients:
+        app.logger.error('Hero media failure notification could not be sent: no admin email is configured.')
+    elif admin_email and not admin_notified:
+        app.logger.error('Hero media failure notification was not delivered to ADMIN_EMAIL.')
+
+    return jsonify({
+        'success': True,
+        'disabled': True,
+        'notification_sent': notification_sent,
+        'admin_notified': admin_notified,
+        'message': 'The failed hero media was disabled.'
+    })
 
 
 @app.route('/about')
@@ -3767,6 +4067,8 @@ def admin_site_content():
             updates['hero_background_images_json'] = json.dumps(hero_filenames)
             updates['hero_background_positions_json'] = json.dumps(hero_positions)
             updates['hero_background_image'] = hero_filenames[0] if hero_filenames else ''
+            if request.form.get('reenable_disabled_hero_media') == 'on':
+                updates['hero_disabled_media_json'] = '[]'
 
             _upsert_site_settings(updates)
             db.session.commit()
@@ -3787,6 +4089,234 @@ def admin_site_content():
         max_hero_media_per_upload=MAX_HERO_MEDIA_PER_UPLOAD,
         max_hero_videos_per_upload=MAX_HERO_VIDEOS_PER_UPLOAD
     )
+
+
+@app.route('/admin/awareness', methods=['GET', 'POST'])
+@admin_required
+def admin_awareness():
+    """Edit the homepage reasons, health tips, and awareness media."""
+    _ensure_awareness_content()
+    if request.method == 'POST':
+        try:
+            delete_reason_id = request.form.get('delete_reason_id', type=int)
+            if delete_reason_id:
+                reason = WhyReason.query.get_or_404(delete_reason_id)
+                db.session.delete(reason)
+                db.session.commit()
+                flash('Reason deleted.', 'success')
+                return redirect(url_for('admin_awareness'))
+
+            delete_tip_id = request.form.get('delete_tip_id', type=int)
+            if delete_tip_id:
+                tip = HealthTip.query.get_or_404(delete_tip_id)
+                db.session.delete(tip)
+                db.session.commit()
+                flash('Health tip deleted.', 'success')
+                return redirect(url_for('admin_awareness'))
+
+            reasons = WhyReason.query.order_by(WhyReason.display_order.asc(), WhyReason.id.asc()).all()
+            tips = HealthTip.query.order_by(HealthTip.display_order.asc(), HealthTip.id.asc()).all()
+
+            for reason in reasons:
+                reason.title = (request.form.get(f'reason_{reason.id}_title') or '').strip()
+                reason.description = (request.form.get(f'reason_{reason.id}_description') or '').strip()
+                reason.icon = (request.form.get(f'reason_{reason.id}_icon') or '').strip()
+                display_order = request.form.get(f'reason_{reason.id}_order', type=int)
+                if not reason.title or not reason.description or not reason.icon:
+                    raise ValueError(f'Reason "{reason.title or reason.id}" requires a title, description, and icon class.')
+                if len(reason.title) > 120 or len(reason.description) > 500 or len(reason.icon) > 60:
+                    raise ValueError(f'Reason "{reason.title}" is longer than the allowed limit.')
+                if display_order is None or display_order < 1:
+                    raise ValueError(f'Reason "{reason.title}" needs a positive display order.')
+                reason.display_order = display_order
+
+            for tip in tips:
+                tip.condition = (request.form.get(f'tip_{tip.id}_condition') or '').strip()
+                tip.title = (request.form.get(f'tip_{tip.id}_title') or '').strip()
+                tip.description = (request.form.get(f'tip_{tip.id}_description') or '').strip()
+                display_order = request.form.get(f'tip_{tip.id}_order', type=int)
+                if not tip.condition or not tip.title or not tip.description:
+                    raise ValueError(f'Health tip "{tip.title or tip.id}" requires a condition, title, and description.')
+                if len(tip.condition) > 120 or len(tip.title) > 160 or len(tip.description) > 700:
+                    raise ValueError(f'Health tip "{tip.title}" is longer than the allowed limit.')
+                if display_order is None or display_order < 1:
+                    raise ValueError(f'Health tip "{tip.title}" needs a positive display order.')
+                tip.is_active = request.form.get(f'tip_{tip.id}_active') == 'on'
+                tip.display_order = display_order
+
+            db.session.commit()
+            flash('Homepage reasons and health tips updated.', 'success')
+            return redirect(url_for('admin_awareness'))
+        except Exception as exc:
+            db.session.rollback()
+            app.logger.exception('Failed to update homepage awareness content.')
+            flash(f'Unable to update health awareness content: {exc}', 'error')
+
+    return render_template(
+        'admin/awareness.html',
+        reasons=WhyReason.query.order_by(WhyReason.display_order.asc(), WhyReason.id.asc()).all(),
+        health_tips=HealthTip.query.order_by(HealthTip.display_order.asc(), HealthTip.id.asc()).all(),
+        awareness_media=AwarenessMedia.query.order_by(
+            AwarenessMedia.display_order.asc(), AwarenessMedia.id.asc()
+        ).all(),
+        max_video_file_bytes=MAX_VIDEO_FILE_BYTES,
+        max_video_duration_seconds=MAX_VIDEO_DURATION_SECONDS,
+        max_awareness_media=MAX_AWARENESS_MEDIA
+    )
+
+
+@app.route('/admin/awareness/reasons/add', methods=['POST'])
+@admin_required
+def admin_add_awareness_reason():
+    try:
+        if WhyReason.query.count() >= MAX_AWARENESS_MEDIA:
+            raise ValueError(f'You can manage up to {MAX_AWARENESS_MEDIA} homepage reasons.')
+        title = (request.form.get('title') or '').strip()
+        description = (request.form.get('description') or '').strip()
+        icon = (request.form.get('icon') or '').strip()
+        if not title or not description or not icon:
+            raise ValueError('A reason title, description, and icon class are required.')
+        if len(title) > 120 or len(description) > 500 or len(icon) > 60:
+            raise ValueError('The reason content is longer than the allowed limit.')
+        last_reason = WhyReason.query.order_by(WhyReason.display_order.desc()).first()
+        db.session.add(WhyReason(
+            title=title,
+            description=description,
+            icon=icon,
+            display_order=(last_reason.display_order if last_reason else 0) + 1
+        ))
+        db.session.commit()
+        flash('Homepage reason added.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        app.logger.exception('Failed to add a homepage reason.')
+        flash(f'Unable to add homepage reason: {exc}', 'error')
+    return redirect(url_for('admin_awareness'))
+
+
+@app.route('/admin/awareness/tips/add', methods=['POST'])
+@admin_required
+def admin_add_awareness_tip():
+    try:
+        if HealthTip.query.count() >= MAX_AWARENESS_MEDIA:
+            raise ValueError(f'You can manage up to {MAX_AWARENESS_MEDIA} health tips.')
+        condition = (request.form.get('condition') or '').strip()
+        title = (request.form.get('title') or '').strip()
+        description = (request.form.get('description') or '').strip()
+        if not condition or not title or not description:
+            raise ValueError('A condition, tip title, and description are required.')
+        if len(condition) > 120 or len(title) > 160 or len(description) > 700:
+            raise ValueError('The health tip is longer than the allowed limit.')
+        last_tip = HealthTip.query.order_by(HealthTip.display_order.desc()).first()
+        db.session.add(HealthTip(
+            condition=condition,
+            title=title,
+            description=description,
+            display_order=(last_tip.display_order if last_tip else 0) + 1,
+            is_active=True
+        ))
+        db.session.commit()
+        flash('Health tip added.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        app.logger.exception('Failed to add a homepage health tip.')
+        flash(f'Unable to add health tip: {exc}', 'error')
+    return redirect(url_for('admin_awareness'))
+
+
+@app.route('/admin/awareness/media/add', methods=['POST'])
+@admin_required
+def admin_add_awareness_media():
+    try:
+        if AwarenessMedia.query.count() >= MAX_AWARENESS_MEDIA:
+            raise ValueError(f'You can manage up to {MAX_AWARENESS_MEDIA} awareness media items.')
+        uploaded_file = request.files.get('media')
+        if not uploaded_file or not uploaded_file.filename:
+            raise ValueError('Choose an image or video to upload.')
+        title = (request.form.get('title') or '').strip()
+        description = (request.form.get('description') or '').strip()
+        if not title or not description:
+            raise ValueError('A title and description are required.')
+        if len(title) > 160 or len(description) > 700:
+            raise ValueError('The title or description is longer than the allowed limit.')
+
+        filename, media_type, content_type = _save_awareness_media_upload(uploaded_file)
+        if media_type == 'video' and AwarenessMedia.query.filter_by(media_type='video').count() >= MAX_AWARENESS_VIDEO_UPLOADS:
+            raise ValueError(f'You can manage up to {MAX_AWARENESS_VIDEO_UPLOADS} awareness videos.')
+        db.session.add(AwarenessMedia(
+            filename=filename,
+            title=title,
+            description=description,
+            media_type=media_type,
+            content_type=content_type,
+            display_order=AwarenessMedia.query.count() + 1,
+            is_active=True
+        ))
+        db.session.commit()
+        flash('Awareness media uploaded.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        app.logger.exception('Failed to upload homepage awareness media.')
+        flash(f'Unable to upload awareness media: {exc}', 'error')
+    return redirect(url_for('admin_awareness'))
+
+
+@app.route('/admin/awareness/media/<int:media_id>/edit', methods=['POST'])
+@admin_required
+def admin_edit_awareness_media(media_id):
+    media = AwarenessMedia.query.get_or_404(media_id)
+    try:
+        title = (request.form.get('title') or '').strip()
+        description = (request.form.get('description') or '').strip()
+        display_order = request.form.get('display_order', type=int)
+        if not title or not description:
+            raise ValueError('A title and description are required.')
+        if len(title) > 160 or len(description) > 700:
+            raise ValueError('The title or description is longer than the allowed limit.')
+        if display_order is None or display_order < 1:
+            raise ValueError('Display order must be a positive number.')
+
+        uploaded_file = request.files.get('media')
+        if uploaded_file and uploaded_file.filename:
+            extension = _safe_uploaded_filename(uploaded_file.filename).rsplit('.', 1)[-1].lower()
+            if extension in ALLOWED_VIDEO_EXTENSIONS and media.media_type != 'video':
+                video_count = AwarenessMedia.query.filter_by(media_type='video').count()
+                if video_count >= MAX_AWARENESS_VIDEO_UPLOADS:
+                    raise ValueError(f'You can manage up to {MAX_AWARENESS_VIDEO_UPLOADS} awareness videos.')
+            old_filename = media.filename
+            filename, media_type, content_type = _save_awareness_media_upload(uploaded_file)
+            media.filename = filename
+            media.media_type = media_type
+            media.content_type = content_type
+            _delete_uploaded_asset(old_filename)
+
+        media.title = title
+        media.description = description
+        media.display_order = display_order
+        media.is_active = request.form.get('is_active') == 'on'
+        db.session.commit()
+        flash('Awareness media updated.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        app.logger.exception('Failed to update homepage awareness media %s.', media_id)
+        flash(f'Unable to update awareness media: {exc}', 'error')
+    return redirect(url_for('admin_awareness'))
+
+
+@app.route('/admin/awareness/media/<int:media_id>/delete', methods=['POST'])
+@admin_required
+def admin_delete_awareness_media(media_id):
+    media = AwarenessMedia.query.get_or_404(media_id)
+    try:
+        _delete_uploaded_asset(media.filename)
+        db.session.delete(media)
+        db.session.commit()
+        flash('Awareness media deleted.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        app.logger.exception('Failed to delete homepage awareness media %s.', media_id)
+        flash(f'Unable to delete awareness media: {exc}', 'error')
+    return redirect(url_for('admin_awareness'))
 
 
 @app.route('/admin/doctors')

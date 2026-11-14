@@ -1,0 +1,247 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Health Awareness - Admin Panel{% endblock %}
+{% block page_title %}Health Awareness{% endblock %}
+
+{% block extra_css %}
+<style>
+    .awareness-editor-section {
+        margin-top: 1.5rem;
+        padding: 1.25rem;
+        border: 1px solid #dce6f3;
+        border-radius: 12px;
+        background: #ffffff;
+    }
+
+    .awareness-editor-section h2 {
+        margin-top: 0;
+    }
+
+    .awareness-content-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .awareness-content-card,
+    .awareness-media-card {
+        min-width: 0;
+        padding: 1rem;
+        border: 1px solid #e1e9f1;
+        border-radius: 10px;
+        background: #fbfcfe;
+    }
+
+    .awareness-media-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+
+    .awareness-media-card img,
+    .awareness-media-card video {
+        display: block;
+        width: 100%;
+        max-height: 220px;
+        margin-bottom: 0.75rem;
+        border-radius: 8px;
+        background: #edf2f5;
+        object-fit: contain;
+    }
+
+    .awareness-media-card video {
+        aspect-ratio: 16 / 9;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-form-layout">
+    <div class="admin-page-intro">
+        <h1><i class="fas fa-heart-pulse" aria-hidden="true"></i> Homepage Health Awareness</h1>
+        <p>Add, edit, reorder, and delete homepage care reasons and chronic-condition tips. Manage the images and short videos shown alongside them below.</p>
+        <p>Health information is general education and does not replace advice from a qualified health professional.</p>
+    </div>
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <section class="awareness-editor-section">
+            <h2 class="admin-form-title">Why choose Orivana Care?</h2>
+            <div class="awareness-content-grid">
+                {% for reason in reasons %}
+                <article class="awareness-content-card">
+                    <h3>Reason {{ reason.display_order }}</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="reason{{ reason.id }}Title">Title</label>
+                        <input id="reason{{ reason.id }}Title" class="form-control" name="reason_{{ reason.id }}_title" maxlength="120" value="{{ reason.title }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="reason{{ reason.id }}Description">Description</label>
+                        <textarea id="reason{{ reason.id }}Description" class="form-control" name="reason_{{ reason.id }}_description" maxlength="500" rows="3" required>{{ reason.description }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="reason{{ reason.id }}Icon">Icon class</label>
+                        <input id="reason{{ reason.id }}Icon" class="form-control" name="reason_{{ reason.id }}_icon" maxlength="60" value="{{ reason.icon }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="reason{{ reason.id }}Order">Display order</label>
+                        <input id="reason{{ reason.id }}Order" type="number" min="1" name="reason_{{ reason.id }}_order" class="form-control" value="{{ reason.display_order }}" required>
+                    </div>
+                    <button type="submit" class="btn btn-outline" name="delete_reason_id" value="{{ reason.id }}" formnovalidate onclick="return confirm('Delete this homepage reason?');">
+                        <i class="fas fa-trash" aria-hidden="true"></i> Delete reason
+                    </button>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="awareness-editor-section">
+            <h2 class="admin-form-title">Chronic-condition health tips</h2>
+            <div class="awareness-content-grid">
+                {% for tip in health_tips %}
+                <article class="awareness-content-card">
+                    <h3>Health tip {{ tip.display_order }}</h3>
+                    <div class="form-group">
+                        <label class="form-label" for="tip{{ tip.id }}Condition">Condition</label>
+                        <input id="tip{{ tip.id }}Condition" class="form-control" name="tip_{{ tip.id }}_condition" maxlength="120" value="{{ tip.condition }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tip{{ tip.id }}Title">Tip title</label>
+                        <input id="tip{{ tip.id }}Title" class="form-control" name="tip_{{ tip.id }}_title" maxlength="160" value="{{ tip.title }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tip{{ tip.id }}Description">Tip</label>
+                        <textarea id="tip{{ tip.id }}Description" class="form-control" name="tip_{{ tip.id }}_description" maxlength="700" rows="4" required>{{ tip.description }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tip{{ tip.id }}Order">Display order</label>
+                        <input id="tip{{ tip.id }}Order" type="number" min="1" name="tip_{{ tip.id }}_order" class="form-control" value="{{ tip.display_order }}" required>
+                    </div>
+                    <label class="form-label">
+                        <input type="checkbox" name="tip_{{ tip.id }}_active" {% if tip.is_active %}checked{% endif %}>
+                        Show this tip on the homepage
+                    </label>
+                    <button type="submit" class="btn btn-outline" name="delete_tip_id" value="{{ tip.id }}" formnovalidate onclick="return confirm('Delete this health tip?');">
+                        <i class="fas fa-trash" aria-hidden="true"></i> Delete tip
+                    </button>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+            <i class="fas fa-save" aria-hidden="true"></i> Save reasons and tips
+        </button>
+    </form>
+
+    <div class="awareness-content-grid" style="margin-top: 1.5rem;">
+        <section class="awareness-editor-section" style="margin-top: 0;">
+            <h2 class="admin-form-title">Add a reason</h2>
+            <form method="POST" action="{{ url_for('admin_add_awareness_reason') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label class="form-label" for="newReasonTitle">Title</label>
+                    <input id="newReasonTitle" name="title" class="form-control" maxlength="120" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newReasonDescription">Description</label>
+                    <textarea id="newReasonDescription" name="description" class="form-control" maxlength="500" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newReasonIcon">Icon class</label>
+                    <input id="newReasonIcon" name="icon" class="form-control" maxlength="60" placeholder="fas fa-heart" required>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus" aria-hidden="true"></i> Add reason</button>
+            </form>
+        </section>
+        <section class="awareness-editor-section" style="margin-top: 0;">
+            <h2 class="admin-form-title">Add a health tip</h2>
+            <form method="POST" action="{{ url_for('admin_add_awareness_tip') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label class="form-label" for="newTipCondition">Condition</label>
+                    <input id="newTipCondition" name="condition" class="form-control" maxlength="120" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newTipTitle">Tip title</label>
+                    <input id="newTipTitle" name="title" class="form-control" maxlength="160" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newTipDescription">Tip</label>
+                    <textarea id="newTipDescription" name="description" class="form-control" maxlength="700" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-plus" aria-hidden="true"></i> Add tip</button>
+            </form>
+        </section>
+    </div>
+
+    <section class="awareness-editor-section">
+        <h2 class="admin-form-title">Add awareness media</h2>
+        <p class="admin-field-note">Images display for 30 seconds; videos advance when playback ends. Upload PNG, JPG, JPEG, WEBP, or GIF images up to 5 MB, or MP4/WebM videos no longer than {{ max_video_duration_seconds }} seconds and no larger than {{ (max_video_file_bytes / 1024 / 1024)|round|int }} MB. Maximum {{ max_awareness_media }} total items.</p>
+        <form method="POST" action="{{ url_for('admin_add_awareness_media') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label class="form-label" for="awarenessMediaTitle">Title</label>
+                <input id="awarenessMediaTitle" name="title" class="form-control" maxlength="160" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="awarenessMediaDescription">Description</label>
+                <textarea id="awarenessMediaDescription" name="description" class="form-control" maxlength="700" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="awarenessMediaFile">Image or video</label>
+                <input id="awarenessMediaFile" type="file" name="media" class="form-control" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" required>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-upload" aria-hidden="true"></i> Upload media</button>
+        </form>
+    </section>
+
+    <section class="awareness-editor-section">
+        <h2 class="admin-form-title">Manage awareness media</h2>
+        {% if awareness_media %}
+        <div class="awareness-media-grid">
+            {% for media in awareness_media %}
+            <article class="awareness-media-card">
+                {% if media.media_type == 'video' %}
+                <video controls playsinline preload="metadata" aria-label="Preview: {{ media.title }}">
+                    <source src="{{ uploaded_image_url(media.filename) }}" type="{{ media.content_type }}">
+                </video>
+                {% else %}
+                <img src="{{ uploaded_image_url(media.filename) }}" alt="{{ media.title }}" loading="lazy">
+                {% endif %}
+                <form method="POST" action="{{ url_for('admin_edit_awareness_media', media_id=media.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label class="form-label" for="media{{ media.id }}Title">Title</label>
+                        <input id="media{{ media.id }}Title" name="title" class="form-control" maxlength="160" value="{{ media.title }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="media{{ media.id }}Description">Description</label>
+                        <textarea id="media{{ media.id }}Description" name="description" class="form-control" maxlength="700" rows="3" required>{{ media.description }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="media{{ media.id }}Order">Display order</label>
+                        <input id="media{{ media.id }}Order" type="number" min="1" name="display_order" class="form-control" value="{{ media.display_order }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="media{{ media.id }}File">Replace image or video (optional)</label>
+                        <input id="media{{ media.id }}File" type="file" name="media" class="form-control" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm">
+                    </div>
+                    <label class="form-label">
+                        <input type="checkbox" name="is_active" {% if media.is_active %}checked{% endif %}>
+                        Show on the homepage
+                    </label>
+                    <button type="submit" class="btn btn-outline"><i class="fas fa-save" aria-hidden="true"></i> Save media</button>
+                </form>
+                <form method="POST" action="{{ url_for('admin_delete_awareness_media', media_id=media.id) }}" onsubmit="return confirm('Delete this awareness item permanently?');" style="margin-top: 0.5rem;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-outline"><i class="fas fa-trash" aria-hidden="true"></i> Delete</button>
+                </form>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="admin-field-note">There are no awareness media items. Upload an image or video to add one.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}
