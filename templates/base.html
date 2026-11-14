@@ -69,12 +69,6 @@
     {% set initial_live_stats = live_stats if live_stats is defined else {} %}
     <!-- Navigation Header -->
     <header class="header{% if request.endpoint == 'index' %} over-hero{% endif %}" id="header">
-        {% if request.endpoint == 'index' %}
-        <div class="header-media-background" aria-hidden="true">
-            <img data-header-media-image alt="" hidden>
-            <video data-header-media-video muted loop playsinline preload="none" hidden></video>
-        </div>
-        {% endif %}
         <div class="container">
             <div class="header-content">
                 <a href="{{ url_for('index') }}" class="logo" aria-label="Orivana Care Medical Centre Ltd Home">

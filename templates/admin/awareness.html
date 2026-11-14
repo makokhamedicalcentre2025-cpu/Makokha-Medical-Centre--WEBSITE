@@ -59,7 +59,7 @@
 <div class="admin-form-layout">
     <div class="admin-page-intro">
         <h1><i class="fas fa-heart-pulse" aria-hidden="true"></i> Homepage Health Awareness</h1>
-        <p>Add, edit, reorder, and delete homepage care reasons and chronic-condition tips. Manage the images and short videos shown alongside them below.</p>
+        <p>Add, edit, reorder, and delete homepage care reasons and chronic-condition tips. Link each awareness image or video to the matching health tip; unlinked service media appears on its own rather than beside an unrelated condition.</p>
         <p>Health information is general education and does not replace advice from a qualified health professional.</p>
     </div>
 
@@ -188,6 +188,16 @@
                 <textarea id="awarenessMediaDescription" name="description" class="form-control" maxlength="700" rows="3" required></textarea>
             </div>
             <div class="form-group">
+                <label class="form-label" for="awarenessMediaTip">Matching health tip (optional)</label>
+                <select id="awarenessMediaTip" name="health_tip_id" class="form-control">
+                    <option value="">General service / awareness media - no condition pairing</option>
+                    {% for tip in health_tips %}
+                    <option value="{{ tip.id }}">{{ tip.condition }} - {{ tip.title }}{% if not tip.is_active %} (hidden){% endif %}</option>
+                    {% endfor %}
+                </select>
+                <p class="admin-field-note">Choose only a tip that the uploaded media actually covers.</p>
+            </div>
+            <div class="form-group">
                 <label class="form-label" for="awarenessMediaFile">Image or video</label>
                 <input id="awarenessMediaFile" type="file" name="media" class="form-control" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm" required>
             </div>
@@ -221,6 +231,15 @@
                     <div class="form-group">
                         <label class="form-label" for="media{{ media.id }}Order">Display order</label>
                         <input id="media{{ media.id }}Order" type="number" min="1" name="display_order" class="form-control" value="{{ media.display_order }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="media{{ media.id }}Tip">Matching health tip</label>
+                        <select id="media{{ media.id }}Tip" name="health_tip_id" class="form-control">
+                            <option value="">General service / awareness media - no condition pairing</option>
+                            {% for tip in health_tips %}
+                            <option value="{{ tip.id }}" {% if media.health_tip_id == tip.id %}selected{% endif %}>{{ tip.condition }} - {{ tip.title }}{% if not tip.is_active %} (hidden){% endif %}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="media{{ media.id }}File">Replace image or video (optional)</label>

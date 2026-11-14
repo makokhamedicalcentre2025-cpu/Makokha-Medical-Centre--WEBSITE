@@ -103,11 +103,20 @@
         max-width: 760px;
     }
 
-    .header.over-hero {
+    .header.over-hero,
+    .header.over-hero.scrolled,
+    .header.over-hero.menu-open {
         background: transparent;
         box-shadow: none;
-        border-bottom: none;
+        border: 0;
         backdrop-filter: none;
+    }
+
+    .header.over-hero .nav-menu,
+    .header.menu-open .nav-menu {
+        background: transparent;
+        border: 0;
+        box-shadow: none;
     }
 
     .header.over-hero .logo,
@@ -127,24 +136,20 @@
 
     .header.over-hero .nav-link.admin-link {
         background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.95);
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
         color: #ffffff;
+        padding: 0;
     }
 
     .header.over-hero .nav-link.admin-link:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: #ffffff;
+        background: transparent;
+        border: 0;
     }
 
     .header.over-hero .mobile-menu-toggle span {
         background: #ffffff;
-    }
-
-    .header.over-hero.scrolled {
-        background: transparent;
-        box-shadow: 0 8px 26px rgba(13, 69, 64, 0.18);
-        border-bottom: none;
-        backdrop-filter: none;
     }
 
     .header.menu-open .logo,
@@ -1825,12 +1830,18 @@
     .awareness-slide-media {
         display: block;
         width: 100%;
+        min-width: 0;
+        max-width: 100%;
         height: 100%;
         min-height: 260px;
         max-height: 500px;
         aspect-ratio: 16 / 9;
         background: #edf3f0;
         object-fit: cover;
+    }
+
+    video.awareness-slide-media {
+        object-fit: contain;
     }
 
     .awareness-slide-copy {
@@ -2077,6 +2088,10 @@
             max-height: none;
             height: auto;
             aspect-ratio: 16 / 9;
+        }
+
+        video.awareness-slide-media {
+            object-fit: contain;
         }
 
         .hero {
@@ -2386,10 +2401,7 @@
 
             <div data-awareness-slides aria-live="polite">
                 {% for media in awareness_media %}
-                {% set tip = none %}
-                {% if health_tips %}
-                {% set tip = health_tips[loop.index0 % (health_tips|length)] %}
-                {% endif %}
+                {% set tip = media.health_tip %}
                 <article class="awareness-slide{% if loop.first %} is-active{% endif %}" data-awareness-slide data-media-type="{{ media.media_type }}">
                     {% if media.media_type == 'video' %}
                     <video class="awareness-slide-media" muted playsinline controls preload="none" aria-label="{{ media.title }}">
@@ -2407,16 +2419,15 @@
                         <p class="awareness-media-title">{{ media.title }}{% if media.description %} - {{ media.description }}{% endif %}</p>
                     </div>
                 </article>
-                {% else %}
-                    {% for tip in health_tips %}
-                    <article class="awareness-slide{% if loop.first %} is-active{% endif %}" data-awareness-slide data-media-type="tip">
-                        <div class="awareness-slide-copy">
-                            <p class="awareness-condition">{{ tip.condition }}</p>
-                            <h4>{{ tip.title }}</h4>
-                            <p>{{ tip.description }}</p>
-                        </div>
-                    </article>
-                    {% endfor %}
+                {% endfor %}
+                {% for tip in health_tips %}
+                <article class="awareness-slide{% if not awareness_media and loop.first %} is-active{% endif %}" data-awareness-slide data-media-type="tip">
+                    <div class="awareness-slide-copy">
+                        <p class="awareness-condition">{{ tip.condition }}</p>
+                        <h4>{{ tip.title }}</h4>
+                        <p>{{ tip.description }}</p>
+                    </div>
+                </article>
                 {% endfor %}
             </div>
             <p class="awareness-carousel-status" data-awareness-status role="status">General education only - not a substitute for personal medical advice.</p>
@@ -2896,7 +2907,7 @@
 {% endblock %}
 
 {% block inline_js %}
-    // Keep the hero and navigation backgrounds on the same active media.
+    // Keep the hero background in sync with its active media.
     (function initHeroBackgroundSlider() {
         const track = document.getElementById('heroBgTrack');
         if (!track) return;
@@ -2907,63 +2918,6 @@
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let currentIndex = 0;
         let slideInterval = null;
-        const header = document.getElementById('header');
-        const headerImage = header && header.querySelector('[data-header-media-image]');
-        const headerVideo = header && header.querySelector('[data-header-media-video]');
-        const syncHeaderMedia = (slide) => {
-            if (!headerImage || !headerVideo) return;
-            const image = slide && slide.querySelector('img');
-            const video = slide && slide.querySelector('video');
-            if (!image && !video) {
-                headerImage.hidden = true;
-                headerVideo.pause();
-                headerVideo.hidden = true;
-                headerVideo.removeAttribute('src');
-                headerVideo.load();
-                headerImage.onerror = null;
-                headerVideo.onerror = null;
-                return;
-            }
-
-            if (video) {
-                const source = video.currentSrc || video.src || video.getAttribute('src');
-                headerImage.hidden = true;
-                headerVideo.hidden = false;
-                headerVideo.dataset.mediaFilename = slide.dataset.mediaFilename;
-                if (headerVideo.src !== source) {
-                    headerVideo.src = source;
-                    headerVideo.load();
-                }
-                headerVideo.onerror = () => {
-                    if (headerVideo.currentSrc === source && slides[currentIndex] === slide) {
-                        reportMediaFailure(slide);
-                    }
-                };
-                if (!reducedMotion) {
-                    const playRequest = headerVideo.play();
-                    if (playRequest && typeof playRequest.catch === 'function') {
-                        playRequest.catch((error) => {
-                            console.warn('Navigation background video could not start.', error);
-                        });
-                    }
-                }
-                return;
-            }
-
-            headerVideo.pause();
-            headerVideo.hidden = true;
-            headerVideo.removeAttribute('src');
-            headerVideo.load();
-            headerImage.hidden = false;
-            headerImage.dataset.mediaFilename = slide.dataset.mediaFilename;
-            const source = image.currentSrc || image.src;
-            if (headerImage.src !== source) headerImage.src = source;
-            headerImage.onerror = () => {
-                if (headerImage.currentSrc === source && slides[currentIndex] === slide) {
-                    reportMediaFailure(slide);
-                }
-            };
-        };
         const reportMediaFailure = (slide) => {
             if (slide.dataset.failureReported) return;
             slide.dataset.failureReported = 'true';
@@ -3000,7 +2954,6 @@
 
             if (!slides.length) {
                 if (slideInterval) window.clearInterval(slideInterval);
-                syncHeaderMedia(null);
                 return;
             }
             currentIndex %= slides.length;
@@ -3029,7 +2982,6 @@
                     video.pause();
                 }
             });
-            syncHeaderMedia(slides[currentIndex]);
         };
         setActiveSlide();
         slides.slice().forEach((slide) => {

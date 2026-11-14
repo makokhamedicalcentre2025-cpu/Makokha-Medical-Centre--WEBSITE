@@ -19,6 +19,7 @@ import math
 import mimetypes
 import struct
 from uuid import uuid4
+from xml.sax.saxutils import escape as xml_escape
 from sqlalchemy import desc, inspect, text, or_, func
 from sqlalchemy.exc import SQLAlchemyError
 from urllib.parse import urlparse, urlencode
@@ -158,7 +159,40 @@ DEFAULT_AWARENESS_CAMPAIGNS = (
     ('service-laboratory.mp4', 'Laboratory services: follow through', 'Your clinician can explain which tests are appropriate and what your results mean.'),
     ('service-pharmacy.mp4', 'Pharmacy support: ask questions', 'Ask a qualified health professional before changing a prescribed medicine.')
 )
+DEFAULT_AWARENESS_ILLUSTRATIONS = (
+    (
+        'High blood pressure',
+        'Heart and blood pressure checks',
+        '#c94f63',
+        '<path d="M170 348s-74-44-74-96c0-44 56-55 74-16 18-39 74-28 74 16 0 52-74 96-74 96z" fill="none" stroke="#fff" stroke-width="14" stroke-linejoin="round"/><path d="M115 270h35l14-27 21 55 15-28h29" fill="none" stroke="#fff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>'
+    ),
+    (
+        'Diabetes',
+        'Check-ups and a care plan that fits you',
+        '#cf8c22',
+        '<path d="M170 205c-20 36-55 69-55 105a55 55 0 00110 0c0-36-35-69-55-105z" fill="none" stroke="#fff" stroke-width="14" stroke-linejoin="round"/><path d="M142 318h56M170 290v56" stroke="#fff" stroke-width="11" stroke-linecap="round"/>'
+    ),
+    (
+        'Asthma',
+        'Ask about inhaler technique and your action plan',
+        '#3786a8',
+        '<path d="M165 235v55c-27-33-52-30-63 2-10 28-17 73 2 88 22 17 51-6 63-31 6-13 8-31 8-56M175 235v55c27-33 52-30 63 2 10 28 17 73-2 88-22 17-51-6-63-31-6-13-8-31-8-56" fill="none" stroke="#fff" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/><path d="M170 205v66" stroke="#fff" stroke-width="13" stroke-linecap="round"/>'
+    ),
+    (
+        'Arthritis',
+        'Discuss comfortable movement with your clinician',
+        '#8669a8',
+        '<path d="M119 235l29 29-19 19-29-29M221 235l-29 29 19 19 29-29M143 283l27 27 27-27M170 310v48" fill="none" stroke="#fff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/><circle cx="170" cy="310" r="15" fill="#fff"/><circle cx="129" cy="274" r="12" fill="#fff"/><circle cx="211" cy="274" r="12" fill="#fff"/>'
+    ),
+    (
+        'Chronic kidney disease',
+        'Keep recommended kidney-health follow-ups',
+        '#358c76',
+        '<path d="M146 235c-32-21-66 3-66 48 0 43 23 78 54 68 23-8 26-38 19-59-7-20 9-44-7-57zM194 235c32-21 66 3 66 48 0 43-23 78-54 68-23-8-26-38-19-59 7-20-9-44 7-57z" transform="translate(-24 0)" fill="none" stroke="#fff" stroke-width="13" stroke-linejoin="round"/><path d="M170 285v74" stroke="#fff" stroke-width="11" stroke-linecap="round"/>'
+    )
+)
 BUILTIN_AWARENESS_MEDIA_SEED_KEY = 'homepage_awareness_media_seeded'
+BUILTIN_AWARENESS_ILLUSTRATIONS_SEED_KEY = 'homepage_awareness_illustrations_seeded'
 BUILTIN_WHY_REASONS_SEED_KEY = 'homepage_why_reasons_seeded'
 BUILTIN_HEALTH_TIPS_SEED_KEY = 'homepage_health_tips_seeded'
 BUILTIN_HOMEPAGE_VIDEOS_SEED_KEY = 'homepage_builtin_videos_seeded'
@@ -565,7 +599,7 @@ class HealthTip(db.Model):
 
 
 class AwarenessMedia(db.Model):
-    """Uploaded video/image slides paired with homepage health-awareness tips."""
+    """Uploaded awareness media, optionally linked to a matching health tip."""
     __tablename__ = 'awareness_media'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -577,6 +611,7 @@ class AwarenessMedia(db.Model):
     display_order = db.Column(db.Integer, nullable=False, default=0)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     seed_key = db.Column(db.String(120), nullable=True, unique=True)
+    health_tip_id = db.Column(db.Integer, nullable=True)
 
 
 class UploadedAsset(db.Model):
@@ -1620,6 +1655,30 @@ def _seed_builtin_homepage_videos():
     app.logger.info('Seeded %s built-in homepage service videos.', seeded_count)
 
 
+def _build_awareness_condition_svg(condition, subtitle, accent_color, illustration):
+    safe_condition = xml_escape(condition)
+    safe_subtitle = xml_escape(subtitle)
+    return (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" '
+        f'aria-label="{safe_condition} health awareness illustration">'
+        '<defs><linearGradient id="awareness-bg" x1="0" x2="1" y1="0" y2="1">'
+        '<stop offset="0" stop-color="#f0faf6"/><stop offset="1" stop-color="#dcefe8"/>'
+        '</linearGradient></defs>'
+        '<rect width="960" height="540" rx="28" fill="url(#awareness-bg)"/>'
+        f'<circle cx="190" cy="285" r="132" fill="{accent_color}"/>'
+        f'<g transform="translate(20 -5)">{illustration}</g>'
+        '<text x="390" y="185" fill="#087a70" font-family="Arial,sans-serif" '
+        'font-size="22" font-weight="700" letter-spacing="3">HEALTH AWARENESS</text>'
+        f'<text x="390" y="253" fill="#173c3b" font-family="Arial,sans-serif" '
+        f'font-size="44" font-weight="700">{safe_condition}</text>'
+        f'<text x="390" y="310" fill="#46615d" font-family="Arial,sans-serif" '
+        f'font-size="25">{safe_subtitle}</text>'
+        '<text x="390" y="380" fill="#5d6775" font-family="Arial,sans-serif" '
+        'font-size="20">Ask a qualified health professional for advice.</text>'
+        '</svg>'
+    ).encode('utf-8')
+
+
 def _ensure_awareness_content():
     """Seed editable homepage care reasons, chronic-condition tips, and service clips once."""
     reason_seeded = SiteSetting.query.filter_by(setting_key=BUILTIN_WHY_REASONS_SEED_KEY).first()
@@ -1701,18 +1760,101 @@ def _ensure_awareness_content():
             setting_value='1'
         ))
 
+    illustrations_seeded = SiteSetting.query.filter_by(
+        setting_key=BUILTIN_AWARENESS_ILLUSTRATIONS_SEED_KEY
+    ).first()
+    if not illustrations_seeded:
+        tips_by_condition = {
+            tip.condition.strip().casefold(): tip
+            for tip in HealthTip.query.all()
+        }
+        last_media = AwarenessMedia.query.order_by(
+            AwarenessMedia.display_order.desc(),
+            AwarenessMedia.id.desc()
+        ).first()
+        next_order = (last_media.display_order if last_media else 0) + 1
+        for condition, subtitle, accent_color, illustration in DEFAULT_AWARENESS_ILLUSTRATIONS:
+            tip = tips_by_condition.get(condition.casefold())
+            if not tip:
+                continue
+            seed_key = f'builtin:condition-illustration:{re.sub(r"[^a-z0-9]+", "-", condition.casefold()).strip("-")}'
+            if AwarenessMedia.query.filter_by(seed_key=seed_key).first():
+                continue
+
+            filename = f'awareness_condition_{uuid4().hex}.svg'
+            payload = _build_awareness_condition_svg(condition, subtitle, accent_color, illustration)
+            _store_uploaded_asset(
+                filename=filename,
+                payload_bytes=payload,
+                content_type='image/svg+xml',
+                original_filename=f'{condition.lower().replace(" ", "-")}.svg',
+                owner_type='awareness_media'
+            )
+            db.session.add(AwarenessMedia(
+                filename=filename,
+                title=f'{condition} health awareness',
+                description=subtitle,
+                media_type='image',
+                content_type='image/svg+xml',
+                display_order=next_order,
+                is_active=True,
+                seed_key=seed_key,
+                health_tip_id=tip.id
+            ))
+            next_order += 1
+        db.session.add(SiteSetting(
+            setting_key=BUILTIN_AWARENESS_ILLUSTRATIONS_SEED_KEY,
+            setting_value='1'
+        ))
+
     db.session.commit()
+
+
+def _ensure_awareness_media_schema():
+    """Add the optional health-tip association to existing awareness media tables."""
+    inspector = inspect(db.engine)
+    if not inspector.has_table(AwarenessMedia.__tablename__):
+        return
+    columns = {column['name'] for column in inspector.get_columns(AwarenessMedia.__tablename__)}
+    if 'health_tip_id' not in columns:
+        db.session.execute(text(
+            f'ALTER TABLE {AwarenessMedia.__tablename__} ADD COLUMN health_tip_id INTEGER'
+        ))
+        db.session.commit()
+
+
+def _parse_awareness_health_tip_id(raw_value):
+    value = str(raw_value or '').strip()
+    if not value:
+        return None
+    try:
+        tip_id = int(value)
+    except ValueError as exc:
+        raise ValueError('Choose a valid health tip for this media.') from exc
+    if tip_id < 1 or not HealthTip.query.filter_by(id=tip_id).first():
+        raise ValueError('The selected health tip no longer exists.')
+    return tip_id
 
 
 def _get_awareness_media(active_only=True):
     query = AwarenessMedia.query
     if active_only:
         query = query.filter_by(is_active=True)
+    media_rows = query.order_by(AwarenessMedia.display_order.asc(), AwarenessMedia.id.asc()).all()
+    tip_ids = {media.health_tip_id for media in media_rows if media.health_tip_id}
+    tips_by_id = {
+        tip.id: tip
+        for tip in HealthTip.query.filter(
+            HealthTip.id.in_(tip_ids),
+            HealthTip.is_active.is_(True)
+        ).all()
+    } if tip_ids else {}
     slides = []
-    for media in query.order_by(AwarenessMedia.display_order.asc(), AwarenessMedia.id.asc()).all():
+    for media in media_rows:
         media_url = _uploaded_image_url(media.filename)
         if not media_url:
             continue
+        tip = tips_by_id.get(media.health_tip_id)
         slides.append({
             'id': media.id,
             'filename': media.filename,
@@ -1720,7 +1862,13 @@ def _get_awareness_media(active_only=True):
             'title': media.title,
             'description': media.description,
             'media_type': media.media_type,
-            'content_type': media.content_type
+            'content_type': media.content_type,
+            'health_tip': {
+                'id': tip.id,
+                'condition': tip.condition,
+                'title': tip.title,
+                'description': tip.description
+            } if tip else None
         })
     return slides
 
@@ -3041,6 +3189,7 @@ def _ensure_runtime_schema_once():
             return
 
         db.create_all()
+        _ensure_awareness_media_schema()
         _ensure_founder_table()
         _ensure_partner_table()
         _ensure_doctor_schema()
@@ -3280,6 +3429,15 @@ def index():
         HealthTip.id.asc()
     ).all()
     awareness_media = _get_awareness_media()
+    linked_health_tip_ids = {
+        media['health_tip']['id']
+        for media in awareness_media
+        if media['health_tip']
+    }
+    unpaired_health_tips = [
+        tip for tip in health_tips
+        if tip.id not in linked_health_tip_ids
+    ]
     
     return render_template(
         'index.html',
@@ -3300,7 +3458,7 @@ def index():
         gallery_photos=gallery_photos,
         homepage_videos=homepage_videos,
         why_reasons=why_reasons,
-        health_tips=health_tips,
+        health_tips=unpaired_health_tips,
         awareness_media=awareness_media
     )
 
@@ -4109,6 +4267,10 @@ def admin_awareness():
             delete_tip_id = request.form.get('delete_tip_id', type=int)
             if delete_tip_id:
                 tip = HealthTip.query.get_or_404(delete_tip_id)
+                AwarenessMedia.query.filter_by(health_tip_id=tip.id).update(
+                    {AwarenessMedia.health_tip_id: None},
+                    synchronize_session=False
+                )
                 db.session.delete(tip)
                 db.session.commit()
                 flash('Health tip deleted.', 'success')
@@ -4235,6 +4397,7 @@ def admin_add_awareness_media():
             raise ValueError('Choose an image or video to upload.')
         title = (request.form.get('title') or '').strip()
         description = (request.form.get('description') or '').strip()
+        health_tip_id = _parse_awareness_health_tip_id(request.form.get('health_tip_id'))
         if not title or not description:
             raise ValueError('A title and description are required.')
         if len(title) > 160 or len(description) > 700:
@@ -4249,6 +4412,7 @@ def admin_add_awareness_media():
             description=description,
             media_type=media_type,
             content_type=content_type,
+            health_tip_id=health_tip_id,
             display_order=AwarenessMedia.query.count() + 1,
             is_active=True
         ))
@@ -4269,6 +4433,7 @@ def admin_edit_awareness_media(media_id):
         title = (request.form.get('title') or '').strip()
         description = (request.form.get('description') or '').strip()
         display_order = request.form.get('display_order', type=int)
+        health_tip_id = _parse_awareness_health_tip_id(request.form.get('health_tip_id'))
         if not title or not description:
             raise ValueError('A title and description are required.')
         if len(title) > 160 or len(description) > 700:
@@ -4292,6 +4457,7 @@ def admin_edit_awareness_media(media_id):
 
         media.title = title
         media.description = description
+        media.health_tip_id = health_tip_id
         media.display_order = display_order
         media.is_active = request.form.get('is_active') == 'on'
         db.session.commit()
@@ -7225,6 +7391,7 @@ def init_db():
     """Initialize database"""
     with app.app_context():
         db.create_all()
+        _ensure_awareness_media_schema()
         _ensure_founder_table()
         _ensure_partner_table()
         _ensure_doctor_schema()
