@@ -32,22 +32,28 @@
     }
 
     .hero-bg-track {
-        display: flex;
+        position: relative;
         width: 100%;
         height: 100%;
-        transform: translate3d(0, 0, 0);
-        transition: transform 1s ease-in-out;
-        will-change: transform;
     }
 
     .hero-bg-slide {
-        flex: 0 0 100%;
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
         background: #123b39;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 1.25s ease, visibility 1.25s ease;
+    }
+
+    .hero-bg-slide.is-active {
+        opacity: 1;
+        visibility: visible;
     }
 
     .hero-bg-slide img,
@@ -57,6 +63,28 @@
         object-fit: cover;
         object-position: center;
         image-rendering: auto;
+        transform: scale(1.045);
+        transition: transform 8s cubic-bezier(0.2, 0.65, 0.3, 1);
+        will-change: transform;
+    }
+
+    .hero-bg-slide.is-active img,
+    .hero-bg-slide.is-active video {
+        transform: scale(1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .hero-bg-slide,
+        .hero-bg-slide img,
+        .hero-bg-slide video {
+            transition: none;
+        }
+
+        .hero-bg-slide img,
+        .hero-bg-slide video {
+            transform: none;
+            will-change: auto;
+        }
     }
     
     .hero::before {
@@ -2062,6 +2090,16 @@
 {% block content %}
 {% set initial_live_stats = live_stats if live_stats is defined else {} %}
 {% set hero_slider_images = site_content.hero_background_slides if site_content.hero_background_slides is defined else [] %}
+{% set hero_default_filename = 'hero_bg_20261113195946242920_Free_Stock_footage_Hospital.mp4' %}
+{% set hero_slider_images = hero_slider_images | rejectattr('filename', 'equalto', hero_default_filename) | list %}
+{% set hero_default_slide = {
+    'filename': 'hero-default.mp4',
+    'url': url_for('static', filename='videos/hero-default.mp4'),
+    'is_video': true,
+    'position_x': 50,
+    'position_y': 50
+} %}
+{% set hero_slider_images = [hero_default_slide] + hero_slider_images %}
 {% set hero_phone_line = site_content.contact_phone_lines[0] if site_content.contact_phone_lines is defined and site_content.contact_phone_lines else '' %}
 {% set hero_phone_number = hero_phone_line.rsplit(':', 1)[-1]|trim %}
 {% set homepage_doctor_count = initial_live_stats.get('total_doctors', total_doctors or 0)|int %}
@@ -2074,7 +2112,7 @@
     <div class="hero-bg-slider" aria-hidden="true">
         <div class="hero-bg-track" id="heroBgTrack">
             {% for hero_slide in hero_slider_images %}
-            <div class="hero-bg-slide">
+            <div class="hero-bg-slide{{ ' is-active' if loop.first else '' }}">
                 {% if hero_slide.is_video %}
                 <video
                     src="{{ hero_slide.url }}"
@@ -2082,7 +2120,7 @@
                     muted
                     loop
                     playsinline
-                    preload="none"
+                    preload="{{ 'metadata' if loop.first else 'none' }}"
                     style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
                 ></video>
                 {% else %}
@@ -2651,7 +2689,7 @@
 {% endblock %}
 
 {% block inline_js %}
-    // Hero background slider (moves horizontally every 10 seconds)
+    // Hero background slider crossfades every 10 seconds.
     (function initHeroBackgroundSlider() {
         const track = document.getElementById('heroBgTrack');
         if (!track) return;
@@ -2659,13 +2697,15 @@
         const slides = Array.from(track.querySelectorAll('.hero-bg-slide'));
         if (!slides.length) return;
 
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         let currentIndex = 0;
         const slideCount = slides.length;
         const setActiveSlide = () => {
             slides.forEach((slide, index) => {
+                slide.classList.toggle('is-active', index === currentIndex);
                 const video = slide.querySelector('video');
                 if (!video) return;
-                if (index === currentIndex) {
+                if (index === currentIndex && !reducedMotion) {
                     const playRequest = video.play();
                     if (playRequest && typeof playRequest.catch === 'function') {
                         playRequest.catch((error) => {
@@ -2678,11 +2718,10 @@
             });
         };
         setActiveSlide();
-        if (slideCount <= 1) return;
+        if (slideCount <= 1 || reducedMotion) return;
 
         setInterval(() => {
             currentIndex = (currentIndex + 1) % slideCount;
-            track.style.transform = `translate3d(-${currentIndex * 100}%, 0, 0)`;
             setActiveSlide();
         }, 10000);
     })();

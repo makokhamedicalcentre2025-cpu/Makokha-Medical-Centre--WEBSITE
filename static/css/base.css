@@ -615,7 +615,7 @@ ul, ol {
     right: 1.25rem;
     bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
     z-index: 9997;
-    display: inline-flex;
+    display: none !important;
     min-height: 46px;
     align-items: center;
     justify-content: center;
