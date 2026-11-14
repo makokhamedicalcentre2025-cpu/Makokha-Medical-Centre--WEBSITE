@@ -104,6 +104,9 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=_env_int('SESSION_LIF
 ALLOWED_VIDEO_EXTENSIONS = {'mp4', 'webm'}
 MAX_VIDEO_FILE_BYTES = MAX_UPLOAD_FILE_BYTES
 MAX_VIDEO_DURATION_SECONDS = 40
+FREE_SERVICE_WEEK_BANNER_FILENAME = 'event_20260603094216919930_0_1001142836.png'
+FREE_SERVICE_WEEK_BANNER_SOURCE_SHA256 = '206237d514796c8f69287d1fb9bc7628cc8c98cf864b3e5f37692b89d734e35f'
+FREE_SERVICE_WEEK_BANNER_REPLACEMENT = 'orivana-free-community-health-week.png'
 BUILTIN_HOMEPAGE_VIDEOS = (
     ('service-outpatient.mp4', 'Outpatient Consultation'),
     ('service-emergency.mp4', 'Emergency Care'),
@@ -404,6 +407,7 @@ class Event(db.Model):
     event_date = db.Column(db.DateTime, nullable=False)
     location = db.Column(db.String(200), nullable=True)
     image_filename = db.Column(db.String(255), nullable=True)
+    video_filename = db.Column(db.String(255), nullable=True)
     image_focus_x = db.Column(db.Float, default=50.0)
     image_focus_y = db.Column(db.Float, default=50.0)
     event_type = db.Column(db.String(50), default='general')  # 'health_camp', 'workshop', 'general', etc.
@@ -1075,6 +1079,38 @@ def _store_uploaded_asset(
     return asset
 
 
+def _migrate_free_service_week_banner():
+    """Replace the legacy health-week flyer once, without overriding later admin uploads."""
+    asset = _get_uploaded_asset(FREE_SERVICE_WEEK_BANNER_FILENAME)
+    if asset is None or not asset.file_data:
+        return False
+
+    if hashlib.sha256(asset.file_data).hexdigest() != FREE_SERVICE_WEEK_BANNER_SOURCE_SHA256:
+        return False
+
+    replacement_path = os.path.join(
+        app.root_path,
+        'static',
+        'images',
+        FREE_SERVICE_WEEK_BANNER_REPLACEMENT
+    )
+    with open(replacement_path, 'rb') as replacement_file:
+        replacement_bytes = replacement_file.read()
+    if not replacement_bytes:
+        raise RuntimeError('The replacement health-week flyer is empty.')
+    if len(replacement_bytes) > MAX_UPLOAD_FILE_BYTES:
+        raise RuntimeError('The replacement health-week flyer exceeds the 5 MB upload limit.')
+
+    asset.file_data = replacement_bytes
+    asset.byte_size = len(replacement_bytes)
+    asset.content_type = 'image/png'
+    asset.original_filename = FREE_SERVICE_WEEK_BANNER_REPLACEMENT
+    asset.updated_at = datetime.now(timezone.utc)
+    db.session.commit()
+    app.logger.info('Rebranded the existing Free service week flyer for Orivana Care.')
+    return True
+
+
 def _delete_uploaded_asset(filename):
     safe_name = _safe_uploaded_filename(filename)
     if not safe_name:
@@ -1238,7 +1274,7 @@ def _save_uploaded_image(
     return True
 
 
-def _save_uploaded_video(file_obj, filename, owner_type='homepage_video'):
+def _save_uploaded_video(file_obj, filename, owner_type='homepage_video', owner_id=None):
     """Validate and store a short browser-playable video in database-backed storage."""
     safe_filename = _safe_uploaded_filename(filename)
     if not safe_filename:
@@ -1270,7 +1306,8 @@ def _save_uploaded_video(file_obj, filename, owner_type='homepage_video'):
         payload_bytes=payload,
         content_type=content_type_by_extension[extension],
         original_filename=original_filename,
-        owner_type=owner_type
+        owner_type=owner_type,
+        owner_id=owner_id
     )
     return len(payload)
 
@@ -1856,7 +1893,7 @@ def _build_telemedicine_content(content_map=None):
 
 
 def _build_event_slides_map(events):
-    """Build image slide payload for events (cover image + gallery images)."""
+    """Build event media payloads for photos and the optional video."""
     event_list = [event for event in (events or []) if getattr(event, 'id', None) is not None]
     if not event_list:
         return {}
@@ -1865,6 +1902,7 @@ def _build_event_slides_map(events):
     slide_map = {event_id: [] for event_id in event_ids}
 
     for event in event_list:
+        setattr(event, 'video_url', _uploaded_image_url(getattr(event, 'video_filename', None)))
         if not event.image_filename:
             continue
         cover_url = _uploaded_image_url(event.image_filename)
@@ -2020,6 +2058,34 @@ def _attach_uploaded_event_images(event, uploaded_files):
             )
         )
         next_display_order += 1
+
+
+def _attach_uploaded_event_video(event):
+    """Validate and attach one short event video without removing its photo gallery."""
+    file_obj = request.files.get('video')
+    if not file_obj or not file_obj.filename:
+        return
+
+    original_name = secure_filename(file_obj.filename)
+    if not original_name:
+        raise ValueError('Choose a valid event video file.')
+    if '.' not in original_name:
+        raise ValueError('Video must be MP4 or WebM.')
+
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S%f')
+    name_part, extension = original_name.rsplit('.', 1)
+    filename = f"event_video_{event.id}_{timestamp}_{name_part[:120]}.{extension.lower()}"
+    _save_uploaded_video(
+        file_obj,
+        filename,
+        owner_type='event',
+        owner_id=event.id
+    )
+
+    previous_filename = event.video_filename
+    event.video_filename = filename
+    if previous_filename and previous_filename != filename:
+        _delete_uploaded_asset(previous_filename)
 
 
 def _ensure_founder_table():
@@ -3152,7 +3218,9 @@ def load_past_events():
             'image_url': image_slides[0]['url'] if image_slides else None,
             'image_focus_x': image_slides[0]['x'] if image_slides else _clamp_focus_percent(event.image_focus_x, 50.0),
             'image_focus_y': image_slides[0]['y'] if image_slides else _clamp_focus_percent(event.image_focus_y, 50.0),
-            'image_slides': image_slides
+            'image_slides': image_slides,
+            'video_url': getattr(event, 'video_url', '') or None,
+            'video_type': 'video/webm' if (event.video_filename or '').lower().endswith('.webm') else 'video/mp4'
         })
 
     has_more = page * page_size < total
@@ -4152,6 +4220,7 @@ def admin_add_event():
             db.session.add(event)
             db.session.flush()
             _attach_uploaded_event_images(event, _collect_event_upload_files())
+            _attach_uploaded_event_video(event)
             db.session.commit()
             
             flash('Event added successfully!', 'success')
@@ -4195,6 +4264,10 @@ def admin_edit_event(event_id):
                 _delete_uploaded_asset(event.image_filename)
                 event.image_filename = None
 
+            if request.form.get('remove_event_video') == 'on' and event.video_filename:
+                _delete_uploaded_asset(event.video_filename)
+                event.video_filename = None
+
             remove_photo_ids = set()
             for raw_id in request.form.getlist('remove_event_photo_ids'):
                 try:
@@ -4222,6 +4295,7 @@ def admin_edit_event(event_id):
                     editable_photo.focus_y = position['y']
 
             _attach_uploaded_event_images(event, _collect_event_upload_files())
+            _attach_uploaded_event_video(event)
             db.session.commit()
             flash('Event updated successfully!', 'success')
             return redirect(url_for('admin_events'))
@@ -4263,6 +4337,8 @@ def admin_delete_event(event_id):
 
         if event.image_filename:
             _delete_uploaded_asset(event.image_filename)
+        if event.video_filename:
+            _delete_uploaded_asset(event.video_filename)
 
         event_photos = EventPhoto.query.filter_by(event_id=event.id).all()
         for event_photo in event_photos:
@@ -6468,6 +6544,9 @@ def ensure_event_schema():
     if 'image_focus_y' not in existing_columns:
         db.session.execute(text("ALTER TABLE event ADD COLUMN image_focus_y FLOAT DEFAULT 50.0"))
         event_schema_changed = True
+    if 'video_filename' not in existing_columns:
+        db.session.execute(text("ALTER TABLE event ADD COLUMN video_filename VARCHAR(255)"))
+        event_schema_changed = True
     if event_schema_changed:
         db.session.commit()
 
@@ -6606,6 +6685,7 @@ def init_db():
         ensure_event_schema()
         ensure_site_settings()
         _migrate_referenced_uploads_to_database()
+        _migrate_free_service_week_banner()
         migrate_legacy_hospital_ratings()
         create_default_admin()
         print("Database initialized successfully!")

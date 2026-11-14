@@ -1,0 +1,15 @@
+{% macro render_readable_copy(text, title, css_class) -%}
+    <div class="readable-text-block">
+        <p class="{{ css_class }} readable-copy" data-readable-copy>{{ text }}</p>
+        <button
+            type="button"
+            class="read-more-trigger"
+            data-readable-trigger
+            data-reader-title="{{ title }}"
+            aria-haspopup="dialog"
+            hidden
+        >
+            Read more <i class="fas fa-arrow-right" aria-hidden="true"></i>
+        </button>
+    </div>
+{%- endmacro %}

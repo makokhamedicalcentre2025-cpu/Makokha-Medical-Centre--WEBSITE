@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "macros/event_media.html" import render_event_media %}
+{% from "macros/readable_copy.html" import render_readable_copy %}
 
 {% block title %}Events - Orivana Care Medical Centre Ltd{% endblock %}
 
@@ -77,6 +79,55 @@
 
     .event-card.event-card-past {
         grid-template-columns: minmax(260px, 36%) minmax(0, 1fr);
+    }
+
+    .event-card-upcoming {
+        border: 1px solid #d4e9e1;
+        border-radius: 20px;
+        background: linear-gradient(115deg, #f1faf6 0%, #ffffff 66%);
+        box-shadow: 0 16px 38px rgba(18, 59, 57, 0.11);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .event-card-upcoming:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 46px rgba(18, 59, 57, 0.16);
+    }
+
+    .event-card-upcoming .event-content {
+        padding: clamp(1.2rem, 3vw, 2rem);
+    }
+
+    .event-card-upcoming .event-title {
+        font-size: clamp(1.4rem, 2.5vw, 2rem);
+        line-height: 1.15;
+    }
+
+    .event-card-upcoming .event-badge-status {
+        padding: 0.38rem 0.72rem;
+        border: 1px solid #f0d99f;
+        border-radius: 999px;
+        background: #fff7df;
+        color: #76500a;
+        font-weight: 750;
+        letter-spacing: 0.035em;
+        text-transform: uppercase;
+    }
+
+    .event-attend-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        min-height: 46px;
+        margin-top: 0.9rem;
+        padding: 0.7rem 1.1rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #03595d, #20843e);
+        color: #ffffff;
+        font-weight: 750;
+        text-decoration: none;
+        box-shadow: 0 8px 18px rgba(3, 89, 93, 0.2);
     }
 
     .event-media {
@@ -321,7 +372,7 @@
         <div class="events-toolbar">
             <div>
                 <h2>Events Directory</h2>
-                <p>Every event below shows full title, date, time, location, type, status, and full description. Category filter: {{ selected_event_type_label }} (change from the Events navigation dropdown).</p>
+                <p>Find a program that matters to you. Discover community health events, plan your visit, and take a practical step toward better health together.</p>
             </div>
         </div>
 
@@ -361,7 +412,7 @@
                                     <span><strong>Launch Window:</strong> {{ telemedicine.launch_window }}</span>
                                 </div>
                             </div>
-                            <p class="event-description">{{ telemedicine.description }}</p>
+                            {{ render_readable_copy(telemedicine.description, telemedicine.title, 'event-description') }}
                         </div>
                         <div class="event-media event-media-telemedicine">
                             {% if telemedicine.image_url %}
@@ -403,22 +454,12 @@
                                     <span><strong>Location:</strong> {{ event.location or 'Not specified' }}</span>
                                 </div>
                             </div>
-                            <p class="event-description">{{ event.description }}</p>
+                            {{ render_readable_copy(event.description, event.title, 'event-description') }}
+                            <a href="{{ url_for('contact') }}" class="event-attend-cta">
+                                Get event details <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            </a>
                         </div>
-                        <div class="event-media">
-                            {% set media_slides = event_slides_map.get(event.id, []) %}
-                            {% if media_slides %}
-                                <img
-                                    src="{{ media_slides[0].url }}"
-                                    alt="{{ event.title }}"
-                                    class="event-auto-image"
-                                    data-event-slides='{{ media_slides|tojson }}'
-                                    style="object-position: {{ '%.2f'|format((media_slides[0].x if media_slides[0].x is not none else 50.0)) }}% {{ '%.2f'|format((media_slides[0].y if media_slides[0].y is not none else 50.0)) }}%;"
-                                >
-                            {% else %}
-                                <i class="fas fa-calendar-alt"></i>
-                            {% endif %}
-                        </div>
+                        {{ render_event_media(event, event_slides_map.get(event.id, [])) }}
                     </article>
                     {% endfor %}
                 </div>
@@ -443,20 +484,7 @@
                         {% set status_label = 'Upcoming' %}
                     {% endif %}
                     <article class="event-card event-card-past fade-in">
-                        <div class="event-media">
-                            {% set media_slides = event_slides_map.get(event.id, []) %}
-                            {% if media_slides %}
-                                <img
-                                    src="{{ media_slides[0].url }}"
-                                    alt="{{ event.title }}"
-                                    class="event-auto-image"
-                                    data-event-slides='{{ media_slides|tojson }}'
-                                    style="object-position: {{ '%.2f'|format((media_slides[0].x if media_slides[0].x is not none else 50.0)) }}% {{ '%.2f'|format((media_slides[0].y if media_slides[0].y is not none else 50.0)) }}%;"
-                                >
-                            {% else %}
-                                <i class="fas fa-calendar-alt"></i>
-                            {% endif %}
-                        </div>
+                        {{ render_event_media(event, event_slides_map.get(event.id, [])) }}
                         <div class="event-content">
                             <div class="event-topline">
                                 <span class="event-badge event-badge-type">{{ (event.event_type or 'general')|replace('_', ' ')|title }}</span>
@@ -477,7 +505,7 @@
                                     <span><strong>Location:</strong> {{ event.location or 'Not specified' }}</span>
                                 </div>
                             </div>
-                            <p class="event-description">{{ event.description }}</p>
+                            {{ render_readable_copy(event.description, event.title, 'event-description') }}
                         </div>
                     </article>
                     {% endfor %}
@@ -526,6 +554,10 @@
         if (triggerButton) {
             triggerButton.classList.add('active');
         }
+
+        if (window.refreshReadableSummaries) {
+            window.refreshReadableSummaries(document.getElementById(tabName));
+        }
     }
 
     function escapeHtml(value) {
@@ -537,25 +569,50 @@
             .replace(/'/g, '&#39;');
     }
 
-    function renderPastEventCard(event) {
-        const slides = Array.isArray(event.image_slides) ? event.image_slides : [];
+    function renderEventMedia(event, slides) {
         const firstSlide = slides.length ? slides[0] : null;
+        const firstUrl = firstSlide && firstSlide.url ? firstSlide.url : event.image_url;
         const focusX = firstSlide && Number.isFinite(Number(firstSlide.x))
             ? Number(firstSlide.x)
             : (Number.isFinite(Number(event.image_focus_x)) ? Number(event.image_focus_x) : 50);
         const focusY = firstSlide && Number.isFinite(Number(firstSlide.y))
             ? Number(firstSlide.y)
             : (Number.isFinite(Number(event.image_focus_y)) ? Number(event.image_focus_y) : 50);
-        const firstUrl = firstSlide && firstSlide.url ? firstSlide.url : event.image_url;
         const imageMarkup = firstUrl
             ? `<img src="${escapeHtml(firstUrl)}" alt="${escapeHtml(event.title)}" class="event-auto-image" data-event-slides='${escapeHtml(JSON.stringify(slides))}' style="object-position: ${focusX.toFixed(2)}% ${focusY.toFixed(2)}%;">`
-            : '<i class="fas fa-calendar-alt"></i>';
+            : '<i class="fas fa-calendar-alt" aria-hidden="true"></i>';
+        const videoMarkup = event.video_url
+            ? `<video class="event-video" controls playsinline preload="metadata" aria-label="${escapeHtml(event.title)} event video"><source src="${escapeHtml(event.video_url)}" type="${escapeHtml(event.video_type || 'video/mp4')}"></video>`
+            : '';
+
+        if (videoMarkup && firstUrl) {
+            return `
+                <div class="event-media">
+                    <div class="event-media-switcher" data-event-media-switcher>
+                        <div class="event-media-switcher-tabs" role="group" aria-label="Event media">
+                            <button type="button" class="is-active" data-event-media-toggle="video" aria-pressed="true">Watch video</button>
+                            <button type="button" data-event-media-toggle="photos" aria-pressed="false">View photos</button>
+                        </div>
+                        <div class="event-media-switcher-panel" data-event-media-panel="video">
+                            <video controls playsinline preload="metadata" poster="${escapeHtml(firstUrl)}" aria-label="${escapeHtml(event.title)} event video">
+                                <source src="${escapeHtml(event.video_url)}" type="${escapeHtml(event.video_type || 'video/mp4')}">
+                            </video>
+                        </div>
+                        <div class="event-media-switcher-panel" data-event-media-panel="photos" hidden>${imageMarkup}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        return `<div class="event-media">${videoMarkup || imageMarkup}</div>`;
+    }
+
+    function renderPastEventCard(event) {
+        const slides = Array.isArray(event.image_slides) ? event.image_slides : [];
 
         return `
             <article class="event-card event-card-past fade-in">
-                <div class="event-media">
-                    ${imageMarkup}
-                </div>
+                ${renderEventMedia(event, slides)}
                 <div class="event-content">
                     <div class="event-topline">
                         <span class="event-badge event-badge-type">${escapeHtml(event.event_type || '')}</span>
@@ -576,7 +633,12 @@
                             <span><strong>Location:</strong> ${escapeHtml(event.location || 'Not specified')}</span>
                         </div>
                     </div>
-                    <p class="event-description">${escapeHtml(event.description || '')}</p>
+                    <div class="readable-text-block">
+                        <p class="event-description readable-copy" data-readable-copy>${escapeHtml(event.description || '')}</p>
+                        <button type="button" class="read-more-trigger" data-readable-trigger data-reader-title="${escapeHtml(event.title)}" aria-haspopup="dialog" hidden>
+                            Read more <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
             </article>
         `;
@@ -609,6 +671,7 @@
                 eventsGrid.insertAdjacentHTML('beforeend', renderPastEventCard(eventItem));
             });
             initEventCardImageSlides(eventsGrid);
+            if (window.refreshReadableSummaries) window.refreshReadableSummaries(eventsGrid);
 
             if (data.has_more && data.next_page) {
                 buttonElement.dataset.nextPage = String(data.next_page);

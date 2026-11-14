@@ -14,7 +14,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <div class="form-group">
             <label class="form-label">Photo Image</label>
-            <input type="file" name="image" class="form-control" accept="image/*" multiple required>
+            <input type="file" name="image" class="form-control" accept="image/*" multiple required data-image-upload-preview data-image-preview-ratio="4 / 3">
             <small class="admin-field-note">You can upload multiple photos at once. Maximum file size per file: 5 MB. Supported formats: JPG, PNG, WEBP, GIF.</small>
         </div>
 

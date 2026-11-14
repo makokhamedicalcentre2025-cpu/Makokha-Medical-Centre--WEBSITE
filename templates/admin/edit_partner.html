@@ -12,12 +12,15 @@
 
     .partner-image-stage {
         position: relative;
-        width: 100%;
-        aspect-ratio: 4 / 5;
+        width: clamp(160px, 22vw, 220px);
+        height: clamp(160px, 22vw, 220px);
+        aspect-ratio: 1;
         overflow: hidden;
-        border-radius: 8px;
-        border: 1px solid #d6e8df;
-        background: #123b39;
+        border-radius: 50%;
+        border: 6px solid #ffffff;
+        outline: 1px solid #d6e8df;
+        background: linear-gradient(145deg, #f1faf6, #dceee7);
+        box-shadow: 0 12px 28px rgba(18, 59, 57, 0.16);
         cursor: grab;
         touch-action: none;
     }
@@ -108,12 +111,27 @@
         <div class="form-group">
             <label class="form-label">Partner Photo</label>
             <div class="partner-image-editor" id="partnerImageEditor" {% if not partner.image_filename %}hidden{% endif %}>
-                <div class="partner-image-stage" id="partnerImageStage">
-                    {% if partner.image_filename %}
-                    <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" id="partnerImagePreview" style="object-fit: {{ 'contain' if partner_focus.zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format(partner_focus.x) }}% {{ '%.2f'|format(partner_focus.y) }}%; transform: scale({{ partner_zoom }});">
-                    {% else %}
-                    <img src="" alt="Partner photo preview" id="partnerImagePreview">
-                    {% endif %}
+                <div class="profile-image-preview-comparison">
+                    <figure class="profile-image-preview-panel">
+                        <figcaption>Full image</figcaption>
+                        <div class="profile-image-full-frame">
+                            <img
+                                src="{{ uploaded_image_url(partner.image_filename) if partner.image_filename else '' }}"
+                                alt="Complete partner photo"
+                                id="partnerImageFullPreview"
+                            >
+                        </div>
+                    </figure>
+                    <figure class="profile-image-preview-panel">
+                        <figcaption>Website result · round</figcaption>
+                        <div class="partner-image-stage profile-avatar-frame" id="partnerImageStage">
+                            {% if partner.image_filename %}
+                            <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" id="partnerImagePreview" style="object-fit: {{ 'contain' if partner_focus.zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format(partner_focus.x) }}% {{ '%.2f'|format(partner_focus.y) }}%; transform: scale({{ partner_zoom }});">
+                            {% else %}
+                            <img src="" alt="Partner photo preview" id="partnerImagePreview">
+                            {% endif %}
+                        </div>
+                    </figure>
                 </div>
                 <div class="partner-image-toolbar">
                     <span class="partner-position-label" id="partnerImagePositionLabel">{{ '%.0f'|format(partner_focus.x) }}% x / {{ '%.0f'|format(partner_focus.y) }}% y</span>
@@ -125,7 +143,7 @@
                 </div>
             </div>
             <input type="file" id="partnerImageInput" name="image" class="form-control" accept="image/*">
-            <small class="admin-field-note">Leave blank to keep the current photo. Drag the live preview to reposition; use below 100% to fit more of the photo.</small>
+            <small class="admin-field-note">Leave blank to keep the current photo. The left preview shows the full image; the circular preview shows exactly how it appears on the website.</small>
         </div>
 
         <div class="admin-form-actions">
@@ -148,18 +166,19 @@
         const editor = document.getElementById('partnerImageEditor');
         const stage = document.getElementById('partnerImageStage');
         const image = document.getElementById('partnerImagePreview');
+        const fullImage = document.getElementById('partnerImageFullPreview');
         const positionLabel = document.getElementById('partnerImagePositionLabel');
         const zoomInput = document.getElementById('partnerImageZoom');
         const zoomLabel = document.getElementById('partnerImageZoomLabel');
-        if (!hiddenInput || !fileInput || !editor || !stage || !image || !zoomInput) return;
+        if (!hiddenInput || !fileInput || !editor || !stage || !image || !fullImage || !zoomInput) return;
 
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
         let position = { x: 50, y: 50, zoom: Number(zoomInput.value) || 1 };
         try {
             const parsed = JSON.parse(hiddenInput.value || '{}');
             position = {
-                x: clamp(Number(parsed.x) || 50, 0, 100),
-                y: clamp(Number(parsed.y) || 50, 0, 100),
+                x: clamp(parsed.x !== null && parsed.x !== undefined && Number.isFinite(Number(parsed.x)) ? Number(parsed.x) : 50, 0, 100),
+                y: clamp(parsed.y !== null && parsed.y !== undefined && Number.isFinite(Number(parsed.y)) ? Number(parsed.y) : 50, 0, 100),
                 zoom: clamp(Number(parsed.zoom) || 1, 0.5, 2.5)
             };
         } catch (error) {
@@ -218,14 +237,36 @@
         stage.addEventListener('pointercancel', stopDragging);
         stage.addEventListener('lostpointercapture', stopDragging);
 
+        let previewUrl = '';
+        const initialPreviewUrl = image.getAttribute('src') || '';
         fileInput.addEventListener('change', () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = '';
+            }
             const file = fileInput.files && fileInput.files[0];
-            if (!file) return;
-            image.src = URL.createObjectURL(file);
+            if (!file) {
+                if (initialPreviewUrl) {
+                    image.src = initialPreviewUrl;
+                    fullImage.src = initialPreviewUrl;
+                    editor.hidden = false;
+                } else {
+                    editor.hidden = true;
+                    image.removeAttribute('src');
+                    fullImage.removeAttribute('src');
+                }
+                return;
+            }
+            previewUrl = URL.createObjectURL(file);
+            image.src = previewUrl;
+            fullImage.src = previewUrl;
             position = { x: 50, y: 50, zoom: 1 };
             editor.hidden = false;
             sync();
         });
+        window.addEventListener('pagehide', () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        }, { once: true });
     })();
 </script>
 {% endblock %}

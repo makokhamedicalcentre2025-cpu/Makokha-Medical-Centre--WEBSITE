@@ -128,6 +128,24 @@
         {% block content %}{% endblock %}
     </main>
 
+    <dialog
+        id="publicContentReader"
+        class="public-content-reader"
+        aria-labelledby="publicContentReaderTitle"
+        aria-describedby="publicContentReaderBody"
+    >
+        <div class="public-content-reader-panel">
+            <div class="public-content-reader-header">
+                <h2 id="publicContentReaderTitle"></h2>
+                <button type="button" class="public-content-reader-close" data-reader-close>
+                    <span class="sr-only">Close full text</span>
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div id="publicContentReaderBody" class="public-content-reader-body"></div>
+        </div>
+    </dialog>
+
     <button class="back-to-top" id="backToTop" type="button" aria-label="Go to top" title="Go to top" hidden>
         <i class="fas fa-arrow-up" aria-hidden="true"></i>
         <span>Go up</span>
@@ -2334,6 +2352,7 @@
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/public-enhancements.js') }}" defer></script>
     
     {% block extra_js %}{% endblock %}
     

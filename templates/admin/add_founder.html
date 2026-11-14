@@ -15,13 +15,15 @@
 
     .founder-image-stage {
         position: relative;
-        width: 100%;
-        max-width: 360px;
-        aspect-ratio: 4 / 5;
-        border-radius: 8px;
+        width: clamp(160px, 22vw, 220px);
+        height: clamp(160px, 22vw, 220px);
+        aspect-ratio: 1;
+        border-radius: 50%;
         overflow: hidden;
-        border: 1px solid #d6e8df;
-        background: #123b39;
+        border: 6px solid #ffffff;
+        outline: 1px solid #d6e8df;
+        background: linear-gradient(145deg, #f1faf6, #dceee7);
+        box-shadow: 0 12px 28px rgba(18, 59, 57, 0.16);
         cursor: grab;
         touch-action: none;
     }
@@ -112,8 +114,19 @@
         <div class="form-group">
             <label class="form-label">Founder Photo</label>
             <div class="founder-image-editor" id="founderImageEditor" hidden>
-                <div class="founder-image-stage" id="founderImageStage">
-                    <img src="" alt="Founder photo preview" id="founderImagePreview" class="founder-adjust-image">
+                <div class="profile-image-preview-comparison">
+                    <figure class="profile-image-preview-panel">
+                        <figcaption>Full image</figcaption>
+                        <div class="profile-image-full-frame">
+                            <img src="" alt="Complete founder photo" id="founderImageFullPreview">
+                        </div>
+                    </figure>
+                    <figure class="profile-image-preview-panel">
+                        <figcaption>Website result · round</figcaption>
+                        <div class="founder-image-stage profile-avatar-frame" id="founderImageStage">
+                            <img src="" alt="Founder photo as displayed on the website" id="founderImagePreview" class="founder-adjust-image">
+                        </div>
+                    </figure>
                 </div>
                 <div class="founder-image-toolbar">
                     <span class="founder-position-label" id="founderImagePositionLabel">50% x / 50% y</span>
@@ -125,7 +138,7 @@
                 </div>
             </div>
             <input type="file" id="founderImageInput" name="image" class="form-control" accept="image/*">
-            <small class="admin-field-note">Drag the live preview to reposition. Use below 100% to fit more of the photo, or above 100% to crop closer.</small>
+            <small class="admin-field-note">The left preview shows the full photo. Drag the circular website preview to choose its crop, or adjust zoom before saving.</small>
         </div>
 
         <div class="admin-form-actions">
@@ -148,10 +161,11 @@
         const editor = document.getElementById('founderImageEditor');
         const stage = document.getElementById('founderImageStage');
         const image = document.getElementById('founderImagePreview');
+        const fullImage = document.getElementById('founderImageFullPreview');
         const label = document.getElementById('founderImagePositionLabel');
         const zoomInput = document.getElementById('founderImageZoom');
         const zoomLabel = document.getElementById('founderImageZoomLabel');
-        if (!hiddenInput || !fileInput || !editor || !stage || !image) return;
+        if (!hiddenInput || !fileInput || !editor || !stage || !image || !fullImage) return;
 
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -230,17 +244,36 @@
         stage.addEventListener('pointercancel', stopDragging);
         stage.addEventListener('lostpointercapture', stopDragging);
 
+        let previewUrl = '';
+        const initialPreviewUrl = image.getAttribute('src') || '';
         fileInput.addEventListener('change', () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = '';
+            }
             const file = fileInput.files && fileInput.files[0];
             if (!file) {
-                editor.hidden = true;
-                image.removeAttribute('src');
+                if (initialPreviewUrl) {
+                    image.src = initialPreviewUrl;
+                    fullImage.src = initialPreviewUrl;
+                    editor.hidden = false;
+                } else {
+                    editor.hidden = true;
+                    image.removeAttribute('src');
+                    fullImage.removeAttribute('src');
+                }
                 return;
             }
-            image.src = URL.createObjectURL(file);
+            previewUrl = URL.createObjectURL(file);
+            image.src = previewUrl;
+            fullImage.src = previewUrl;
+            position = { x: 50, y: 50, zoom: 1 };
             editor.hidden = false;
             sync();
         });
+        window.addEventListener('pagehide', () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        }, { once: true });
     })();
 </script>
 {% endblock %}

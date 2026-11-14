@@ -138,8 +138,19 @@
         <div class="form-group">
             <label class="form-label">Doctor Photo</label>
             <div class="doctor-image-editor" id="doctorImageEditor" hidden>
-                <div class="doctor-image-stage" id="doctorImageStage">
-                    <img src="" alt="Doctor photo preview" id="doctorImagePreview" class="doctor-adjust-image">
+                <div class="profile-image-preview-comparison">
+                    <figure class="profile-image-preview-panel">
+                        <figcaption>Full image</figcaption>
+                        <div class="profile-image-full-frame">
+                            <img src="" alt="Complete doctor photo" id="doctorImageFullPreview">
+                        </div>
+                    </figure>
+                    <figure class="profile-image-preview-panel">
+                        <figcaption>Website view</figcaption>
+                        <div class="doctor-image-stage" id="doctorImageStage">
+                            <img src="" alt="Doctor photo as displayed on the website" id="doctorImagePreview" class="doctor-adjust-image">
+                        </div>
+                    </figure>
                 </div>
                 <div class="doctor-image-toolbar">
                     <span class="doctor-position-label" id="doctorImagePositionLabel">50% x / 50% y</span>
@@ -151,7 +162,7 @@
                 </div>
             </div>
             <input type="file" id="doctorImageInput" name="image" class="form-control" accept="image/*">
-            <small class="admin-field-note">Drag the live preview to reposition. Use below 100% to fit more of the photo, or above 100% to crop closer.</small>
+            <small class="admin-field-note">The left preview shows the full photo. Drag the right preview to choose its crop, or adjust zoom before saving.</small>
         </div>
 
         <div class="admin-form-actions">
@@ -174,10 +185,11 @@
         const editor = document.getElementById('doctorImageEditor');
         const stage = document.getElementById('doctorImageStage');
         const image = document.getElementById('doctorImagePreview');
+        const fullImage = document.getElementById('doctorImageFullPreview');
         const label = document.getElementById('doctorImagePositionLabel');
         const zoomInput = document.getElementById('doctorImageZoom');
         const zoomLabel = document.getElementById('doctorImageZoomLabel');
-        if (!hiddenInput || !fileInput || !editor || !stage || !image) return;
+        if (!hiddenInput || !fileInput || !editor || !stage || !image || !fullImage) return;
 
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -256,17 +268,29 @@
         stage.addEventListener('pointercancel', stopDragging);
         stage.addEventListener('lostpointercapture', stopDragging);
 
+        let previewUrl = '';
         fileInput.addEventListener('change', () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = '';
+            }
             const file = fileInput.files && fileInput.files[0];
             if (!file) {
                 editor.hidden = true;
                 image.removeAttribute('src');
+                fullImage.removeAttribute('src');
                 return;
             }
-            image.src = URL.createObjectURL(file);
+            previewUrl = URL.createObjectURL(file);
+            image.src = previewUrl;
+            fullImage.src = previewUrl;
+            position = { x: 50, y: 50, zoom: 1 };
             editor.hidden = false;
             sync();
         });
+        window.addEventListener('pagehide', () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        }, { once: true });
     })();
 </script>
 {% endblock %}

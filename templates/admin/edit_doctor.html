@@ -138,18 +138,33 @@
         <div class="form-group">
             <label class="form-label">Doctor Photo</label>
             <div class="doctor-image-editor" id="doctorImageEditor" {% if not doctor.image_filename %}hidden{% endif %}>
-                <div class="doctor-image-stage" id="doctorImageStage">
-                    {% if doctor.image_filename %}
-                    <img
-                        src="{{ uploaded_image_url(doctor.image_filename) }}"
-                        alt="{{ doctor.full_name() }}"
-                        id="doctorImagePreview"
-                        class="doctor-adjust-image"
-                        style="object-fit: {{ 'contain' if doctor_focus.zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format(doctor_focus.x) }}% {{ '%.2f'|format(doctor_focus.y) }}%; transform: scale({{ doctor_focus.zoom }});"
-                    >
-                    {% else %}
-                    <img src="" alt="Doctor photo preview" id="doctorImagePreview" class="doctor-adjust-image">
-                    {% endif %}
+                <div class="profile-image-preview-comparison">
+                    <figure class="profile-image-preview-panel">
+                        <figcaption>Full image</figcaption>
+                        <div class="profile-image-full-frame">
+                            <img
+                                src="{{ uploaded_image_url(doctor.image_filename) if doctor.image_filename else '' }}"
+                                alt="Complete doctor photo"
+                                id="doctorImageFullPreview"
+                            >
+                        </div>
+                    </figure>
+                    <figure class="profile-image-preview-panel">
+                        <figcaption>Website view</figcaption>
+                        <div class="doctor-image-stage" id="doctorImageStage">
+                            {% if doctor.image_filename %}
+                            <img
+                                src="{{ uploaded_image_url(doctor.image_filename) }}"
+                                alt="{{ doctor.full_name() }}"
+                                id="doctorImagePreview"
+                                class="doctor-adjust-image"
+                                style="object-fit: {{ 'contain' if doctor_focus.zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format(doctor_focus.x) }}% {{ '%.2f'|format(doctor_focus.y) }}%; transform: scale({{ doctor_focus.zoom }});"
+                            >
+                            {% else %}
+                            <img src="" alt="Doctor photo preview" id="doctorImagePreview" class="doctor-adjust-image">
+                            {% endif %}
+                        </div>
+                    </figure>
                 </div>
                 <div class="doctor-image-toolbar">
                     <small class="admin-field-note">Current photo. Drag to adjust visible area.</small>
@@ -162,7 +177,7 @@
                 </div>
             </div>
             <input type="file" id="doctorImageInput" name="image" class="form-control" accept="image/*">
-            <small class="admin-field-note">Leave blank to keep the current photo. Drag the live preview to reposition; use below 100% to fit more of the photo.</small>
+            <small class="admin-field-note">Leave blank to keep the current photo. The left preview shows the full image; the right preview shows the saved website crop.</small>
         </div>
 
         <div class="admin-form-actions">
@@ -185,10 +200,11 @@
         const editor = document.getElementById('doctorImageEditor');
         const stage = document.getElementById('doctorImageStage');
         const image = document.getElementById('doctorImagePreview');
+        const fullImage = document.getElementById('doctorImageFullPreview');
         const label = document.getElementById('doctorImagePositionLabel');
         const zoomInput = document.getElementById('doctorImageZoom');
         const zoomLabel = document.getElementById('doctorImageZoomLabel');
-        if (!hiddenInput || !fileInput || !editor || !stage || !image) return;
+        if (!hiddenInput || !fileInput || !editor || !stage || !image || !fullImage) return;
 
         const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -267,14 +283,36 @@
         stage.addEventListener('pointercancel', stopDragging);
         stage.addEventListener('lostpointercapture', stopDragging);
 
+        let previewUrl = '';
+        const initialPreviewUrl = image.getAttribute('src') || '';
         fileInput.addEventListener('change', () => {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+                previewUrl = '';
+            }
             const file = fileInput.files && fileInput.files[0];
-            if (!file) return;
-            image.src = URL.createObjectURL(file);
+            if (!file) {
+                if (initialPreviewUrl) {
+                    image.src = initialPreviewUrl;
+                    fullImage.src = initialPreviewUrl;
+                    editor.hidden = false;
+                } else {
+                    editor.hidden = true;
+                    image.removeAttribute('src');
+                    fullImage.removeAttribute('src');
+                }
+                return;
+            }
+            previewUrl = URL.createObjectURL(file);
+            image.src = previewUrl;
+            fullImage.src = previewUrl;
             position = { x: 50, y: 50, zoom: 1 };
             editor.hidden = false;
             sync();
         });
+        window.addEventListener('pagehide', () => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl);
+        }, { once: true });
     })();
 </script>
 {% endblock %}

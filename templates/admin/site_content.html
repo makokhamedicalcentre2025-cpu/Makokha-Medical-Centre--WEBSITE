@@ -94,6 +94,54 @@
         touch-action: none;
     }
 
+    .hero-preview-comparison,
+    .services-banner-comparison,
+    .telemedicine-preview-comparison {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.6rem;
+    }
+
+    .site-content-card .image-preview-view-label {
+        margin: 0 0 0.3rem;
+        color: #607186;
+        font-size: 0.76rem;
+        font-weight: 650;
+    }
+
+    .hero-preview-source-stage,
+    .services-banner-source-stage,
+    .telemedicine-source-stage {
+        display: grid;
+        width: 100%;
+        place-items: center;
+        overflow: hidden;
+        border: 1px solid #d6e8df;
+        border-radius: 8px;
+        background: #f1f7f4;
+    }
+
+    .hero-preview-source-stage {
+        aspect-ratio: 16 / 9;
+    }
+
+    .services-banner-source-stage {
+        aspect-ratio: 16 / 5;
+    }
+
+    .telemedicine-source-stage {
+        aspect-ratio: 16 / 10;
+    }
+
+    .hero-preview-source-stage img,
+    .services-banner-source-stage img,
+    .telemedicine-source-stage img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
     .hero-preview-stage.dragging {
         cursor: grabbing;
     }
@@ -197,6 +245,16 @@
         border: 1px solid #d6e8df;
     }
 
+    .telemedicine-preview-comparison > div:first-child img {
+        object-fit: cover;
+    }
+
+    .telemedicine-preview-comparison > div:last-child img {
+        border-radius: 8px;
+        border: 0;
+        object-fit: contain;
+    }
+
     .form-help {
         font-size: 0.82rem;
         color: #5f6b7a;
@@ -236,14 +294,25 @@
                 <input type="hidden" id="servicesBannerPositionJson" name="services_banner_position_json" value='{{ site_content.services_banner_position|tojson }}'>
                 {% if site_content.services_banner_image_url %}
                 <div class="services-banner-editor" id="servicesBannerEditor">
-                    <div class="services-banner-stage" id="servicesBannerStage">
-                        <img
-                            src="{{ site_content.services_banner_image_url }}"
-                            alt="Services banner preview"
-                            id="servicesBannerImage"
-                            class="services-banner-adjust-image"
-                            style="object-position: {{ '%.2f'|format(site_content.services_banner_position.x) }}% {{ '%.2f'|format(site_content.services_banner_position.y) }}%;"
-                        >
+                    <div class="services-banner-comparison">
+                        <div>
+                            <p class="image-preview-view-label">Website view</p>
+                            <div class="services-banner-stage" id="servicesBannerStage">
+                                <img
+                                    src="{{ site_content.services_banner_image_url }}"
+                                    alt="Services banner website crop"
+                                    id="servicesBannerImage"
+                                    class="services-banner-adjust-image"
+                                    style="object-position: {{ '%.2f'|format(site_content.services_banner_position.x) }}% {{ '%.2f'|format(site_content.services_banner_position.y) }}%;"
+                                >
+                            </div>
+                        </div>
+                        <div>
+                            <p class="image-preview-view-label">Full image</p>
+                            <div class="services-banner-source-stage">
+                                <img src="{{ site_content.services_banner_image_url }}" alt="Complete services banner image">
+                            </div>
+                        </div>
                     </div>
                     <div class="hero-preview-toolbar">
                         <label class="hero-remove">
@@ -259,7 +328,7 @@
                 {% endif %}
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label" for="services_banner_image">Upload Banner Image</label>
-                    <input id="services_banner_image" type="file" name="services_banner_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif">
+                    <input id="services_banner_image" type="file" name="services_banner_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" data-image-upload-preview data-image-preview-ratio="16 / 5" data-image-preview-position-source="servicesBannerPositionJson">
                     <p class="form-help">Accepted formats: JPG, JPEG, PNG, WEBP, GIF. Maximum file size: 5 MB.</p>
                 </div>
             </section>
@@ -336,7 +405,18 @@
                 </div>
                 {% if site_content.telemedicine_image_url %}
                 <div class="telemedicine-preview">
-                    <img src="{{ site_content.telemedicine_image_url }}" alt="Upcoming telemedicine image preview">
+                    <div class="telemedicine-preview-comparison">
+                        <div>
+                            <p class="image-preview-view-label">Website view</p>
+                            <img src="{{ site_content.telemedicine_image_url }}" alt="Upcoming telemedicine website image">
+                        </div>
+                        <div>
+                            <p class="image-preview-view-label">Full image</p>
+                            <div class="telemedicine-source-stage">
+                                <img src="{{ site_content.telemedicine_image_url }}" alt="Complete telemedicine image">
+                            </div>
+                        </div>
+                    </div>
                     <div class="hero-preview-toolbar">
                         <label class="hero-remove">
                             <input type="checkbox" name="remove_telemedicine_image" value="1">
@@ -349,7 +429,7 @@
                 {% endif %}
                 <div class="form-group">
                     <label class="form-label" for="telemedicine_image">Upload Telemedicine Image</label>
-                    <input id="telemedicine_image" type="file" name="telemedicine_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif">
+                    <input id="telemedicine_image" type="file" name="telemedicine_image" class="form-control" accept=".jpg,.jpeg,.png,.webp,.gif" data-image-upload-preview data-image-preview-ratio="16 / 10">
                     <p class="form-help">This image appears on the right side of the Upcoming Telemedicine card. Maximum file size: 5 MB.</p>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
@@ -380,25 +460,38 @@
                             <i class="fas fa-grip-vertical"></i>
                             Drag to reorder
                         </div>
-                        <div class="hero-preview-stage">
-                            {% if hero_slide.is_video %}
-                            <video
-                                src="{{ hero_slide.url }}"
-                                class="hero-adjust-media"
-                                muted
-                                loop
-                                autoplay
-                                playsinline
-                                preload="metadata"
-                                style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
-                            ></video>
-                            {% else %}
-                            <img
-                                src="{{ hero_slide.url }}"
-                                alt="Current hero background image {{ loop.index }}"
-                                class="hero-adjust-media"
-                                style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
-                            >
+                        <div class="hero-preview-comparison">
+                            <div>
+                                <p class="image-preview-view-label">Website view</p>
+                                <div class="hero-preview-stage">
+                                    {% if hero_slide.is_video %}
+                                    <video
+                                        src="{{ hero_slide.url }}"
+                                        class="hero-adjust-media"
+                                        muted
+                                        loop
+                                        autoplay
+                                        playsinline
+                                        preload="metadata"
+                                        style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
+                                    ></video>
+                                    {% else %}
+                                    <img
+                                        src="{{ hero_slide.url }}"
+                                        alt="Current hero background image {{ loop.index }} website crop"
+                                        class="hero-adjust-media"
+                                        style="object-position: {{ '%.2f'|format(hero_slide.position_x) }}% {{ '%.2f'|format(hero_slide.position_y) }}%;"
+                                    >
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if not hero_slide.is_video %}
+                            <div>
+                                <p class="image-preview-view-label">Full image</p>
+                                <div class="hero-preview-source-stage">
+                                    <img src="{{ hero_slide.url }}" alt="Complete hero background image {{ loop.index }}">
+                                </div>
+                            </div>
                             {% endif %}
                         </div>
                         <div class="hero-preview-toolbar">
@@ -481,7 +574,33 @@
                     }
                     media.src = previewUrl;
                     stage.appendChild(media);
-                    card.appendChild(stage);
+                    if (isVideo) {
+                        card.appendChild(stage);
+                    } else {
+                        const comparison = document.createElement('div');
+                        comparison.className = 'hero-preview-comparison';
+                        const websiteView = document.createElement('div');
+                        const websiteLabel = document.createElement('p');
+                        websiteLabel.className = 'image-preview-view-label';
+                        websiteLabel.textContent = 'Website view';
+                        websiteView.appendChild(websiteLabel);
+                        websiteView.appendChild(stage);
+                        const fullImageView = document.createElement('div');
+                        const fullImageLabel = document.createElement('p');
+                        fullImageLabel.className = 'image-preview-view-label';
+                        fullImageLabel.textContent = 'Full image';
+                        const fullImageStage = document.createElement('div');
+                        fullImageStage.className = 'hero-preview-source-stage';
+                        const fullImage = document.createElement('img');
+                        fullImage.src = previewUrl;
+                        fullImage.alt = `Complete image: ${file.name}`;
+                        fullImageStage.appendChild(fullImage);
+                        fullImageView.appendChild(fullImageLabel);
+                        fullImageView.appendChild(fullImageStage);
+                        comparison.appendChild(websiteView);
+                        comparison.appendChild(fullImageView);
+                        card.appendChild(comparison);
+                    }
                     const label = document.createElement('p');
                     label.className = 'form-help';
                     label.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
@@ -621,8 +740,8 @@
 
             const existing = positionMap[imageName] || { x: 50, y: 50 };
             const position = {
-                x: clamp(Number(existing.x) || 50, 0, 100),
-                y: clamp(Number(existing.y) || 50, 0, 100)
+                x: clamp(existing.x !== null && existing.x !== undefined && Number.isFinite(Number(existing.x)) ? Number(existing.x) : 50, 0, 100),
+                y: clamp(existing.y !== null && existing.y !== undefined && Number.isFinite(Number(existing.y)) ? Number(existing.y) : 50, 0, 100)
             };
             positionMap[imageName] = position;
 
@@ -705,8 +824,8 @@
             try {
                 const parsed = JSON.parse(servicesPositionInput.value || '{}');
                 servicesPosition = {
-                    x: clamp(Number(parsed.x) || 50, 0, 100),
-                    y: clamp(Number(parsed.y) || 50, 0, 100)
+                    x: clamp(parsed.x !== null && parsed.x !== undefined && Number.isFinite(Number(parsed.x)) ? Number(parsed.x) : 50, 0, 100),
+                    y: clamp(parsed.y !== null && parsed.y !== undefined && Number.isFinite(Number(parsed.y)) ? Number(parsed.y) : 50, 0, 100)
                 };
             } catch (error) {
                 servicesPosition = { x: 50, y: 50 };
@@ -714,6 +833,7 @@
 
             const syncServicesPosition = () => {
                 servicesPositionInput.value = JSON.stringify(servicesPosition);
+                servicesPositionInput.dispatchEvent(new Event('input', { bubbles: true }));
             };
 
             const renderServicesPosition = () => {

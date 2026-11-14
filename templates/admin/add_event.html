@@ -64,8 +64,18 @@
 
         <div class="form-group">
             <label class="form-label">Event Images</label>
-            <input type="file" name="image" class="form-control" accept="image/*" multiple>
+            <input type="file" name="image" class="form-control" accept="image/*" multiple data-image-upload-preview data-image-preview-ratio="16 / 9">
             <small class="admin-field-note">You can select multiple images at once. The first image is used as the cover.</small>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="eventVideoUpload">Event Video (optional)</label>
+            <input type="file" id="eventVideoUpload" name="video" class="form-control" accept="video/mp4,video/webm">
+            <small class="admin-field-note">Add one MP4 or WebM clip, up to 40 seconds and 5 MB. Event photos remain available alongside the video.</small>
+            <div class="event-video-preview" data-event-video-preview hidden>
+                <video controls playsinline preload="metadata"></video>
+                <p data-event-video-status role="status" aria-live="polite"></p>
+            </div>
         </div>
 
         <div class="admin-form-actions">
@@ -78,4 +88,5 @@
         </div>
     </form>
 </div>
+<script src="{{ url_for('static', filename='js/event-video-preview.js') }}" defer></script>
 {% endblock %}

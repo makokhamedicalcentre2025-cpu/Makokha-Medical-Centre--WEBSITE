@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% from "macros/event_media.html" import render_event_media %}
+{% from "macros/readable_copy.html" import render_readable_copy %}
 
 {% block title %}Orivana Care Medical Centre | Quality Healthcare in Kenya{% endblock %}
 {% block description %}Orivana Care Medical Centre Ltd in Maliki, Kenya provides quality, accessible healthcare, including outpatient, laboratory, pharmacy, maternal and child health services.{% endblock %}
@@ -650,7 +652,8 @@
 
     .people-slider.static-mode .founder-image,
     .people-slider.static-mode .partner-image {
-        height: clamp(150px, 22vw, 240px);
+        width: clamp(160px, 22vw, 220px);
+        height: clamp(160px, 22vw, 220px);
     }
 
     .founder-card {
@@ -710,6 +713,7 @@
         background: transparent;
         border: 0;
         box-shadow: none;
+        text-align: center;
     }
 
     .partner-details {
@@ -717,6 +721,7 @@
         background: transparent;
         border: 0;
         box-shadow: none;
+        text-align: center;
     }
 
     .founder-name {
@@ -819,43 +824,44 @@
     }
 
     .events-home-toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        gap: 1rem;
+        display: grid;
+        gap: 0.75rem;
         margin-bottom: 1.3rem;
     }
 
-    .events-home-toolbar h2 {
+    .events-home-heading {
+        display: grid;
+        grid-template-columns: minmax(220px, 260px) auto;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .events-home-heading h2 {
         margin: 0;
         color: #263b39;
     }
 
-    .events-home-toolbar p {
-        margin: 0.38rem 0 0;
+    .events-home-intro {
+        max-width: 760px;
+        margin: 0;
         color: #5f6b7a;
     }
 
     .events-home-filter {
-        min-width: 260px;
-    }
-
-    .events-home-filter label {
-        display: block;
-        margin-bottom: 0.34rem;
-        font-size: 0.84rem;
-        font-weight: 600;
-        color: #465468;
+        min-width: 0;
     }
 
     .events-home-filter select {
         width: 100%;
-        height: 42px;
-        border: 1px solid #c6dfd5;
-        border-radius: 9px;
-        padding: 0 0.78rem;
-        color: #263b39;
-        background: #fff;
+        height: 46px;
+        border: 1px solid #b9d8ce;
+        border-radius: 12px;
+        padding: 0 2.4rem 0 0.9rem;
+        color: #173c3b;
+        background: #f2faf7;
+        font-weight: 650;
+        box-shadow: 0 5px 16px rgba(18, 59, 57, 0.07);
+        cursor: pointer;
     }
 
     .events-home-group {
@@ -968,6 +974,63 @@
 
     .event-card.event-card-past {
         grid-template-columns: minmax(250px, 36%) minmax(0, 1fr);
+    }
+
+    .event-card-upcoming {
+        position: relative;
+        border: 1px solid #d4e9e1;
+        border-radius: 22px;
+        background: linear-gradient(115deg, #f1faf6 0%, #ffffff 66%);
+        box-shadow: 0 16px 38px rgba(18, 59, 57, 0.11);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .event-card-upcoming:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 46px rgba(18, 59, 57, 0.16);
+    }
+
+    .event-card-upcoming .event-content {
+        padding: clamp(1.2rem, 3vw, 2rem);
+    }
+
+    .event-card-upcoming .event-title {
+        font-size: clamp(1.4rem, 2.5vw, 2rem);
+        line-height: 1.15;
+    }
+
+    .event-card-upcoming .event-badge-status {
+        padding: 0.38rem 0.72rem;
+        border: 1px solid #f0d99f;
+        border-radius: 999px;
+        background: #fff7df;
+        color: #76500a;
+        font-weight: 750;
+        letter-spacing: 0.035em;
+        text-transform: uppercase;
+    }
+
+    .event-attend-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.55rem;
+        min-height: 46px;
+        margin-top: 0.9rem;
+        padding: 0.7rem 1.1rem;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #03595d, #20843e);
+        color: #ffffff;
+        font-weight: 750;
+        text-decoration: none;
+        box-shadow: 0 8px 18px rgba(3, 89, 93, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .event-attend-cta:hover {
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(3, 89, 93, 0.25);
     }
 
     .event-media {
@@ -1828,6 +1891,21 @@
             padding: calc(var(--site-header-height, 70px) + 3.6rem) 0 3rem;
         }
 
+        .events-home-heading {
+            grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+            gap: 0.65rem;
+        }
+
+        .events-home-filter select {
+            height: 42px;
+            padding-left: 0.65rem;
+            font-size: 0.86rem;
+        }
+
+        .events-home-heading h2 {
+            font-size: clamp(1.35rem, 5vw, 1.7rem);
+        }
+
         .events-carousel.has-controls {
             grid-template-columns: 36px minmax(0, 1fr) 36px;
             gap: 0.45rem;
@@ -2253,18 +2331,18 @@
 <section class="events-section">
     <div class="container">
         <div class="events-home-toolbar">
-            <div>
+            <div class="events-home-heading">
+                <div class="events-home-filter">
+                    <label class="sr-only" for="homeEventTypeRedirect">Filter events by category</label>
+                    <select id="homeEventTypeRedirect">
+                        {% for option in event_type_options %}
+                        <option value="{{ option.value }}">{{ option.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <h2>Events & Outreach</h2>
-                <p>Upcoming events are shown with details on the left and photos on the right. Past events are shown with photos on the left and details on the right.</p>
             </div>
-            <div class="events-home-filter">
-                <label for="homeEventTypeRedirect">Browse by category</label>
-                <select id="homeEventTypeRedirect">
-                    {% for option in event_type_options %}
-                    <option value="{{ option.value }}">{{ option.label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+            <p class="events-home-intro">Better health happens together. Join an upcoming health camp, screening, or community program—bring someone you care about and take a practical step toward a healthier future.</p>
         </div>
 
         <div class="events-home-group">
@@ -2300,7 +2378,7 @@
                                 <span><strong>Launch Window:</strong> {{ telemedicine.launch_window }}</span>
                             </div>
                         </div>
-                        <p class="event-description">{{ telemedicine.description }}</p>
+                        {{ render_readable_copy(telemedicine.description, telemedicine.title, 'event-description') }}
                     </div>
                     <div class="event-media event-media-telemedicine">
                         {% if telemedicine.image_url %}
@@ -2342,22 +2420,12 @@
                                 <span><strong>Location:</strong> {{ event.location or 'Not specified' }}</span>
                             </div>
                         </div>
-                        <p class="event-description">{{ event.description }}</p>
+                        {{ render_readable_copy(event.description, event.title, 'event-description') }}
+                        <a href="{{ url_for('contact') }}" class="event-attend-cta">
+                            Get event details <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                        </a>
                     </div>
-                    <div class="event-media">
-                        {% set media_slides = event_slides_map.get(event.id, []) %}
-                        {% if media_slides %}
-                            <img
-                                src="{{ media_slides[0].url }}"
-                                alt="{{ event.title }}"
-                                class="event-auto-image"
-                                data-event-slides='{{ media_slides|tojson }}'
-                                style="object-position: {{ '%.2f'|format((media_slides[0].x if media_slides[0].x is not none else 50.0)) }}% {{ '%.2f'|format((media_slides[0].y if media_slides[0].y is not none else 50.0)) }}%;"
-                            >
-                        {% else %}
-                            <i class="fas fa-calendar-alt"></i>
-                        {% endif %}
-                    </div>
+                    {{ render_event_media(event, event_slides_map.get(event.id, [])) }}
                 </article>
                 {% endfor %}
                     </div>
@@ -2394,20 +2462,7 @@
                     {% set status_label = 'Upcoming' %}
                 {% endif %}
                 <article class="event-card event-card-past fade-in" data-event-slide>
-                    <div class="event-media">
-                        {% set media_slides = event_slides_map.get(event.id, []) %}
-                        {% if media_slides %}
-                            <img
-                                src="{{ media_slides[0].url }}"
-                                alt="{{ event.title }}"
-                                class="event-auto-image"
-                                data-event-slides='{{ media_slides|tojson }}'
-                                style="object-position: {{ '%.2f'|format((media_slides[0].x if media_slides[0].x is not none else 50.0)) }}% {{ '%.2f'|format((media_slides[0].y if media_slides[0].y is not none else 50.0)) }}%;"
-                            >
-                        {% else %}
-                            <i class="fas fa-calendar-alt"></i>
-                        {% endif %}
-                    </div>
+                    {{ render_event_media(event, event_slides_map.get(event.id, [])) }}
                     <div class="event-content">
                         <div class="event-topline">
                             <span class="event-badge event-badge-type">{{ (event.event_type or 'general')|replace('_', ' ')|title }}</span>
@@ -2428,7 +2483,7 @@
                                 <span><strong>Location:</strong> {{ event.location or 'Not specified' }}</span>
                             </div>
                         </div>
-                        <p class="event-description">{{ event.description }}</p>
+                        {{ render_readable_copy(event.description, event.title, 'event-description') }}
                     </div>
                 </article>
                 {% endfor %}
@@ -2487,7 +2542,7 @@
             {% for founder in founders %}
                     <div class="people-slide">
                         <article class="founder-card">
-                            <div class="founder-image">
+                            <div class="founder-image profile-avatar-frame">
                                 {% if founder.image_filename %}
                                     <img src="{{ uploaded_image_url(founder.image_filename) }}" alt="{{ founder.full_name }}" style="width: 100%; height: 100%; object-fit: {{ 'contain' if founder.image_zoom is not none and founder.image_zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format((founder.image_focus_x if founder.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((founder.image_focus_y if founder.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((founder.image_zoom if founder.image_zoom is not none else 1.0)) }};">
                                 {% else %}
@@ -2498,7 +2553,7 @@
                                 <h3 class="founder-name">{{ founder.full_name }}</h3>
                                 <p class="founder-title">{{ founder.title }}</p>
                                 {% if founder.bio %}
-                                <p class="founder-bio">{{ founder.bio }}</p>
+                                {{ render_readable_copy(founder.bio, founder.full_name, 'founder-bio') }}
                                 {% endif %}
                             </div>
                         </article>
@@ -2531,7 +2586,7 @@
             {% for partner in partners %}
                     <div class="people-slide">
                         <article class="partner-card">
-                            <div class="partner-image">
+                            <div class="partner-image profile-avatar-frame">
                                 {% if partner.image_filename %}
                                     <img src="{{ uploaded_image_url(partner.image_filename) }}" alt="{{ partner.full_name }}" style="width: 100%; height: 100%; object-fit: {{ 'contain' if partner.image_zoom is not none and partner.image_zoom < 1 else 'cover' }}; object-position: {{ '%.2f'|format((partner.image_focus_x if partner.image_focus_x is not none else 50.0)) }}% {{ '%.2f'|format((partner.image_focus_y if partner.image_focus_y is not none else 50.0)) }}%; --profile-image-zoom: {{ '%.2f'|format((partner.image_zoom if partner.image_zoom is not none else 1.0)) }};">
                                 {% else %}
@@ -2542,7 +2597,7 @@
                                 <h3 class="partner-name">{{ partner.full_name }}</h3>
                                 <p class="partner-title">{{ partner.title }}</p>
                                 {% if partner.bio %}
-                                <p class="partner-bio">{{ partner.bio }}</p>
+                                {{ render_readable_copy(partner.bio, partner.full_name, 'partner-bio') }}
                                 {% endif %}
                             </div>
                         </article>
@@ -2774,6 +2829,13 @@
             let autoAdvanceTimer = null;
             let scrollEndTimer = null;
 
+            const pauseInactiveVideos = () => {
+                slides.forEach((slide, index) => {
+                    if (index === currentIndex) return;
+                    slide.querySelectorAll('video').forEach((video) => video.pause());
+                });
+            };
+
             const updateCurrentIndex = () => {
                 const scrollLeft = viewport.scrollLeft;
                 currentIndex = slides.reduce((nearestIndex, slide, index) => {
@@ -2783,10 +2845,12 @@
                         ? index
                         : nearestIndex;
                 }, 0);
+                pauseInactiveVideos();
             };
 
             const showSlide = (index) => {
                 currentIndex = (index + slides.length) % slides.length;
+                pauseInactiveVideos();
                 const slideLeft = slides[currentIndex].offsetLeft - slides[0].offsetLeft;
                 viewport.scrollTo({
                     left: slideLeft,
@@ -2798,6 +2862,8 @@
                 if (autoAdvanceTimer) window.clearInterval(autoAdvanceTimer);
                 if (reducedMotion) return;
                 autoAdvanceTimer = window.setInterval(() => {
+                    const reader = document.getElementById('publicContentReader');
+                    if (reader && reader.open) return;
                     updateCurrentIndex();
                     showSlide(currentIndex + 1);
                 }, 30000);
@@ -2847,6 +2913,8 @@
             let index = 0;
             imageNode.dataset.sliderReady = '1';
             setInterval(() => {
+                const reader = document.getElementById('publicContentReader');
+                if (reader && reader.open) return;
                 index = (index + 1) % slides.length;
                 const current = slides[index] || {};
                 if (!current.url) return;
@@ -2938,7 +3006,11 @@
             const startAuto = () => {
                 stopAuto();
                 if (maxIndex <= 0) return;
-                timerId = setInterval(goNext, 7000);
+                timerId = setInterval(() => {
+                    const reader = document.getElementById('publicContentReader');
+                    if (reader && reader.open) return;
+                    goNext();
+                }, 7000);
             };
 
             const configureLayout = () => {
