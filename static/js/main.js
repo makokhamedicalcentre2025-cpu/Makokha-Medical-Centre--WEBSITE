@@ -176,8 +176,10 @@ function initBackToTop() {
     const button = document.getElementById('backToTop');
     if (!button) return;
 
+    const heroSection = document.querySelector('.hero');
     const updateVisibility = () => {
-        button.hidden = window.scrollY < 320 && document.activeElement !== button;
+        const isHeroVisible = heroSection && heroSection.getBoundingClientRect().bottom > 0;
+        button.hidden = isHeroVisible || (window.scrollY < 320 && document.activeElement !== button);
     };
 
     button.addEventListener('click', () => {
@@ -191,6 +193,7 @@ function initBackToTop() {
     button.addEventListener('blur', updateVisibility);
     updateVisibility();
     window.addEventListener('scroll', updateVisibility, { passive: true });
+    window.addEventListener('resize', updateVisibility);
 }
 
 // ================================
