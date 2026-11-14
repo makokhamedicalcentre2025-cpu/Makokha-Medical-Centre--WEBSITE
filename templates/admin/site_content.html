@@ -542,12 +542,10 @@
         if (fileInput) {
             let uploadPreviewUrls = [];
             let overlongVideoFiles = new Set();
-            let unplayableVideoFiles = new Set();
             fileInput.addEventListener('change', () => {
                 uploadPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
                 uploadPreviewUrls = [];
                 overlongVideoFiles = new Set();
-                unplayableVideoFiles = new Set();
                 if (uploadPreviewGrid) uploadPreviewGrid.replaceChildren();
 
                 const selectedFiles = Array.from(fileInput.files || []);
@@ -652,10 +650,9 @@
                                 const playRequest = media.play();
                                 if (playRequest && typeof playRequest.catch === 'function') {
                                     playRequest.catch((error) => {
-                                        if (!uploadPreviewUrls.includes(previewUrl) || media.error) return;
+                                        if (!uploadPreviewUrls.includes(previewUrl)) return;
                                         if (error && error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
-                                            unplayableVideoFiles.add(file);
-                                            durationLabel.textContent = 'Preview failed. Try an H.264 MP4 or VP8/VP9 WebM video.';
+                                            durationLabel.textContent = 'Preview unavailable here. You can still save; the server will validate this video.';
                                             durationLabel.classList.add('is-error');
                                         } else {
                                             durationLabel.textContent = 'Preview is ready. Press Play if playback did not start automatically.';
@@ -666,7 +663,6 @@
                         }, { once: true });
                         media.addEventListener('playing', () => {
                             if (!uploadPreviewUrls.includes(previewUrl)) return;
-                            unplayableVideoFiles.delete(file);
                             if (!overlongVideoFiles.has(file)) {
                                 durationLabel.textContent = `${media.duration.toFixed(1)} seconds. Preview is playing muted.`;
                                 durationLabel.classList.remove('is-error');
@@ -674,8 +670,7 @@
                         });
                         media.addEventListener('error', () => {
                             if (!uploadPreviewUrls.includes(previewUrl)) return;
-                            unplayableVideoFiles.add(file);
-                            durationLabel.textContent = 'Preview failed. Try an H.264 MP4 or VP8/VP9 WebM video.';
+                            durationLabel.textContent = 'Preview unavailable here. You can still save; the server will validate this video.';
                             durationLabel.classList.add('is-error');
                         }, { once: true });
                     }
@@ -687,11 +682,6 @@
             const form = fileInput.closest('form');
             if (form) {
                 form.addEventListener('submit', (event) => {
-                    if (unplayableVideoFiles.size) {
-                        event.preventDefault();
-                        alert('One or more videos could not be previewed. Try H.264 MP4 or VP8/VP9 WebM videos before saving.');
-                        return;
-                    }
                     if (!overlongVideoFiles.size) return;
                     event.preventDefault();
                     alert(`Hero videos must be ${maxVideoDurationSeconds} seconds or shorter.`);

@@ -196,8 +196,9 @@
                 if (previewUrl !== selectedPreviewUrl) return;
                 const duration = preview.duration;
                 if (!Number.isFinite(duration) || duration <= 0) {
-                    validationState = 'invalid';
-                    showStatus('The video duration could not be read. Choose another MP4 or WebM file.', true);
+                    validationState = 'preview_failed';
+                    submitButton.disabled = false;
+                    showStatus('Preview duration could not be read here. You can still save; the server will validate the video.', true);
                     return;
                 }
                 if (duration > maxDurationSeconds) {
@@ -217,11 +218,11 @@
                     playRequest.then(() => {
                         markPreviewReady(`${readyMessage} Preview is playing muted.`);
                     }).catch((error) => {
-                        if (previewUrl !== selectedPreviewUrl || preview.error) return;
+                        if (previewUrl !== selectedPreviewUrl) return;
                         if (error && error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
-                            validationState = 'invalid';
-                            submitButton.disabled = true;
-                            showStatus('This browser cannot play the video codec. Choose a browser-compatible MP4 or WebM video.', true);
+                            validationState = 'preview_failed';
+                            submitButton.disabled = false;
+                            showStatus('Preview is unavailable in this browser. You can still save; the server will validate the video.', true);
                         } else {
                             markPreviewReady(`${readyMessage} Press Play to preview.`);
                         }
@@ -232,9 +233,9 @@
             }, { once: true });
             preview.addEventListener('error', () => {
                 if (previewUrl !== selectedPreviewUrl) return;
-                validationState = 'invalid';
-                submitButton.disabled = true;
-                showStatus('This browser cannot play the video codec. Choose a browser-compatible MP4 or WebM video.', true);
+                validationState = 'preview_failed';
+                submitButton.disabled = false;
+                showStatus('Preview is unavailable in this browser. You can still save; the server will validate the video.', true);
             }, { once: true });
             preview.muted = true;
             preview.controls = true;
@@ -244,7 +245,7 @@
         });
 
         form.addEventListener('submit', (event) => {
-            if (validationState !== 'valid') {
+            if (validationState !== 'valid' && validationState !== 'preview_failed') {
                 event.preventDefault();
                 showStatus('Select a valid video and wait for its duration check before uploading.', true);
                 fileInput.focus();

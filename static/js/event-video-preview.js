@@ -56,10 +56,9 @@
                         status.textContent = `${lengthMessage}${sizeMessage} Preview is playing muted.`;
                     }
                 }).catch((error) => {
-                    if (previewUrl !== selectedPreviewUrl || video.error) return;
+                    if (previewUrl !== selectedPreviewUrl) return;
                     if (error && error.name !== 'NotAllowedError' && error.name !== 'AbortError') {
-                        input.setCustomValidity('This browser cannot play this video. Choose a browser-compatible MP4 or WebM video.');
-                        status.textContent = 'Preview failed. Choose an MP4 or WebM video with a browser-compatible codec.';
+                        status.textContent = 'Preview unavailable in this browser. You can still save; the server will validate the video.';
                     } else {
                         status.textContent = `${lengthMessage}${sizeMessage} Press Play to preview.`;
                     }
@@ -70,8 +69,7 @@
         }, { once: true });
         video.addEventListener('error', () => {
             if (previewUrl !== selectedPreviewUrl) return;
-            input.setCustomValidity('This browser cannot play this video. Choose a browser-compatible MP4 or WebM video.');
-            status.textContent = 'Preview failed. Choose an MP4 or WebM video with a browser-compatible codec.';
+            status.textContent = 'Preview unavailable in this browser. You can still save; the server will validate the video.';
         }, { once: true });
         video.src = selectedPreviewUrl;
         video.load();
