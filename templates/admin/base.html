@@ -1016,14 +1016,19 @@
 
         document.querySelectorAll('input[type="file"]:not(#homepageVideoFile)').forEach((input) => {
             input.addEventListener('change', () => {
-                const isVideoUpload = input.accept.toLowerCase().includes('video/');
-                const maxFileBytes = (isVideoUpload ? 40 : 5) * 1024 * 1024;
-                const maxFileMegabytes = isVideoUpload ? 40 : 5;
-                const oversizedFile = Array.from(input.files || [])
-                    .find((file) => file.size > maxFileBytes);
+                const oversizedFile = Array.from(input.files || []).find((file) => {
+                    const isVideo = file.type.toLowerCase().startsWith('video/')
+                        || /\.(mp4|webm)$/i.test(file.name);
+                    return file.size > (isVideo ? 40 : 5) * 1024 * 1024;
+                });
+                const oversizedFileIsVideo = oversizedFile && (
+                    oversizedFile.type.toLowerCase().startsWith('video/')
+                    || /\.(mp4|webm)$/i.test(oversizedFile.name)
+                );
+                const maxFileMegabytes = oversizedFileIsVideo ? 40 : 5;
                 input.setCustomValidity(
                     oversizedFile
-                        ? `Each ${isVideoUpload ? 'video' : 'image'} must be ${maxFileMegabytes} MB or smaller.`
+                        ? `Each ${oversizedFileIsVideo ? 'video' : 'image'} must be ${maxFileMegabytes} MB or smaller.`
                         : ''
                 );
                 if (oversizedFile) input.reportValidity();

@@ -65,6 +65,7 @@ IS_PRODUCTION = APP_ENV == 'production'
 MAX_UPLOAD_FILE_BYTES = 5 * 1024 * 1024
 MAX_VIDEO_FILE_BYTES = 40 * 1024 * 1024
 MAX_HERO_MEDIA_PER_UPLOAD = 10
+MAX_HERO_VIDEOS_PER_UPLOAD = 5
 MAX_UPLOAD_REQUEST_BYTES = (
     MAX_VIDEO_FILE_BYTES * MAX_HERO_MEDIA_PER_UPLOAD
 ) + (2 * 1024 * 1024)
@@ -3703,6 +3704,13 @@ def admin_site_content():
             if len(hero_files) > MAX_HERO_MEDIA_PER_UPLOAD:
                 raise ValueError(f'Please upload at most {MAX_HERO_MEDIA_PER_UPLOAD} hero media files at a time.')
 
+            hero_video_count = sum(
+                1 for hero_file in hero_files
+                if _is_allowed_video_filename(secure_filename(hero_file.filename))
+            )
+            if hero_video_count > MAX_HERO_VIDEOS_PER_UPLOAD:
+                raise ValueError(f'Please upload at most {MAX_HERO_VIDEOS_PER_UPLOAD} hero videos at a time.')
+
             for hero_file in hero_files:
                 original_name = secure_filename(hero_file.filename)
                 if not _is_allowed_hero_media_filename(original_name):
@@ -3775,7 +3783,9 @@ def admin_site_content():
         services_editor_text=site_content.get('services_editor_text', ''),
         max_upload_file_bytes=MAX_UPLOAD_FILE_BYTES,
         max_video_file_bytes=MAX_VIDEO_FILE_BYTES,
-        max_video_duration_seconds=MAX_VIDEO_DURATION_SECONDS
+        max_video_duration_seconds=MAX_VIDEO_DURATION_SECONDS,
+        max_hero_media_per_upload=MAX_HERO_MEDIA_PER_UPLOAD,
+        max_hero_videos_per_upload=MAX_HERO_VIDEOS_PER_UPLOAD
     )
 
 
